@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>대전하기중학교 3학년 3반</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f6f9; color: #333; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px 20px 60px 20px; background-color: #f4f6f9; color: #333; position: relative; min-height: 100vh; box-sizing: border-box; }
     header { text-align: center; margin-bottom: 20px; }
     h1 { color: #1a365d; margin-bottom: 5px; }
     .sub-title { color: #2563eb; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
@@ -20,6 +20,8 @@
     .period { font-weight: bold; width: 60px; color: #2563eb; }
     .subject { font-weight: 500; }
     
+    .save-btn { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
+    .edit-input { width: 100%; padding: 6px; margin: 2px 0; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
     .day-selector { display: flex; gap: 5px; margin-bottom: 15px; }
     .day-btn { flex: 1; padding: 8px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; }
     .day-btn.active { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
@@ -32,6 +34,25 @@
     .monthly-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
     .day-meal-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 12px; }
     .day-meal-box strong { color: #2563eb; display: block; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
+
+    /* 하단 우측 은밀한 관리자 버튼 */
+    .hidden-admin-btn {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0.3;
+      transition: opacity 0.2s;
+    }
+    .hidden-admin-btn:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -64,7 +85,14 @@
       <button class="day-btn" onclick="selectDay(5)">금</button>
     </div>
 
+    <!-- 게스트용 조회 화면 -->
     <div id="viewScheduleArea" class="schedule-list"></div>
+
+    <!-- 관리자용 수정 화면 -->
+    <div id="editScheduleArea" style="display: none;">
+      <div id="inputForm"></div>
+      <button class="save-btn" onclick="saveSchedule()">시간표 저장하기</button>
+    </div>
   </div>
 
   <!-- 월간 급식 모달 -->
@@ -78,10 +106,14 @@
     </div>
   </div>
 
+  <!-- 하단 맨 우측 은밀한 관리자 버튼 -->
+  <button class="hidden-admin-btn" onclick="toggleAdminMode()" title="관리자 설정">⚙️</button>
+
   <script>
     const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
+    const ADMIN_PW = "1234"; // 비밀번호
 
     const today = new Date();
     const YYYY = today.getFullYear();
@@ -92,10 +124,9 @@
     let currentDay = today.getDay(); // 1:월 ~ 5:금
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
 
-    // 요일별 교시 수 (화/수: 7교시, 나머지: 6교시)
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
 
-    // 💡 시간표 변경 시 여기만 수정 후 깃허브 저장(Commit)하면 됩니다!
+    // 기본 시간표
     const defaultSchedule = {
       1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"],
       2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"],
@@ -103,6 +134,11 @@
       4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"],
       5: ["체육", "진직", "과학1", "수학", "과학2", "역사"]
     };
+
+    function getStoredSchedule() {
+      const stored = localStorage.getItem("hagi_3_3_schedule_v3");
+      return stored ? JSON.parse(stored) : defaultSchedule;
+    }
 
     window.onload = () => {
       document.getElementById("mealDateBtn").textContent = `${YYYY}년 ${MM}월 ${DD}일 [월간 급식표]`;
@@ -174,7 +210,7 @@
       document.getElementById("mealModal").style.display = "none";
     }
 
-    // 요일 선택 및 시간표 처리
+    // 요일 선택
     function selectDay(dayNum) {
       currentDay = dayNum;
       const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
@@ -188,7 +224,8 @@
     }
 
     function renderScheduleView() {
-      const todayList = defaultSchedule[currentDay] || [];
+      const scheduleData = getStoredSchedule();
+      const todayList = scheduleData[currentDay] || [];
       const viewDiv = document.getElementById("viewScheduleArea");
       const count = maxPeriods[currentDay];
 
@@ -206,6 +243,62 @@
       }
 
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
+    }
+
+    // ⚙️ 하단 은밀한 관리자 수정 기능
+    function toggleAdminMode() {
+      const editArea = document.getElementById("editScheduleArea");
+      const viewArea = document.getElementById("viewScheduleArea");
+
+      if (editArea.style.display === "none") {
+        const pw = prompt("관리자 비밀번호를 입력하세요:");
+        if (pw === ADMIN_PW) {
+          editArea.style.display = "block";
+          viewArea.style.display = "none";
+          renderScheduleForm();
+        } else if (pw !== null) {
+          alert("비밀번호가 틀렸습니다.");
+        }
+      } else {
+        editArea.style.display = "none";
+        viewArea.style.display = "block";
+      }
+    }
+
+    function renderScheduleForm() {
+      const scheduleData = getStoredSchedule();
+      const todayList = scheduleData[currentDay] || [];
+      const formDiv = document.getElementById("inputForm");
+      const count = maxPeriods[currentDay];
+
+      let html = "";
+      for (let i = 0; i < count; i++) {
+        html += `
+          <div>
+            <label style="font-size:12px; font-weight:bold;">${i + 1}교시</label>
+            <input type="text" class="edit-input" id="period_${i}" value="${todayList[i] || ''}" placeholder="과목명 입력">
+          </div>
+        `;
+      }
+      formDiv.innerHTML = html;
+    }
+
+    function saveSchedule() {
+      const scheduleData = getStoredSchedule();
+      const newList = [];
+      const count = maxPeriods[currentDay];
+
+      for (let i = 0; i < count; i++) {
+        newList.push(document.getElementById(`period_${i}`).value.trim());
+      }
+
+      scheduleData[currentDay] = newList;
+      localStorage.setItem("hagi_3_3_schedule_v3", JSON.stringify(scheduleData));
+
+      alert(`${currentDay}요일 (${count}교시) 시간표가 저장되었습니다!`);
+      document.getElementById("editScheduleArea").style.display = "none";
+      document.getElementById("viewScheduleArea").style.display = "block";
+      renderScheduleView();
     }
   </script>
 </body>
