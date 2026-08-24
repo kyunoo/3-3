@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대전하기중학교 3학년 3반</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f6f9; color: #333; }
+    header { text-align: center; margin-bottom: 20px; }
+    h1 { color: #1a365d; margin-bottom: 5px; }
+    .sub-title { color: #2563eb; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+    
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .card h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .date-click { font-size: 14px; color: #2563eb; cursor: pointer; text-decoration: underline; font-weight: normal; }
+    .meal-content { line-height: 1.8; white-space: pre-line; font-size: 15px; }
+    
+    .schedule-item { display: flex; padding: 8px 10px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #2563eb; margin-bottom: 8px; }
+    .period { font-weight: bold; width: 60px; color: #2563eb; }
+    .subject { font-weight: 500; }
+    
+    .day-selector { display: flex; gap: 5px; margin-bottom: 15px; }
+    .day-btn { flex: 1; padding: 8px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; }
+    .day-btn.active { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
+
+    /* 월간 급식 모달 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+    .close-btn { font-size: 24px; cursor: pointer; border: none; background: none; color: #64748b; }
+    .monthly-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .day-meal-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 12px; }
+    .day-meal-box strong { color: #2563eb; display: block; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🏫 대전하기중학교</h1>
+    <div class="sub-title">3학년 3반 전용</div>
+  </header>
+
+  <!-- 급식 카드 -->
+  <div class="card">
+    <h2>
+      🍱 오늘의 급식 
+      <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중... 📅</span>
+    </h2>
+    <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
+  </div>
+
+  <!-- 시간표 카드 -->
+  <div class="card">
+    <h2>
+      <span>📅 시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
+    </h2>
+
+    <div class="day-selector">
+      <button class="day-btn" onclick="selectDay(1)">월</button>
+      <button class="day-btn" onclick="selectDay(2)">화</button>
+      <button class="day-btn" onclick="selectDay(3)">수</button>
+      <button class="day-btn" onclick="selectDay(4)">목</button>
+      <button class="day-btn" onclick="selectDay(5)">금</button>
+    </div>
+
+    <div id="viewScheduleArea" class="schedule-list"></div>
+  </div>
+
+  <!-- 월간 급식 모달 -->
+  <div id="mealModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle" style="margin:0;">이번 달 전체 급식표</h3>
+        <button class="close-btn" onclick="closeMealModal()">&times;</button>
+      </div>
+      <div id="monthlyMealGrid" class="monthly-grid">급식표를 불러오는 중...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
+    const ATPT_CODE = "G10";
+    const SCHOOL_CODE = "7451051"; 
+
+    const today = new Date();
+    const YYYY = today.getFullYear();
+    const MM = String(today.getMonth() + 1).padStart(2, '0');
+    const DD = String(today.getDate()).padStart(2, '0');
+    const YYYYMM = `${YYYY}${MM}`;
+
+    let currentDay = today.getDay(); // 1:월 ~ 5:금
+    if (currentDay === 0 || currentDay === 6) currentDay = 1;
+
+    // 요일별 교시 수 (화/수: 7교시, 나머지: 6교시)
+    const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
+
+    // 💡 시간표 변경 시 여기만 수정 후 깃허브 저장(Commit)하면 됩니다!
+    const defaultSchedule = {
+      1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"],
+      2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"],
+      3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""],
+      4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"],
+      5: ["체육", "진직", "과학1", "수학", "과학2", "역사"]
+    };
+
+    window.onload = () => {
+      document.getElementById("mealDateBtn").textContent = `${YYYY}년 ${MM}월 ${DD}일 [월간 급식표]`;
+      fetchTodayMeal();
+      selectDay(currentDay);
+    };
+
+    // 오늘의 급식
+    async function fetchTodayMeal() {
+      const mealDiv = document.getElementById("mealResult");
+      const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YMD=${YYYY}${MM}${DD}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.mealServiceDietInfo) {
+          const rawDish = data.mealServiceDietInfo[1].row[0].DDISH_NM;
+          mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
+        } else {
+          mealDiv.textContent = "오늘의 급식 정보가 없습니다. (주말/휴교일)";
+        }
+      } catch (err) {
+        mealDiv.textContent = "급식 불러오기 실패";
+      }
+    }
+
+    // 이번 달 전체 급식
+    async function openMealModal() {
+      const modal = document.getElementById("mealModal");
+      const grid = document.getElementById("monthlyMealGrid");
+      document.getElementById("modalTitle").textContent = `${YYYY}년 ${Number(MM)}월 전체 급식표`;
+      
+      modal.style.display = "flex";
+      grid.innerHTML = "불러오는 중...";
+
+      const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YM=${YYYYMM}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.mealServiceDietInfo) {
+          const rows = data.mealServiceDietInfo[1].row;
+          const filteredRows = rows.filter(r => r.MLSV_YMD.startsWith(YYYYMM));
+
+          if (filteredRows.length > 0) {
+            grid.innerHTML = filteredRows.map(r => {
+              const dayNum = r.MLSV_YMD.substring(6, 8);
+              const dish = r.DDISH_NM.replace(/<br\/>/g, '<br/>').replace(/\([0-9.]+\)/g, '');
+              return `
+                <div class="day-meal-box">
+                  <strong>${Number(dayNum)}일</strong>
+                  <div>${dish}</div>
+                </div>
+              `;
+            }).join('');
+          } else {
+            grid.textContent = "이번 달 급식 데이터가 없습니다.";
+          }
+        } else {
+          grid.textContent = "이번 달 급식 데이터가 없습니다.";
+        }
+      } catch (err) {
+        grid.textContent = "월간 급식 정보를 불러오지 못했습니다.";
+      }
+    }
+
+    function closeMealModal() {
+      document.getElementById("mealModal").style.display = "none";
+    }
+
+    // 요일 선택 및 시간표 처리
+    function selectDay(dayNum) {
+      currentDay = dayNum;
+      const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
+      document.getElementById("selectedDayText").textContent = `(${dayNames[dayNum]} - ${maxPeriods[dayNum]}교시)`;
+      
+      document.querySelectorAll(".day-btn").forEach((btn, idx) => {
+        btn.classList.toggle("active", idx + 1 === dayNum);
+      });
+
+      renderScheduleView();
+    }
+
+    function renderScheduleView() {
+      const todayList = defaultSchedule[currentDay] || [];
+      const viewDiv = document.getElementById("viewScheduleArea");
+      const count = maxPeriods[currentDay];
+
+      let html = "";
+      for (let i = 0; i < count; i++) {
+        const subject = todayList[i] || "";
+        if (subject) {
+          html += `
+            <div class="schedule-item">
+              <span class="period">${i + 1}교시</span>
+              <span class="subject">${subject}</span>
+            </div>
+          `;
+        }
+      }
+
+      viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
+    }
+  </script>
+</body>
+</html>
