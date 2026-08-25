@@ -56,7 +56,7 @@
     .day-meal-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 12px; }
     .day-meal-box strong { color: #2563eb; display: block; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
 
-    /* 페이지 맨 하단 영역 */
+    /* 페이지 맨 하단 푸터 */
     footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
     .footer-credits { font-size: 12px; color: #64748b; line-height: 1.4; }
     .footer-credits a { color: #2563eb; text-decoration: none; }
@@ -129,7 +129,7 @@
     <div id="lotteryResult" class="draw-result"></div>
   </div>
 
-  <!-- D-day 카드 (제비뽑기 하단으로 이동, 접기/펼치기) -->
+  <!-- D-day 카드 -->
   <div class="card">
     <h2>
       <span>주요 학사일정 D-Day</span>
@@ -174,15 +174,15 @@
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
 
-    // 학사일정 D-day 데이터
+    // 현재 학년도에 맞춘 학사일정 D-day 데이터
     const events = [
-      { name: "2차고사 (중간고사)", date: "2026-09-22" },
-      { name: "체육대회", date: "2026-10-08" },
-      { name: "3학년 기말고사", date: "2026-11-16" },
-      { name: "1,2학년 기말고사", date: "2026-12-14" },
-      { name: "솔마루 축제", date: "2026-12-24" },
-      { name: "종업식 / 졸업식", date: "2027-01-05" },
-      { name: "겨울방학", date: "2027-01-06" }
+      { name: "2차고사 (중간고사)", date: "2024-09-22" },
+      { name: "체육대회", date: "2024-10-08" },
+      { name: "3학년 기말고사", date: "2024-11-16" },
+      { name: "1,2학년 기말고사", date: "2024-12-14" },
+      { name: "솔마루 축제", date: "2024-12-24" },
+      { name: "종업식 / 졸업식", date: "2025-01-05" },
+      { name: "겨울방학", date: "2025-01-06" }
     ];
 
     function renderDday() {
