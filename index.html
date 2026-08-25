@@ -15,8 +15,10 @@
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .card h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
     
-    /* D-day 전용 스타일 */
-    .dday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .toggle-btn { font-size: 13px; color: #2563eb; cursor: pointer; font-weight: normal; }
+
+    /* D-day 카드 스타일 */
+    .dday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 5px; }
     .dday-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 10px; text-align: center; }
     .dday-title { font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 4px; }
     .dday-count { font-size: 20px; font-weight: 800; color: #2563eb; }
@@ -83,12 +85,6 @@
     </div>
   </header>
 
-  <!-- D-day 카드 -->
-  <div class="card">
-    <h2>주요 학사일정 D-Day</h2>
-    <div id="ddayContainer" class="dday-grid"></div>
-  </div>
-
   <!-- 급식 카드 -->
   <div class="card">
     <h2>
@@ -133,6 +129,15 @@
     <div id="lotteryResult" class="draw-result"></div>
   </div>
 
+  <!-- D-day 카드 (제비뽑기 하단으로 이동, 접기/펼치기) -->
+  <div class="card">
+    <h2>
+      <span>주요 학사일정 D-Day</span>
+      <span class="toggle-btn" id="ddayToggleBtn" onclick="toggleDday()">[접기]</span>
+    </h2>
+    <div id="ddayContainer" class="dday-grid"></div>
+  </div>
+
   <!-- 월간 급식 모달 -->
   <div id="mealModal" class="modal">
     <div class="modal-content">
@@ -144,7 +149,7 @@
     </div>
   </div>
 
-  <!-- 스크롤 시 맨 하단에 나오는 푸터 영역 -->
+  <!-- 스크롤 시 맨 하단 푸터 -->
   <footer>
     <div class="footer-credits">
       제작자: 박현우 | <a href="mailto:hwpark719@gmail.com">hwpark719@gmail.com</a> | 인스타: <a href="https://instagram.com/kyunoo___" target="_blank">@kyunoo___</a>
@@ -169,7 +174,7 @@
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
 
-    // 주요 학사일정 D-day 목록 데이터
+    // 학사일정 D-day 데이터
     const events = [
       { name: "2차고사 (중간고사)", date: "2026-09-22" },
       { name: "체육대회", date: "2026-10-08" },
@@ -211,6 +216,18 @@
       });
 
       container.innerHTML = html || "<div style='color:#888; text-align:center; grid-column: 1/-1;'>남은 일정이 없습니다.</div>";
+    }
+
+    function toggleDday() {
+      const container = document.getElementById("ddayContainer");
+      const btn = document.getElementById("ddayToggleBtn");
+      if (container.style.display === "none") {
+        container.style.display = "grid";
+        btn.textContent = "[접기]";
+      } else {
+        container.style.display = "none";
+        btn.textContent = "[펼치기]";
+      }
     }
 
     // 전 학년/반 기본 시간표 데이터
