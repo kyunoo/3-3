@@ -234,7 +234,7 @@
           const calorie = row.CAL_INFO || "";
           
           mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
-          calDiv.textContent = calorie ? `🔥 열량: ${calorie}` : "";
+          calDiv.textContent = calorie ? `칼로리: ${calorie}` : "";
         } else {
           mealDiv.textContent = "오늘의 급식 정보가 없습니다. (주말/휴교일)";
           calDiv.textContent = "";
