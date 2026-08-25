@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>대전하기중학교 학급 모음</title>
+  <title>시간표</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px 20px 80px 20px; background-color: #f4f6f9; color: #333; position: relative; min-height: 100vh; box-sizing: border-box; }
     header { text-align: center; margin-bottom: 20px; }
@@ -59,7 +59,7 @@
 <body>
 
   <header>
-    <h1>🏫 대전하기중학교</h1>
+    <h1>대전하기중학교</h1>
     <div class="class-select-box">
       <select id="gradeSelect" onchange="changeClass()">
         <option value="1">1학년</option>
@@ -90,7 +90,7 @@
   <!-- 시간표 카드 -->
   <div class="card">
     <h2>
-      <span>📅 시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
+      <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
     </h2>
 
     <div class="day-selector">
@@ -112,7 +112,7 @@
 
   <!-- 제비뽑기 카드 -->
   <div class="card">
-    <h2>🎲 번호 제비뽑기</h2>
+    <h2>번호 제비뽑기</h2>
     <div class="tool-row">
       <label>전체 인원수:</label>
       <input type="number" id="lotteryCount" value="25" min="1" max="50" style="width: 70px;">
@@ -123,7 +123,7 @@
 
   <!-- 랜덤 자리배치 카드 -->
   <div class="card">
-    <h2>🪑 랜덤 자리배치</h2>
+    <h2>랜덤 자리배치</h2>
     <div class="tool-row">
       <label>학생 수:</label>
       <input type="number" id="seatStudents" value="25" min="1" style="width: 60px;">
@@ -507,7 +507,7 @@
       resDiv.textContent = "추첨 중...";
       setTimeout(() => {
         const selected = Math.floor(Math.random() * total) + 1;
-        resDiv.textContent = `🎉 당첨: ${selected}번!`;
+        resDiv.textContent = `당첨!!: ${selected}번!`;
       }, 300);
     }
 
