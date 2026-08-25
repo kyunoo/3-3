@@ -7,7 +7,7 @@
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background-color: #f4f6f9; color: #333; position: relative; min-height: 100vh; box-sizing: border-box; }
     
-    /* 헤더 및 실시간 시계 배치 (시계 클릭 가능하도록 설정) */
+    /* 헤더 및 실시간 시계 배치 (시계 클릭 가능) */
     header { position: relative; text-align: center; margin-bottom: 25px; }
     .current-time { position: absolute; left: 0; top: 0; font-size: 20px; font-weight: 800; color: #1e293b; background: #ffffff; padding: 8px 16px; border-radius: 20px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.06); cursor: pointer; user-select: none; }
     .current-time:hover { background: #f8fafc; border-color: #059669; }
@@ -28,6 +28,11 @@
     .card h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
     
     .toggle-btn { font-size: 13px; color: #059669; cursor: pointer; font-weight: normal; }
+
+    /* 급식 날짜 조절 화살표 스타일 */
+    .meal-date-nav { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #059669; font-weight: normal; }
+    .meal-nav-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-weight: bold; color: #1e293b; user-select: none; }
+    .meal-nav-btn:hover { background: #059669; color: white; border-color: #059669; }
 
     /* D-day 카드 스타일 */
     .dday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 5px; }
@@ -144,11 +149,15 @@
       </div>
     </div>
 
-    <!-- 오른쪽: 급식 카드 -->
+    <!-- 오른쪽: 급식 카드 (날짜 이동 화살표 추가) -->
     <div class="card">
       <h2>
-        오늘의 급식 
-        <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
+        <span>오늘의 급식</span>
+        <div class="meal-date-nav">
+          <button class="meal-nav-btn" onclick="changeMealDate(-1)">&lt;</button>
+          <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
+          <button class="meal-nav-btn" onclick="changeMealDate(1)">&gt;</button>
+        </div>
       </h2>
       <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
       <div id="calorieResult" class="calorie-info"></div>
@@ -212,10 +221,7 @@
     const ADMIN_PW = "6158";
 
     const today = new Date();
-    const YYYY = today.getFullYear();
-    const MM = String(today.getMonth() + 1).padStart(2, '0');
-    const DD = String(today.getDate()).padStart(2, '0');
-    const YYYYMM = `${YYYY}${MM}`;
+    let currentMealDate = new Date(); // 현재 조회 중인 급식 날짜
 
     let currentDay = today.getDay();
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
@@ -233,11 +239,11 @@
 
     // 학사일정 D-day 데이터
     const events = [
-      { name: "중간", date: "2026-09-22" },
+      { name: "2차고사 (중간고사)", date: "2026-09-22" },
       { name: "체육대회", date: "2026-10-08" },
-      { name: "3학년 기말", date: "2026-11-16" },
-      { name: "1,2학년 기말", date: "2026-12-14" },
-      { name: "축제", date: "2026-12-24" },
+      { name: "3학년 기말고사", date: "2026-11-16" },
+      { name: "1,2학년 기말고사", date: "2026-12-14" },
+      { name: "솔마루 축제", date: "2026-12-24" },
       { name: "종업식 / 졸업식", date: "2027-01-05" },
       { name: "겨울방학", date: "2027-01-06" }
     ];
@@ -429,18 +435,35 @@
       return { g, c };
     }
 
+    // 1주일(7일) 자동 리셋 로직 적용된 시간표 로더
     function getStoredSchedule(g, c) {
       const key = `hagi_${g}_${c}_schedule`;
+      const timeKey = `hagi_${g}_${c}_time`;
+      
       const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : defaultSchedules[g][c];
+      const storedTime = localStorage.getItem(timeKey);
+
+      if (stored && storedTime) {
+        const nowMs = new Date().getTime();
+        const savedMs = parseInt(storedTime, 10);
+        const diffDays = (nowMs - savedMs) / (1000 * 60 * 60 * 24);
+
+        // 7일(1주일)이 지나면 자동 삭제(초기화)
+        if (diffDays >= 7) {
+          localStorage.removeItem(key);
+          localStorage.removeItem(timeKey);
+          return defaultSchedules[g][c];
+        }
+        return JSON.parse(stored);
+      }
+      return defaultSchedules[g][c];
     }
 
     window.onload = () => {
       updateClock();
       setInterval(updateClock, 1000);
       renderDday();
-      document.getElementById("mealDateBtn").textContent = `${YYYY}년 ${MM}월 ${DD}일 [월간 급식표]`;
-      fetchTodayMeal();
+      fetchMealByDate(currentMealDate);
       selectDay(currentDay);
     };
 
@@ -448,11 +471,30 @@
       selectDay(currentDay);
     }
 
-    // 1. 급식 및 칼로리 불러오기
-    async function fetchTodayMeal() {
+    // 1. 급식 날짜 조절 및 데이터 불러오기
+    function changeMealDate(offsetDays) {
+      currentMealDate.setDate(currentMealDate.getDate() + offsetDays);
+      fetchMealByDate(currentMealDate);
+    }
+
+    async function fetchMealByDate(targetDate) {
       const mealDiv = document.getElementById("mealResult");
       const calDiv = document.getElementById("calorieResult");
-      const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YMD=${YYYY}${MM}${DD}`;
+      const dateBtn = document.getElementById("mealDateBtn");
+
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const YYYYMMDD = `${year}${month}${day}`;
+
+      const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
+      const weekName = weekNames[targetDate.getDay()];
+
+      dateBtn.textContent = `${year}.${month}.${day}(${weekName})`;
+      mealDiv.textContent = "급식을 불러오는 중...";
+      calDiv.textContent = "";
+
+      const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YMD=${YYYYMMDD}`;
 
       try {
         const res = await fetch(url);
@@ -465,11 +507,11 @@
           mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
           calDiv.textContent = calorie ? `열량: ${calorie}` : "";
         } else {
-          mealDiv.textContent = "오늘의 급식 정보가 없습니다. (주말/휴교일)";
+          mealDiv.textContent = "해당 날짜의 급식 정보가 없습니다. (주말/휴교일)";
           calDiv.textContent = "";
         }
       } catch (err) {
-        mealDiv.textContent = "급식 불러오기 실패";
+        mealDiv.textContent = "급식 정보를 불러오지 못했습니다.";
         calDiv.textContent = "";
       }
     }
@@ -478,7 +520,11 @@
     async function openMealModal() {
       const modal = document.getElementById("mealModal");
       const grid = document.getElementById("monthlyMealGrid");
-      document.getElementById("modalTitle").textContent = `${YYYY}년 ${Number(MM)}월 전체 급식표`;
+      const year = currentMealDate.getFullYear();
+      const month = String(currentMealDate.getMonth() + 1).padStart(2, '0');
+      const YYYYMM = `${year}${month}`;
+
+      document.getElementById("modalTitle").textContent = `${year}년 ${Number(month)}월 전체 급식표`;
       modal.style.display = "flex";
       grid.innerHTML = "불러오는 중...";
 
@@ -594,6 +640,7 @@
       formDiv.innerHTML = html;
     }
 
+    // 시간표 저장 시 현재 시각 저장 (1주일 카운트다운 시작)
     function saveSchedule() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -606,8 +653,9 @@
 
       scheduleData[currentDay] = newList;
       localStorage.setItem(`hagi_${g}_${c}_schedule`, JSON.stringify(scheduleData));
+      localStorage.setItem(`hagi_${g}_${c}_time`, new Date().getTime().toString());
 
-      alert(`${g}학년 ${c}반 ${currentDay}요일 시간표가 저장되었습니다!`);
+      alert(`${g}학년 ${c}반 ${currentDay}요일 시간표가 저장되었습니다! (7일 후 초기화)`);
       document.getElementById("editScheduleArea").style.display = "none";
       document.getElementById("viewScheduleArea").style.display = "block";
       renderScheduleView();
@@ -628,7 +676,7 @@
       }, 300);
     }
 
-    // 5. 이스터에그 2048 게임 토글 (시계 클릭 시 작동)
+    // 5. 이스터에그 2048 게임 토글
     let board2048 = Array(4).fill().map(() => Array(4).fill(0));
     let score2048 = 0;
 
