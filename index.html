@@ -36,12 +36,6 @@
     .tool-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; align-items: center; }
     .tool-row input, .tool-row select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
     .draw-result { font-size: 20px; font-weight: bold; color: #dc2626; text-align: center; margin-top: 10px; min-height: 30px; }
-    
-    /* 자리배치 그리드 */
-    .seat-grid { display: grid; gap: 10px; margin-top: 15px; justify-content: center; }
-    .seat-box { background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; color: #1e293b; min-width: 45px; }
-    .seat-container { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-    .seat-pair { display: flex; gap: 4px; background: #e2e8f0; padding: 6px; border-radius: 8px; }
 
     /* 월간 급식 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
@@ -52,7 +46,7 @@
     .day-meal-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 12px; }
     .day-meal-box strong { color: #2563eb; display: block; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
 
-    /* 페이지 맨 하단 영역 (고정이 아닌 일반 스크롤 하단에 위치) */
+    /* 페이지 맨 하단 영역 */
     footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
     .footer-credits { font-size: 12px; color: #64748b; line-height: 1.4; }
     .footer-credits a { color: #2563eb; text-decoration: none; }
@@ -123,28 +117,6 @@
       <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
     </div>
     <div id="lotteryResult" class="draw-result"></div>
-  </div>
-
-  <!-- 랜덤 자리배치 카드 -->
-  <div class="card">
-    <h2>랜덤 자리배치</h2>
-    <div class="tool-row">
-      <label>학생 수:</label>
-      <input type="number" id="seatStudents" value="25" min="1" style="width: 60px;">
-      <label>줄 (가로x세로):</label>
-      <input type="number" id="seatCols" value="5" min="1" style="width: 50px;">
-      <span>x</span>
-      <input type="number" id="seatRows" value="5" min="1" style="width: 50px;">
-    </div>
-    <div class="tool-row">
-      <label>배치 방식:</label>
-      <select id="seatType">
-        <option value="pair">짝꿍 (2명씩)</option>
-        <option value="single">혼자 (개별)</option>
-      </select>
-      <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 배치하기</button>
-    </div>
-    <div id="seatDisplay"></div>
   </div>
 
   <!-- 월간 급식 모달 -->
@@ -519,82 +491,6 @@
         const selected = Math.floor(Math.random() * total) + 1;
         resDiv.textContent = `당첨!!: ${selected}번!`;
       }, 300);
-    }
-
-    // 5. 랜덤 자리배치 기능
-    function generateSeats() {
-      const total = parseInt(document.getElementById("seatStudents").value);
-      const cols = parseInt(document.getElementById("seatCols").value);
-      const rows = parseInt(document.getElementById("seatRows").value);
-      const type = document.getElementById("seatType").value;
-      const display = document.getElementById("seatDisplay");
-
-      if (!total || total < 1) {
-        alert("학생 수를 올바르게 입력하세요.");
-        return;
-      }
-
-      let numbers = Array.from({ length: total }, (_, i) => i + 1);
-      for (let i = numbers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-      }
-
-      display.innerHTML = "";
-      let numIdx = 0;
-
-      if (type === "single") {
-        const grid = document.createElement("div");
-        grid.className = "seat-grid";
-        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            const box = document.createElement("div");
-            box.className = "seat-box";
-            if (numIdx < total) {
-              box.textContent = `${numbers[numIdx++]}번`;
-            } else {
-              box.textContent = "-";
-              box.style.opacity = "0.3";
-            }
-            grid.appendChild(box);
-          }
-        }
-        display.appendChild(grid);
-      } else {
-        const container = document.createElement("div");
-        container.className = "seat-container";
-
-        for (let r = 0; r < rows; r++) {
-          const rowDiv = document.createElement("div");
-          rowDiv.style.display = "flex";
-          rowDiv.style.gap = "12px";
-          rowDiv.style.marginBottom = "10px";
-          rowDiv.style.justifyContent = "center";
-          rowDiv.style.width = "100%";
-
-          for (let c = 0; c < Math.ceil(cols / 2); c++) {
-            const pair = document.createElement("div");
-            pair.className = "seat-pair";
-
-            for (let p = 0; p < 2; p++) {
-              const box = document.createElement("div");
-              box.className = "seat-box";
-              if (numIdx < total) {
-                box.textContent = `${numbers[numIdx++]}번`;
-              } else {
-                box.textContent = "-";
-                box.style.opacity = "0.3";
-              }
-              pair.appendChild(box);
-            }
-            rowDiv.appendChild(pair);
-          }
-          container.appendChild(rowDiv);
-        }
-        display.appendChild(container);
-      }
     }
   </script>
 </body>
