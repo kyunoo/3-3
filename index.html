@@ -29,10 +29,12 @@
     
     .toggle-btn { font-size: 13px; color: #059669; cursor: pointer; font-weight: normal; }
 
-    /* 급식 날짜 조절 화살표 스타일 */
+    /* 급식 날짜 조절 네비게이션 스타일 */
     .meal-date-nav { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #059669; font-weight: normal; }
     .meal-nav-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-weight: bold; color: #1e293b; user-select: none; }
     .meal-nav-btn:hover { background: #059669; color: white; border-color: #059669; }
+    .today-reset-btn { background: #059669; color: white; border: none; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; cursor: pointer; display: none; }
+    .today-reset-btn:hover { background: #047857; }
 
     /* D-day 카드 스타일 */
     .dday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 5px; }
@@ -152,7 +154,10 @@
     <!-- 오른쪽: 급식 카드 -->
     <div class="card">
       <h2>
-        <span>오늘의 급식</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>급식</span>
+          <button id="todayMealResetBtn" class="today-reset-btn" onclick="resetToTodayMeal()">오늘 급식</button>
+        </div>
         <div class="meal-date-nav">
           <button class="meal-nav-btn" onclick="changeMealDate(-1)">&lt;</button>
           <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
@@ -237,7 +242,7 @@
       document.getElementById("clockDisplay").textContent = `${hours}:${minutes}:${seconds}`;
     }
 
-    // 학사일정 D-day 데이터 (2차고사 -> 중간고사로 변경)
+    // 학사일정 D-day 데이터
     const events = [
       { name: "중간고사", date: "2026-09-22" },
       { name: "체육대회", date: "2026-10-08" },
@@ -476,15 +481,35 @@
       fetchMealByDate(currentMealDate);
     }
 
+    function resetToTodayMeal() {
+      currentMealDate = new Date();
+      fetchMealByDate(currentMealDate);
+    }
+
     async function fetchMealByDate(targetDate) {
       const mealDiv = document.getElementById("mealResult");
       const calDiv = document.getElementById("calorieResult");
       const dateBtn = document.getElementById("mealDateBtn");
+      const resetBtn = document.getElementById("todayMealResetBtn");
 
       const year = targetDate.getFullYear();
       const month = String(targetDate.getMonth() + 1).padStart(2, '0');
       const day = String(targetDate.getDate()).padStart(2, '0');
       const YYYYMMDD = `${year}${month}${day}`;
+
+      // 오늘 날짜와 현재 조회 중인 날짜 비교 (오늘이면 리셋 버튼 숨김, 다르면 표시)
+      const realToday = new Date();
+      const isToday = (
+        targetDate.getFullYear() === realToday.getFullYear() &&
+        targetDate.getMonth() === realToday.getMonth() &&
+        targetDate.getDate() === realToday.getDate()
+      );
+
+      if (isToday) {
+        resetBtn.style.display = "none";
+      } else {
+        resetBtn.style.display = "inline-block";
+      }
 
       const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
       const weekName = weekNames[targetDate.getDay()];
@@ -515,7 +540,7 @@
       }
     }
 
-    // 2. 월간 급식 모달 (수정하여 완전히 정상 작동되도록 처리)
+    // 2. 월간 급식 모달
     async function openMealModal() {
       const modal = document.getElementById("mealModal");
       const grid = document.getElementById("monthlyMealGrid");
@@ -535,7 +560,6 @@
         if (data.mealServiceDietInfo) {
           const rows = data.mealServiceDietInfo[1].row;
           if (rows && rows.length > 0) {
-            // 날짜순 정렬
             rows.sort((a, b) => a.MLSV_YMD.localeCompare(b.MLSV_YMD));
             grid.innerHTML = rows.map(r => {
               const dayNum = r.MLSV_YMD.substring(6, 8);
