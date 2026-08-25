@@ -47,6 +47,22 @@
     .tool-row input, .tool-row select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
     .draw-result { font-size: 20px; font-weight: bold; color: #dc2626; text-align: center; margin-top: 10px; min-height: 30px; }
 
+    /* 2048 게임 스타일 */
+    #game2048Card { display: none; }
+    .g2048-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #bbada0; padding: 10px; border-radius: 8px; max-width: 320px; margin: 15px auto; touch-action: none; }
+    .g2048-cell { background: #ccc0b3; border-radius: 5px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: bold; color: #776e65; }
+    .g2048-cell[data-val="2"] { background: #eee4da; color: #776e65; }
+    .g2048-cell[data-val="4"] { background: #ede0c8; color: #776e65; }
+    .g2048-cell[data-val="8"] { background: #f2b179; color: #f9f6f2; }
+    .g2048-cell[data-val="16"] { background: #f59563; color: #f9f6f2; }
+    .g2048-cell[data-val="32"] { background: #f67c5f; color: #f9f6f2; }
+    .g2048-cell[data-val="64"] { background: #f65e3b; color: #f9f6f2; }
+    .g2048-cell[data-val="128"] { background: #edcf72; color: #f9f6f2; font-size: 18px; }
+    .g2048-cell[data-val="256"] { background: #edcc61; color: #f9f6f2; font-size: 18px; }
+    .g2048-cell[data-val="512"] { background: #edc850; color: #f9f6f2; font-size: 18px; }
+    .g2048-cell[data-val="1024"] { background: #edc53f; color: #f9f6f2; font-size: 16px; }
+    .g2048-cell[data-val="2048"] { background: #edc22e; color: #f9f6f2; font-size: 16px; }
+
     /* 월간 급식 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; }
@@ -59,7 +75,7 @@
     /* 페이지 맨 하단 푸터 */
     footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 10px; }
     .footer-credits { font-size: 12px; color: #64748b; line-height: 1.4; }
-    .footer-credits a { color: #2563eb; text-decoration: none; }
+    .fake-link { color: #2563eb; text-decoration: underline; cursor: pointer; }
     .admin-bottom-btn { padding: 8px 14px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 20px; color: #334155; font-size: 13px; font-weight: bold; cursor: pointer; }
     .admin-bottom-btn:hover { background: #f1f5f9; border-color: #2563eb; color: #2563eb; }
   </style>
@@ -138,6 +154,17 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
+  <!-- 페이크 이스터에그: 2048 미니게임 카드 -->
+  <div class="card" id="game2048Card">
+    <h2>
+      <span>🎮 미니게임 2048</span>
+      <span style="font-size: 14px; color: #2563eb;">점수: <span id="gameScore">0</span></span>
+    </h2>
+    <div style="text-align: center; font-size: 12px; color: #64748b; margin-bottom: 5px;">키보드 방향키 또는 화면 스와이프로 타일을 합쳐보세요!</div>
+    <div id="g2048Board" class="g2048-board"></div>
+    <button class="btn-primary" style="margin-top: 10px;" onclick="init2048()">게임 새로 시작</button>
+  </div>
+
   <!-- 월간 급식 모달 -->
   <div id="mealModal" class="modal">
     <div class="modal-content">
@@ -152,7 +179,7 @@
   <!-- 스크롤 시 맨 하단 푸터 -->
   <footer>
     <div class="footer-credits">
-      제작자: 박현우 | <a href="mailto:hwpark719@gmail.com">hwpark719@gmail.com</a> | 인스타: <a href="https://instagram.com/kyunoo___" target="_blank">@kyunoo___</a>
+      제작자: 박현우 | <a href="mailto:hwpark719@gmail.com" style="color: #2563eb; text-decoration:none;">hwpark719@gmail.com</a> | 인스타: <span class="fake-link" onclick="open2048Game()">@kyunoo___</span>
     </div>
     <button class="admin-bottom-btn" onclick="toggleAdminMode()">시간표 수정</button>
   </footer>
@@ -174,15 +201,15 @@
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
 
-    // 현재 학년도에 맞춘 학사일정 D-day 데이터
+    // 학사일정 D-day 데이터 (2026-2027)
     const events = [
-      { name: "2차고사 (중간고사)", date: "2024-09-22" },
-      { name: "체육대회", date: "2024-10-08" },
-      { name: "3학년 기말고사", date: "2024-11-16" },
-      { name: "1,2학년 기말고사", date: "2024-12-14" },
-      { name: "솔마루 축제", date: "2024-12-24" },
-      { name: "종업식 / 졸업식", date: "2025-01-05" },
-      { name: "겨울방학", date: "2025-01-06" }
+      { name: "2차고사 (중간고사)", date: "2026-09-22" },
+      { name: "체육대회", date: "2026-10-08" },
+      { name: "3학년 기말고사", date: "2026-11-16" },
+      { name: "1,2학년 기말고사", date: "2026-12-14" },
+      { name: "솔마루 축제", date: "2026-12-24" },
+      { name: "종업식 / 졸업식", date: "2027-01-05" },
+      { name: "겨울방학", date: "2027-01-06" }
     ];
 
     function renderDday() {
@@ -568,6 +595,135 @@
         resDiv.textContent = `당첨!!: ${selected}번!`;
       }, 300);
     }
+
+    // 5. 이스터에그 2048 게임 로직
+    let board2048 = Array(4).fill().map(() => Array(4).fill(0));
+    let score2048 = 0;
+
+    function open2048Game() {
+      const card = document.getElementById("game2048Card");
+      card.style.display = "block";
+      init2048();
+      card.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function init2048() {
+      board2048 = Array(4).fill().map(() => Array(4).fill(0));
+      score2048 = 0;
+      addRandomTile2048();
+      addRandomTile2048();
+      updateBoard2048();
+    }
+
+    function addRandomTile2048() {
+      let emptyCells = [];
+      for(let r=0; r<4; r++){
+        for(let c=0; c<4; c++){
+          if(board2048[r][c] === 0) emptyCells.push({r, c});
+        }
+      }
+      if(emptyCells.length > 0) {
+        let rand = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        board2048[rand.r][rand.c] = Math.random() < 0.9 ? 2 : 4;
+      }
+    }
+
+    function updateBoard2048() {
+      const container = document.getElementById("g2048Board");
+      container.innerHTML = "";
+      document.getElementById("gameScore").textContent = score2048;
+
+      for(let r=0; r<4; r++){
+        for(let c=0; c<4; c++){
+          let val = board2048[r][c];
+          let cell = document.createElement("div");
+          cell.className = "g2048-cell";
+          if(val > 0) {
+            cell.textContent = val;
+            cell.setAttribute("data-val", val);
+          }
+          container.appendChild(cell);
+        }
+      }
+    }
+
+    function slide2048(row) {
+      let arr = row.filter(val => val);
+      for(let i=0; i<arr.length-1; i++){
+        if(arr[i] === arr[i+1]){
+          arr[i] *= 2;
+          score2048 += arr[i];
+          arr[i+1] = 0;
+        }
+      }
+      arr = arr.filter(val => val);
+      while(arr.length < 4) arr.push(0);
+      return arr;
+    }
+
+    function move2048(dir) {
+      let moved = false;
+      let prevBoard = JSON.stringify(board2048);
+
+      if(dir === 'left') {
+        for(let r=0; r<4; r++) board2048[r] = slide2048(board2048[r]);
+      } else if(dir === 'right') {
+        for(let r=0; r<4; r++) board2048[r] = slide2048(board2048[r].reverse()).reverse();
+      } else if(dir === 'up') {
+        for(let c=0; c<4; c++){
+          let col = [board2048[0][c], board2048[1][c], board2048[2][c], board2048[3][c]];
+          col = slide2048(col);
+          for(let r=0; r<4; r++) board2048[r][c] = col[r];
+        }
+      } else if(dir === 'down') {
+        for(let c=0; c<4; c++){
+          let col = [board2048[0][c], board2048[1][c], board2048[2][c], board2048[3][c]];
+          col = slide2048(col.reverse()).reverse();
+          for(let r=0; r<4; r++) board2048[r][c] = col[r];
+        }
+      }
+
+      if(prevBoard !== JSON.stringify(board2048)) {
+        addRandomTile2048();
+        updateBoard2048();
+      }
+    }
+
+    // 키보드 조작 이벤트
+    window.addEventListener("keydown", (e) => {
+      if(document.getElementById("game2048Card").style.display === "block") {
+        if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+          e.preventDefault();
+          if(e.key === "ArrowUp") move2048('up');
+          if(e.key === "ArrowDown") move2048('down');
+          if(e.key === "ArrowLeft") move2048('left');
+          if(e.key === "ArrowRight") move2048('right');
+        }
+      }
+    });
+
+    // 터치 모바일 스와이프 조작 이벤트
+    let touchStartX = 0, touchStartY = 0;
+    const boardElem = document.getElementById("g2048Board");
+
+    boardElem.addEventListener("touchstart", (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, {passive: true});
+
+    boardElem.addEventListener("touchend", (e) => {
+      if(!touchStartX || !touchStartY) return;
+      let dx = e.changedTouches[0].clientX - touchStartX;
+      let dy = e.changedTouches[0].clientY - touchStartY;
+
+      if(Math.abs(dx) > Math.abs(dy)) {
+        if(dx > 30) move2048('right');
+        else if(dx < -30) move2048('left');
+      } else {
+        if(dy > 30) move2048('down');
+        else if(dy < -30) move2048('up');
+      }
+    }, {passive: true});
   </script>
 </body>
 </html>
