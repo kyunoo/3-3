@@ -15,6 +15,14 @@
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .card h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
     
+    /* D-day 전용 스타일 */
+    .dday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .dday-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 10px; text-align: center; }
+    .dday-title { font-size: 13px; color: #64748b; font-weight: bold; margin-bottom: 4px; }
+    .dday-count { font-size: 20px; font-weight: 800; color: #2563eb; }
+    .dday-count.today { color: #dc2626; }
+    .dday-date { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
     .date-click { font-size: 14px; color: #2563eb; cursor: pointer; text-decoration: underline; font-weight: normal; }
     .meal-content { line-height: 1.8; white-space: pre-line; font-size: 15px; }
     .calorie-info { font-size: 13px; color: #059669; font-weight: bold; margin-top: 8px; }
@@ -74,6 +82,12 @@
       </select>
     </div>
   </header>
+
+  <!-- D-day 카드 -->
+  <div class="card">
+    <h2>주요 학사일정 D-Day</h2>
+    <div id="ddayContainer" class="dday-grid"></div>
+  </div>
 
   <!-- 급식 카드 -->
   <div class="card">
@@ -154,6 +168,50 @@
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
+
+    // 주요 학사일정 D-day 목록 데이터
+    const events = [
+      { name: "2차고사 (중간고사)", date: "2026-09-22" },
+      { name: "체육대회", date: "2026-10-08" },
+      { name: "3학년 기말고사", date: "2026-11-16" },
+      { name: "1,2학년 기말고사", date: "2026-12-14" },
+      { name: "솔마루 축제", date: "2026-12-24" },
+      { name: "종업식 / 졸업식", date: "2027-01-05" },
+      { name: "겨울방학", date: "2027-01-06" }
+    ];
+
+    function renderDday() {
+      const container = document.getElementById("ddayContainer");
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      let html = "";
+      events.forEach(evt => {
+        const targetDate = new Date(evt.date);
+        const diffTime = targetDate - todayDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays >= 0) {
+          let countText = "";
+          let isTodayClass = "";
+          if (diffDays === 0) {
+            countText = "D-DAY";
+            isTodayClass = "today";
+          } else {
+            countText = `D-${diffDays}`;
+          }
+
+          html += `
+            <div class="dday-box">
+              <div class="dday-title">${evt.name}</div>
+              <div class="dday-count ${isTodayClass}">${countText}</div>
+              <div class="dday-date">${evt.date}</div>
+            </div>
+          `;
+        }
+      });
+
+      container.innerHTML = html || "<div style='color:#888; text-align:center; grid-column: 1/-1;'>남은 일정이 없습니다.</div>";
+    }
 
     // 전 학년/반 기본 시간표 데이터
     const defaultSchedules = {
@@ -304,6 +362,7 @@
     }
 
     window.onload = () => {
+      renderDday();
       document.getElementById("mealDateBtn").textContent = `${YYYY}년 ${MM}월 ${DD}일 [월간 급식표]`;
       fetchTodayMeal();
       selectDay(currentDay);
