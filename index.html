@@ -3,28 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>대전하기중학교 3학년 3반</title>
+  <title>대전하기중학교 학급 모음</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px 20px 80px 20px; background-color: #f4f6f9; color: #333; position: relative; min-height: 100vh; box-sizing: border-box; }
     header { text-align: center; margin-bottom: 20px; }
-    h1 { color: #1a365d; margin-bottom: 5px; }
-    .sub-title { color: #2563eb; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+    h1 { color: #1a365d; margin-bottom: 10px; }
     
+    .class-select-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+    .class-select-box select { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 15px; color: #1e293b; background: white; }
+
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .card h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
     
     .date-click { font-size: 14px; color: #2563eb; cursor: pointer; text-decoration: underline; font-weight: normal; }
     .meal-content { line-height: 1.8; white-space: pre-line; font-size: 15px; }
-    
+    .calorie-info { font-size: 13px; color: #059669; font-weight: bold; margin-top: 8px; }
+
     .schedule-item { display: flex; padding: 8px 10px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #2563eb; margin-bottom: 8px; }
     .period { font-weight: bold; width: 60px; color: #2563eb; }
     .subject { font-weight: 500; }
     
-    .save-btn { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; width: 100%; }
-    .edit-input { width: 100%; padding: 6px; margin: 2px 0; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+    .edit-row { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
+    .edit-row label { font-size: 14px; font-weight: bold; width: 50px; color: #2563eb; }
+    .edit-input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    .btn-primary { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; margin-top: 8px; }
+    
     .day-selector { display: flex; gap: 5px; margin-bottom: 15px; }
     .day-btn { flex: 1; padding: 8px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; }
     .day-btn.active { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
+
+    /* 유틸리티 도구 양식 (제비뽑기, 자리배치) */
+    .tool-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; align-items: center; }
+    .tool-row input, .tool-row select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+    .draw-result { font-size: 20px; font-weight: bold; color: #dc2626; text-align: center; margin-top: 10px; min-height: 30px; }
+    
+    /* 자리배치 그리드 */
+    .seat-grid { display: grid; gap: 10px; margin-top: 15px; justify-content: center; }
+    .seat-box { background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; font-weight: bold; font-size: 14px; color: #1e293b; min-width: 45px; }
+    .seat-container { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .seat-pair { display: flex; gap: 4px; background: #e2e8f0; padding: 6px; border-radius: 8px; }
 
     /* 월간 급식 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
@@ -35,38 +52,29 @@
     .day-meal-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 12px; }
     .day-meal-box strong { color: #2563eb; display: block; margin-bottom: 4px; border-bottom: 1px solid #cbd5e1; padding-bottom: 2px; }
 
-    /* 하단 우측 관리자 버튼 */
-    .admin-fixed-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      padding: 8px 14px;
-      background: #ffffff;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 20px;
-      color: #475569;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      z-index: 999;
-      transition: all 0.2s;
-    }
-    .admin-fixed-btn:hover {
-      background: #f1f5f9;
-      border-color: #2563eb;
-      color: #2563eb;
-    }
+    /* 하단 관리자 버튼 */
+    .admin-fixed-btn { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 20px; color: #334155; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.12); z-index: 999; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>🏫 대전하기중학교</h1>
-    <div class="sub-title">3학년 3반 전용</div>
+    <div class="class-select-box">
+      <select id="gradeSelect" onchange="changeClass()">
+        <option value="1">1학년</option>
+        <option value="2">2학년</option>
+        <option value="3" selected>3학년</option>
+      </select>
+      <select id="classSelect" onchange="changeClass()">
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+        <option value="3" selected>3반</option>
+        <option value="4">4반</option>
+        <option value="5">5반</option>
+        <option value="6">6반</option>
+      </select>
+    </div>
   </header>
 
   <!-- 급식 카드 -->
@@ -76,6 +84,7 @@
       <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중... 📅</span>
     </h2>
     <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
+    <div id="calorieResult" class="calorie-info"></div>
   </div>
 
   <!-- 시간표 카드 -->
@@ -92,14 +101,46 @@
       <button class="day-btn" onclick="selectDay(5)">금</button>
     </div>
 
-    <!-- 게스트용 조회 화면 -->
     <div id="viewScheduleArea" class="schedule-list"></div>
 
-    <!-- 관리자용 수정 화면 -->
-    <div id="editScheduleArea" style="display: none;">
+    <div id="editScheduleArea" style="display: none; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+      <div style="font-weight: bold; color: #1e293b; margin-bottom: 10px; font-size: 15px;">✏️ 과목명 수정하기</div>
       <div id="inputForm"></div>
-      <button class="save-btn" onclick="saveSchedule()">시간표 저장하기</button>
+      <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
     </div>
+  </div>
+
+  <!-- 제비뽑기 카드 -->
+  <div class="card">
+    <h2>🎲 번호 제비뽑기</h2>
+    <div class="tool-row">
+      <label>전체 인원수:</label>
+      <input type="number" id="lotteryCount" value="25" min="1" max="50" style="width: 70px;">
+      <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
+    </div>
+    <div id="lotteryResult" class="draw-result"></div>
+  </div>
+
+  <!-- 랜덤 자리배치 카드 -->
+  <div class="card">
+    <h2>🪑 랜덤 자리배치</h2>
+    <div class="tool-row">
+      <label>학생 수:</label>
+      <input type="number" id="seatStudents" value="25" min="1" style="width: 60px;">
+      <label>줄 (가로x세로):</label>
+      <input type="number" id="seatCols" value="5" min="1" style="width: 50px;">
+      <span>x</span>
+      <input type="number" id="seatRows" value="5" min="1" style="width: 50px;">
+    </div>
+    <div class="tool-row">
+      <label>배치 방식:</label>
+      <select id="seatType">
+        <option value="pair">짝꿍 (2명씩)</option>
+        <option value="single">혼자 (개별)</option>
+      </select>
+      <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 배치하기</button>
+    </div>
+    <div id="seatDisplay"></div>
   </div>
 
   <!-- 월간 급식 모달 -->
@@ -113,7 +154,6 @@
     </div>
   </div>
 
-  <!-- 우측 하단 관리자 수정 버튼 -->
   <button class="admin-fixed-btn" onclick="toggleAdminMode()">⚙️ 시간표 수정</button>
 
   <script>
@@ -128,12 +168,28 @@
     const DD = String(today.getDate()).padStart(2, '0');
     const YYYYMM = `${YYYY}${MM}`;
 
-    let currentDay = today.getDay(); // 1:월 ~ 5:금
+    let currentDay = today.getDay();
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
 
-    const defaultSchedule = {
+    // 1~3학년 각 1~6반 시간표 데이터 구조 (비어있는 기본틀)
+    const defaultSchedules = {};
+    for (let g = 1; g <= 3; g++) {
+      defaultSchedules[g] = {};
+      for (let c = 1; c <= 6; c++) {
+        defaultSchedules[g][c] = {
+          1: ["", "", "", "", "", ""],
+          2: ["", "", "", "", "", "", ""],
+          3: ["", "", "", "", "", "", ""],
+          4: ["", "", "", "", "", ""],
+          5: ["", "", "", "", "", ""]
+        };
+      }
+    }
+
+    // 예시: 기존에 적으셨던 3학년 3반 시간표 유지
+    defaultSchedules[3][3] = {
       1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"],
       2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"],
       3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""],
@@ -141,9 +197,16 @@
       5: ["체육", "진직", "과학1", "수학", "과학2", "역사"]
     };
 
-    function getStoredSchedule() {
-      const stored = localStorage.getItem("hagi_3_3_schedule_v5");
-      return stored ? JSON.parse(stored) : defaultSchedule;
+    function getCurrentGradeClass() {
+      const g = document.getElementById("gradeSelect").value;
+      const c = document.getElementById("classSelect").value;
+      return { g, c };
+    }
+
+    function getStoredSchedule(g, c) {
+      const key = `hagi_${g}_${c}_schedule`;
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultSchedules[g][c];
     }
 
     window.onload = () => {
@@ -152,31 +215,41 @@
       selectDay(currentDay);
     };
 
-    // 오늘의 급식
+    function changeClass() {
+      selectDay(currentDay);
+    }
+
+    // 1. 급식 및 칼로리 불러오기
     async function fetchTodayMeal() {
       const mealDiv = document.getElementById("mealResult");
+      const calDiv = document.getElementById("calorieResult");
       const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YMD=${YYYY}${MM}${DD}`;
 
       try {
         const res = await fetch(url);
         const data = await res.json();
         if (data.mealServiceDietInfo) {
-          const rawDish = data.mealServiceDietInfo[1].row[0].DDISH_NM;
+          const row = data.mealServiceDietInfo[1].row[0];
+          const rawDish = row.DDISH_NM;
+          const calorie = row.CAL_INFO || "";
+          
           mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
+          calDiv.textContent = calorie ? `🔥 열량: ${calorie}` : "";
         } else {
           mealDiv.textContent = "오늘의 급식 정보가 없습니다. (주말/휴교일)";
+          calDiv.textContent = "";
         }
       } catch (err) {
         mealDiv.textContent = "급식 불러오기 실패";
+        calDiv.textContent = "";
       }
     }
 
-    // 이번 달 전체 급식
+    // 2. 월간 급식 모달
     async function openMealModal() {
       const modal = document.getElementById("mealModal");
       const grid = document.getElementById("monthlyMealGrid");
       document.getElementById("modalTitle").textContent = `${YYYY}년 ${Number(MM)}월 전체 급식표`;
-      
       modal.style.display = "flex";
       grid.innerHTML = "불러오는 중...";
 
@@ -185,27 +258,24 @@
       try {
         const res = await fetch(url);
         const data = await res.json();
-
         if (data.mealServiceDietInfo) {
-          const rows = data.mealServiceDietInfo[1].row;
-          const filteredRows = rows.filter(r => r.MLSV_YMD.startsWith(YYYYMM));
-
-          if (filteredRows.length > 0) {
-            grid.innerHTML = filteredRows.map(r => {
+          const rows = data.mealServiceDietInfo[1].row.filter(r => r.MLSV_YMD.startsWith(YYYYMM));
+          if (rows.length > 0) {
+            grid.innerHTML = rows.map(r => {
               const dayNum = r.MLSV_YMD.substring(6, 8);
               const dish = r.DDISH_NM.replace(/<br\/>/g, '<br/>').replace(/\([0-9.]+\)/g, '');
+              const cal = r.CAL_INFO ? `<div style="color:#059669; margin-top:2px;">${r.CAL_INFO}</div>` : '';
               return `
                 <div class="day-meal-box">
                   <strong>${Number(dayNum)}일</strong>
                   <div>${dish}</div>
+                  ${cal}
                 </div>
               `;
             }).join('');
           } else {
             grid.textContent = "이번 달 급식 데이터가 없습니다.";
           }
-        } else {
-          grid.textContent = "이번 달 급식 데이터가 없습니다.";
         }
       } catch (err) {
         grid.textContent = "월간 급식 정보를 불러오지 못했습니다.";
@@ -216,7 +286,7 @@
       document.getElementById("mealModal").style.display = "none";
     }
 
-    // 요일 선택
+    // 3. 시간표 조회 및 수정
     function selectDay(dayNum) {
       currentDay = dayNum;
       const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
@@ -226,11 +296,17 @@
         btn.classList.toggle("active", idx + 1 === dayNum);
       });
 
-      renderScheduleView();
+      const editArea = document.getElementById("editScheduleArea");
+      if (editArea.style.display === "block") {
+        renderScheduleForm();
+      } else {
+        renderScheduleView();
+      }
     }
 
     function renderScheduleView() {
-      const scheduleData = getStoredSchedule();
+      const { g, c } = getCurrentGradeClass();
+      const scheduleData = getStoredSchedule(g, c);
       const todayList = scheduleData[currentDay] || [];
       const viewDiv = document.getElementById("viewScheduleArea");
       const count = maxPeriods[currentDay];
@@ -247,11 +323,9 @@
           `;
         }
       }
-
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
     }
 
-    // 관리자 수정 모드
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
       const viewArea = document.getElementById("viewScheduleArea");
@@ -268,11 +342,13 @@
       } else {
         editArea.style.display = "none";
         viewArea.style.display = "block";
+        renderScheduleView();
       }
     }
 
     function renderScheduleForm() {
-      const scheduleData = getStoredSchedule();
+      const { g, c } = getCurrentGradeClass();
+      const scheduleData = getStoredSchedule(g, c);
       const todayList = scheduleData[currentDay] || [];
       const formDiv = document.getElementById("inputForm");
       const count = maxPeriods[currentDay];
@@ -280,9 +356,9 @@
       let html = "";
       for (let i = 0; i < count; i++) {
         html += `
-          <div>
-            <label style="font-size:12px; font-weight:bold;">${i + 1}교시</label>
-            <input type="text" class="edit-input" id="period_${i}" value="${todayList[i] || ''}" placeholder="과목명 입력">
+          <div class="edit-row">
+            <label>${i + 1}교시</label>
+            <input type="text" class="edit-input" id="period_${i}" value="${todayList[i] || ''}" placeholder="과목 입력">
           </div>
         `;
       }
@@ -290,7 +366,8 @@
     }
 
     function saveSchedule() {
-      const scheduleData = getStoredSchedule();
+      const { g, c } = getCurrentGradeClass();
+      const scheduleData = getStoredSchedule(g, c);
       const newList = [];
       const count = maxPeriods[currentDay];
 
@@ -299,12 +376,105 @@
       }
 
       scheduleData[currentDay] = newList;
-      localStorage.setItem("hagi_3_3_schedule_v5", JSON.stringify(scheduleData));
+      localStorage.setItem(`hagi_${g}_${c}_schedule`, JSON.stringify(scheduleData));
 
-      alert(`${currentDay}요일 (${count}교시) 시간표가 저장되었습니다!`);
+      alert(`${g}학년 ${c}반 ${currentDay}요일 시간표가 저장되었습니다!`);
       document.getElementById("editScheduleArea").style.display = "none";
       document.getElementById("viewScheduleArea").style.display = "block";
       renderScheduleView();
+    }
+
+    // 4. 번호 제비뽑기 기능
+    function runLottery() {
+      const total = parseInt(document.getElementById("lotteryCount").value);
+      const resDiv = document.getElementById("lotteryResult");
+      if (!total || total < 1) {
+        alert("올바른 인원수를 입력하세요.");
+        return;
+      }
+      resDiv.textContent = "추첨 중...";
+      setTimeout(() => {
+        const selected = Math.floor(Math.random() * total) + 1;
+        resDiv.textContent = `🎉 당첨: ${selected}번!`;
+      }, 300);
+    }
+
+    // 5. 랜덤 자리배치 기능
+    function generateSeats() {
+      const total = parseInt(document.getElementById("seatStudents").value);
+      const cols = parseInt(document.getElementById("seatCols").value);
+      const rows = parseInt(document.getElementById("seatRows").value);
+      const type = document.getElementById("seatType").value;
+      const display = document.getElementById("seatDisplay");
+
+      if (!total || total < 1) {
+        alert("학생 수를 올바르게 입력하세요.");
+        return;
+      }
+
+      // 1부터 total까지 번호 섞기
+      let numbers = Array.from({ length: total }, (_, i) => i + 1);
+      for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+      }
+
+      display.innerHTML = "";
+      let numIdx = 0;
+
+      if (type === "single") {
+        const grid = document.createElement("div");
+        grid.className = "seat-grid";
+        grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const box = document.createElement("div");
+            box.className = "seat-box";
+            if (numIdx < total) {
+              box.textContent = `${numbers[numIdx++]}번`;
+            } else {
+              box.textContent = "-";
+              box.style.opacity = "0.3";
+            }
+            grid.appendChild(box);
+          }
+        }
+        display.appendChild(grid);
+      } else {
+        // 짝꿍 (2명씩 배치)
+        const container = document.createElement("div");
+        container.className = "seat-container";
+
+        for (let r = 0; r < rows; r++) {
+          const rowDiv = document.createElement("div");
+          rowDiv.style.display = "flex";
+          rowDiv.style.gap = "12px";
+          rowDiv.style.marginBottom = "10px";
+          rowDiv.style.justifyContent = "center";
+          rowDiv.style.width = "100%";
+
+          for (let c = 0; c < Math.ceil(cols / 2); c++) {
+            const pair = document.createElement("div");
+            pair.className = "seat-pair";
+
+            for (let p = 0; p < 2; p++) {
+              const box = document.createElement("div");
+              box.className = "seat-box";
+              if (numIdx < total) {
+                box.textContent = `${numbers[numIdx++]}번`;
+              } else {
+                box.textContent = "-";
+                box.style.opacity = "0.3";
+              }
+              pair.appendChild(box);
+            }
+            rowDiv.appendChild(pair);
+          }
+          container.appendChild(rowDiv);
+        }
+        display.appendChild(container);
+      }
     }
   </script>
 </body>
