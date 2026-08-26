@@ -28,18 +28,42 @@
     
     .toggle-btn { font-size: 13px; color: #059669; cursor: pointer; font-weight: normal; }
 
-    /* 급식 날짜 조절 네비게이션 (양쪽 버튼 배치 & 세로 중앙 정렬) */
-    .meal-date-nav { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-    .meal-nav-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-weight: bold; color: #1e293b; user-select: none; display: inline-flex; align-items: center; justify-content: center; line-height: 1; font-size: 14px; }
-    .meal-nav-btn:hover { background: #059669; color: white; border-color: #059669; }
+    /* 급식 날짜 타이틀 */
+    .meal-date-title { text-align: center; margin-bottom: 10px; }
+    .date-click { font-size: 15px; color: #059669; cursor: pointer; text-decoration: underline; font-weight: bold; }
+
+    /* 급식 메뉴 + 양쪽 초록색 동그라미 버튼 레이아웃 */
+    .meal-content-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 150px; }
     
+    /* 초록색 동그라미 버튼 스타일 */
+    .meal-circle-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: #059669;
+      color: white;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .meal-circle-btn:hover { background-color: #047857; transform: scale(1.08); }
+    .meal-circle-btn:active { transform: scale(0.95); }
+
     /* 오늘 급식 복귀 버튼 (하단 오른쪽) */
     .meal-footer { text-align: right; margin-top: 15px; }
     .today-reset-btn { background: #059669; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }
     .today-reset-btn:hover { background: #047857; }
 
-    /* 급식 내용 글씨 크기 확대 및 중앙 정렬 */
-    .meal-content { line-height: 1.8; white-space: pre-line; font-size: 18px; font-weight: 600; text-align: center; padding: 12px 0; color: #1e293b; }
+    /* 급식 내용 글씨 크기 및 중앙 정렬 */
+    .meal-content { flex: 1; line-height: 1.8; white-space: pre-line; font-size: 18px; font-weight: 600; text-align: center; padding: 8px 0; color: #1e293b; }
     .calorie-info { font-size: 14px; color: #059669; font-weight: bold; margin-top: 4px; text-align: center; }
 
     /* D-day 카드 스타일 */
@@ -49,8 +73,6 @@
     .dday-count { font-size: 20px; font-weight: 800; color: #1e293b; }
     .dday-count.today { color: #dc2626; }
     .dday-date { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-
-    .date-click { font-size: 15px; color: #059669; cursor: pointer; text-decoration: underline; font-weight: bold; }
 
     /* 시간표 요소 */
     .schedule-item { display: flex; padding: 8px 10px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #059669; margin-bottom: 8px; }
@@ -145,15 +167,22 @@
           <span>급식</span>
         </h2>
         
-        <!-- 날짜 표시 영역 (좌우 화살표 버튼 배치) -->
-        <div class="meal-date-nav">
-          <button class="meal-nav-btn" onclick="changeMealDate(-1)">&lt;</button>
+        <!-- 날짜 표시 -->
+        <div class="meal-date-title">
           <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
-          <button class="meal-nav-btn" onclick="changeMealDate(1)">&gt;</button>
         </div>
 
-        <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
-        <div id="calorieResult" class="calorie-info"></div>
+        <!-- 급식 메뉴 양쪽에 초록색 동그라미 버튼 배치 -->
+        <div class="meal-content-row">
+          <button class="meal-circle-btn" onclick="changeMealDate(-1)">&lt;</button>
+          
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
+            <div id="calorieResult" class="calorie-info"></div>
+          </div>
+
+          <button class="meal-circle-btn" onclick="changeMealDate(1)">&gt;</button>
+        </div>
       </div>
       
       <!-- 하단 오른쪽 [오늘 급식 보기] 복귀 버튼 -->
