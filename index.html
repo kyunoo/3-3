@@ -28,12 +28,19 @@
     
     .toggle-btn { font-size: 13px; color: #059669; cursor: pointer; font-weight: normal; }
 
-    /* 급식 날짜 조절 네비게이션 스타일 */
-    .meal-date-nav { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #059669; font-weight: normal; }
-    .meal-nav-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-weight: bold; color: #1e293b; user-select: none; }
+    /* 급식 날짜 조절 네비게이션 (세로 중앙 정렬) */
+    .meal-date-nav { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #059669; font-weight: normal; }
+    .meal-nav-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-weight: bold; color: #1e293b; user-select: none; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
     .meal-nav-btn:hover { background: #059669; color: white; border-color: #059669; }
-    .today-reset-btn { background: #059669; color: white; border: none; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: bold; cursor: pointer; display: none; }
+    
+    /* 오늘 급식 복귀 버튼 (하단 오른쪽) */
+    .meal-footer { text-align: right; margin-top: 15px; }
+    .today-reset-btn { background: #059669; color: white; border: none; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; }
     .today-reset-btn:hover { background: #047857; }
+
+    /* 급식 내용 중앙 정렬 */
+    .meal-content { line-height: 1.8; white-space: pre-line; font-size: 15px; text-align: center; padding: 10px 0; }
+    .calorie-info { font-size: 13px; color: #059669; font-weight: bold; margin-top: 8px; text-align: center; }
 
     /* D-day 카드 스타일 */
     .dday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 5px; }
@@ -44,8 +51,6 @@
     .dday-date { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
     .date-click { font-size: 14px; color: #059669; cursor: pointer; text-decoration: underline; font-weight: normal; }
-    .meal-content { line-height: 1.8; white-space: pre-line; font-size: 15px; }
-    .calorie-info { font-size: 13px; color: #059669; font-weight: bold; margin-top: 8px; }
 
     /* 시간표 요소 */
     .schedule-item { display: flex; padding: 8px 10px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #059669; margin-bottom: 8px; }
@@ -134,20 +139,23 @@
     </div>
 
     <!-- 오른쪽: 급식 카드 -->
-    <div class="card">
-      <h2>
-        <div style="display: flex; align-items: center; gap: 8px;">
+    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <h2>
           <span>급식</span>
-          <button id="todayMealResetBtn" class="today-reset-btn" onclick="resetToTodayMeal()">오늘 급식</button>
-        </div>
-        <div class="meal-date-nav">
-          <button class="meal-nav-btn" onclick="changeMealDate(-1)">&lt;</button>
-          <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
-          <button class="meal-nav-btn" onclick="changeMealDate(1)">&gt;</button>
-        </div>
-      </h2>
-      <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
-      <div id="calorieResult" class="calorie-info"></div>
+          <div class="meal-date-nav">
+            <button class="meal-nav-btn" onclick="changeMealDate(-1)">&lt;</button>
+            <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
+            <button class="meal-nav-btn" onclick="changeMealDate(1)">&gt;</button>
+          </div>
+        </h2>
+        <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
+        <div id="calorieResult" class="calorie-info"></div>
+      </div>
+      <!-- 하단 오른쪽 [오늘 급식] 복귀 버튼 -->
+      <div class="meal-footer">
+        <button id="todayMealResetBtn" class="today-reset-btn" onclick="resetToTodayMeal()">오늘 급식 보기</button>
+      </div>
     </div>
   </div>
 
@@ -411,7 +419,6 @@
       return { g, c };
     }
 
-    // 저장된 시간표 로더 (7일 자동 리셋 제거 -> 상시 유지)
     function getStoredSchedule(g, c) {
       const key = `hagi_${g}_${c}_schedule`;
       const stored = localStorage.getItem(key);
