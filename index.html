@@ -3,18 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>시간표</title>
+  <title>시간표 & 급식 정보</title>
   <style>
+    /* 1. 흰색 배경 & 기본 설정 */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      max-width: 1000px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f4f6f9;
-      color: #333;
+      background-color: #ffffff;
+      color: #111111;
       position: relative;
       min-height: 100vh;
       box-sizing: border-box;
+    }
+
+    /* 2. 둥글둥글 사각형 & 연갈색 배경 / 갈색 테두리 */
+    .card {
+      background-color: #f7e7d3; /* 연갈색 */
+      border: 2px solid #8b5a2b; /* 갈색 테두리 */
+      border-radius: 18px; /* 둥글둥글 사각형 */
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(139, 90, 43, 0.1);
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
     }
 
     header {
@@ -24,45 +37,107 @@
       z-index: 1;
     }
 
-    /* 시계 크기 확대 */
+    /* 조건 2. 좌측 상단 작은 현재 시간 표시 */
     .current-time {
       position: absolute;
       left: 0;
       top: 0;
-      font-size: 26px;
-      font-weight: 800;
-      color: #1e293b;
-      background: #ffffff;
-      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #3d2314;
+      background: #f0d5b7;
+      border: 2px solid #8b5a2b;
+      padding: 6px 14px;
       border-radius: 20px;
-      border: 2px solid #cbd5e1;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s;
+    }
+    .current-time:hover {
+      transform: scale(1.05);
+    }
+
+    /* 조건 2. 전체 화면 꽉 채우는 시계 모달 (세로 90% 크기 매우 연한 반투명 회색) */
+    .clock-fullscreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    .clock-fullscreen-text {
+      font-size: 25vw; /* 화면 비율에 맞춘 거대한 세로형 크기 */
+      font-weight: 900;
+      color: rgba(0, 0, 0, 0.08); /* 두껍고 매우 연한 반투명 회색 */
+      writing-mode: vertical-rl; /* 세로로 긴 글씨 */
+      text-orientation: upright;
+      letter-spacing: -1vw;
+      line-height: 1;
+      height: 90vh; /* 세로 90% 채움 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
       user-select: none;
     }
 
-    h1 {
-      color: #1a365d;
-      margin-bottom: 10px;
+    /* 조건 4. 맨 위 가운데 D-Day 큰 글씨 및 레이아웃 */
+    .header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
       margin-top: 10px;
     }
-    
+    .main-dday {
+      font-size: 28px;
+      font-weight: 900;
+      color: #3d2314;
+    }
+    .main-dday-sub {
+      font-size: 16px;
+      color: #8b5a2b;
+      margin-left: 8px;
+      font-weight: bold;
+    }
+
+    /* 조건 5. 세로로 작은 전체 D-day 목록 */
+    .dday-list-small {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #5c3a1e;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid #d4b28c;
+    }
+
     .class-select-box {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 15px;
+      margin-top: 5px;
     }
-
     .class-select-box select {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 2px solid #8b5a2b;
       font-weight: bold;
       font-size: 15px;
-      color: #1e293b;
-      background: white;
+      color: #3d2314;
+      background: #ffffff;
+      cursor: pointer;
     }
 
+    /* 조건 1. 16:9 스크린 기준 양옆 배치 (왼쪽: 시간표 / 오른쪽: 급식정보) */
     .top-grid-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -71,7 +146,6 @@
       position: relative;
       z-index: 1;
     }
-
     @media (max-width: 768px) {
       .top-grid-container {
         grid-template-columns: 1fr;
@@ -83,64 +157,81 @@
       }
     }
 
-    .card {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .top-grid-container .card {
-      margin-bottom: 0;
-    }
-
     .card h2 {
       margin-top: 0;
-      color: #1e293b;
-      border-bottom: 2px solid #e2e8f0;
+      color: #3d2314;
+      border-bottom: 2px solid #8b5a2b;
       padding-bottom: 10px;
-      font-size: 18px;
+      font-size: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    
-    .toggle-btn {
-      font-size: 13px;
-      color: #059669;
+
+    /* 시간표 요소 */
+    .day-selector {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 15px;
+    }
+    .day-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1.5px solid #8b5a2b;
+      background: #ffffff;
+      border-radius: 8px;
       cursor: pointer;
-      font-weight: normal;
+      font-weight: bold;
+      color: #3d2314;
+    }
+    .day-btn.active {
+      background: #8b5a2b;
+      color: #ffffff;
     }
 
+    .schedule-item {
+      display: flex;
+      padding: 10px 12px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      border-left: 5px solid #8b5a2b;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .period {
+      font-weight: bold;
+      width: 70px;
+      color: #8b5a2b;
+    }
+    .subject {
+      font-weight: 600;
+      color: #111111;
+    }
+
+    /* 급식 영역 관련 */
     .meal-date-title {
       text-align: center;
       margin-bottom: 10px;
     }
-
     .date-click {
-      font-size: 15px;
-      color: #059669;
+      font-size: 16px;
+      color: #8b5a2b;
       cursor: pointer;
       text-decoration: underline;
       font-weight: bold;
     }
-
     .meal-content-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      min-height: 150px;
+      min-height: 180px;
     }
-    
     .meal-circle-btn {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background-color: #059669;
+      background-color: #8b5a2b;
       color: white;
       border: none;
       font-size: 18px;
@@ -150,39 +241,10 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
-      transition: all 0.2s ease;
       user-select: none;
     }
-
     .meal-circle-btn:hover {
-      background-color: #047857;
-      transform: scale(1.08);
-    }
-
-    .meal-circle-btn:active {
-      transform: scale(0.95);
-    }
-
-    .meal-footer {
-      text-align: right;
-      margin-top: 15px;
-    }
-
-    .today-reset-btn {
-      background: #059669;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      display: none;
-    }
-
-    .today-reset-btn:hover {
-      background: #047857;
+      background-color: #6a421f;
     }
 
     .meal-content {
@@ -190,163 +252,36 @@
       line-height: 1.8;
       white-space: pre-line;
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
       padding: 8px 0;
-      color: #1e293b;
+      color: #111111;
     }
-
     .calorie-info {
       font-size: 14px;
-      color: #059669;
+      color: #8b5a2b;
       font-weight: bold;
       margin-top: 4px;
       text-align: center;
     }
 
-    .dday-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 5px;
+    .meal-footer {
+      text-align: right;
+      margin-top: 15px;
     }
-
-    .dday-box {
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 12px 10px;
-      text-align: center;
-    }
-
-    .dday-title {
-      font-size: 13px;
-      color: #64748b;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .dday-count {
-      font-size: 20px;
-      font-weight: 800;
-      color: #1e293b;
-    }
-
-    .dday-count.today {
-      color: #dc2626;
-    }
-
-    .dday-date {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 2px;
-    }
-
-    .schedule-item {
-      display: flex;
-      padding: 8px 10px;
-      background-color: #f8fafc;
-      border-radius: 6px;
-      border-left: 4px solid #059669;
-      margin-bottom: 8px;
-    }
-
-    .period {
-      font-weight: bold;
-      width: 60px;
-      color: #059669;
-    }
-
-    .subject {
-      font-weight: 500;
-    }
-    
-    .edit-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-      gap: 10px;
-    }
-
-    .edit-row label {
-      font-size: 14px;
-      font-weight: bold;
-      width: 50px;
-      color: #059669;
-    }
-
-    .edit-input {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    
-    .btn-primary {
-      background: #059669;
+    .today-reset-btn {
+      background: #8b5a2b;
       color: white;
       border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: bold;
       cursor: pointer;
-      font-weight: bold;
-      width: 100%;
-      font-size: 14px;
-      margin-top: 8px;
+      display: none;
     }
 
-    .btn-primary:hover {
-      background: #047857;
-    }
-    
-    .day-selector {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 15px;
-    }
-
-    .day-btn {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid #cbd5e1;
-      background: #fff;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .day-btn.active {
-      background: #059669;
-      color: white;
-      border-color: #059669;
-      font-weight: bold;
-    }
-
-    .tool-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 10px;
-      align-items: center;
-    }
-
-    .tool-row input, .tool-row select {
-      padding: 6px 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .draw-result {
-      font-size: 20px;
-      font-weight: bold;
-      color: #dc2626;
-      text-align: center;
-      margin-top: 10px;
-      min-height: 30px;
-    }
-
+    /* 모달 */
     .modal {
       display: none;
       position: fixed;
@@ -359,126 +294,107 @@
       align-items: center;
       z-index: 1000;
     }
-
     .modal-content {
       background: white;
       padding: 20px;
-      border-radius: 12px;
+      border-radius: 16px;
       width: 90%;
       max-width: 700px;
       max-height: 80vh;
       overflow-y: auto;
+      border: 2px solid #8b5a2b;
     }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-
     .close-btn {
       font-size: 24px;
       cursor: pointer;
       border: none;
       background: none;
-      color: #64748b;
+      color: #8b5a2b;
     }
-
     .monthly-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 10px;
     }
-
     .day-meal-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
+      background: #f7e7d3;
+      border: 1px solid #8b5a2b;
+      border-radius: 8px;
       padding: 8px;
       font-size: 12px;
     }
 
-    .day-meal-box strong {
-      color: #059669;
-      display: block;
-      margin-bottom: 4px;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 2px;
-    }
-
+    /* 푸터 */
     footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-top: 40px;
       padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
-      flex-wrap: wrap;
-      gap: 10px;
+      border-top: 2px solid #e8c6a0;
       position: relative;
       z-index: 1;
     }
-
-    /* 맨 밑 제작자 글씨 크기를 키움 (14px, bold) */
     .footer-credits {
       font-size: 14px;
       font-weight: 600;
-      color: #475569;
-      line-height: 1.4;
+      color: #5c3a1e;
     }
-
-    .footer-credits a {
-      color: #2563eb;
-      text-decoration: none;
-    }
-
     .admin-bottom-btn {
-      padding: 8px 14px;
+      padding: 8px 16px;
       background: #ffffff;
-      border: 1.5px solid #cbd5e1;
+      border: 2px solid #8b5a2b;
       border-radius: 20px;
-      color: #334155;
+      color: #3d2314;
       font-size: 13px;
       font-weight: bold;
       cursor: pointer;
-    }
-
-    .admin-bottom-btn:hover {
-      background: #f1f5f9;
-      border-color: #2563eb;
-      color: #2563eb;
     }
   </style>
 </head>
 <body>
 
+  <!-- 조건 2. 전체 화면 확대 시계 (클릭 시 종료) -->
+  <div id="clockModal" class="clock-fullscreen" onclick="toggleClockFullscreen()">
+    <div id="clockFullscreenText" class="clock-fullscreen-text">00:00:00</div>
+  </div>
+
   <header>
-    <div id="clockDisplay" class="current-time">00:00:00</div>
-    <h1>대전하기중학교</h1>
-    <div class="class-select-box">
-      <select id="gradeSelect" onchange="changeClass()">
-        <option value="1">1학년</option>
-        <option value="2">2학년</option>
-        <option value="3" selected>3학년</option>
-      </select>
-      <select id="classSelect" onchange="changeClass()">
-        <option value="1">1반</option>
-        <option value="2">2반</option>
-        <option value="3" selected>3반</option>
-        <option value="4">4반</option>
-        <option value="5">5반</option>
-        <option value="6">6반</option>
-      </select>
+    <!-- 조건 2. 좌측 상단 조그마한 시계 -->
+    <div id="clockDisplay" class="current-time" onclick="toggleClockFullscreen()">00:00:00</div>
+
+    <div class="header-center">
+      <!-- 조건 4. 맨 위 가운데 가장 가까운 D-Day 크게 표시 -->
+      <div id="nearestDday" class="main-dday">D-Day 불러오는 중...</div>
+
+      <!-- 조건 5. 아래에 세로로 작게 전체 D-Day 표시 -->
+      <div id="allDdayList" class="dday-list-small"></div>
+
+      <!-- 조건 4. 학년 / 반 선택란 -->
+      <div class="class-select-box">
+        <select id="gradeSelect" onchange="changeClass()">
+          <option value="1">1학년</option>
+          <option value="2">2학년</option>
+          <option value="3" selected>3학년</option>
+        </select>
+        <select id="classSelect" onchange="changeClass()">
+          <option value="1">1반</option>
+          <option value="2">2반</option>
+          <option value="3" selected>3반</option>
+          <option value="4">4반</option>
+          <option value="5">5반</option>
+          <option value="6">6반</option>
+        </select>
+      </div>
     </div>
   </header>
 
+  <!-- 조건 1. 16:9 가로 스크린 기준 양 옆 배치 (시간표 왼쪽 / 급식정보 오른쪽) -->
   <div class="top-grid-container">
+    <!-- 왼쪽: 시간표 카드 -->
     <div class="card">
       <h2>
-        <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
+        <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #8b5a2b;"></span></span>
       </h2>
 
       <div class="day-selector">
@@ -489,20 +405,19 @@
         <button class="day-btn" onclick="selectDay(5)">금</button>
       </div>
 
-      <div id="viewScheduleArea" class="schedule-list"></div>
+      <div id="viewScheduleArea"></div>
 
-      <div id="editScheduleArea" style="display: none; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
-        <div style="font-weight: bold; color: #1e293b; margin-bottom: 10px; font-size: 15px;">과목명 수정하기</div>
+      <div id="editScheduleArea" style="display: none; background: #ffffff; padding: 15px; border-radius: 10px; border: 2px dashed #8b5a2b; margin-top: 10px;">
+        <div style="font-weight: bold; color: #3d2314; margin-bottom: 10px; font-size: 15px;">과목명 수정하기</div>
         <div id="inputForm"></div>
-        <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
+        <button class="admin-bottom-btn" style="width: 100%; margin-top: 10px;" onclick="saveSchedule()">수정사항 저장하기</button>
       </div>
     </div>
 
+    <!-- 오른쪽: 급식 정보 카드 -->
     <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
       <div>
-        <h2>
-          <span>급식</span>
-        </h2>
+        <h2><span>급식 정보</span></h2>
         
         <div class="meal-date-title">
           <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
@@ -526,28 +441,22 @@
     </div>
   </div>
 
+  <!-- 번호 제비뽑기 -->
   <div class="card">
     <h2>번호 제비뽑기</h2>
-    <div class="tool-row">
-      <label>전체 인원수:</label>
-      <input type="number" id="lotteryCount" value="25" min="1" max="50" style="width: 70px;">
-      <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <label style="font-weight: bold; color: #3d2314;">전체 인원수:</label>
+      <input type="number" id="lotteryCount" value="25" min="1" max="50" style="padding: 6px; border: 1.5px solid #8b5a2b; border-radius: 6px; width: 70px;">
+      <button class="admin-bottom-btn" onclick="runLottery()">추첨하기</button>
     </div>
-    <div id="lotteryResult" class="draw-result"></div>
+    <div id="lotteryResult" style="font-size: 20px; font-weight: bold; color: #d9534f; text-align: center; margin-top: 10px; min-height: 30px;"></div>
   </div>
 
-  <div class="card">
-    <h2>
-      <span>주요 학사일정 D-Day</span>
-      <span class="toggle-btn" id="ddayToggleBtn" onclick="toggleDday()">[접기]</span>
-    </h2>
-    <div id="ddayContainer" class="dday-grid"></div>
-  </div>
-
+  <!-- 월간 급식 모달 -->
   <div id="mealModal" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modalTitle" style="margin:0;">이번 달 전체 급식표</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #8b5a2b; padding-bottom: 10px; margin-bottom: 15px;">
+        <h3 id="modalTitle" style="margin:0; color: #3d2314;">이번 달 전체 급식표</h3>
         <button class="close-btn" onclick="closeMealModal()">&times;</button>
       </div>
       <div id="monthlyMealGrid" class="monthly-grid">급식표를 불러오는 중...</div>
@@ -556,13 +465,12 @@
 
   <footer>
     <div class="footer-credits">
-      제작자: 박현우 | <a href="mailto:hwpark719@gmail.com">hwpark719@gmail.com</a>
+      제작자: 박현우 | <a href="mailto:hwpark719@gmail.com" style="color: #8b5a2b;">hwpark719@gmail.com</a>
     </div>
     <button class="admin-bottom-btn" onclick="toggleAdminMode()">시간표 수정</button>
   </footer>
 
   <script>
-    // 나이스 API 사용
     const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
@@ -570,23 +478,35 @@
     const today = new Date();
     let currentMealDate = new Date();
 
-    // 주말엔 그냥 월요일로 보여주기
     let currentDay = today.getDay();
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
-    // 시계 1초마다 갱신하는 거
+    // 시계 업데이트 기능
     function updateClock() {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById("clockDisplay").textContent = `${hours}:${minutes}:${seconds}`;
+      const timeStr = `${hours}:${minutes}:${seconds}`;
+      
+      document.getElementById("clockDisplay").textContent = timeStr;
+      document.getElementById("clockFullscreenText").textContent = timeStr;
     }
 
-    // 시험이랑 학사일정 계산용
+    // 조건 2. 시계 풀스크린 토글
+    function toggleClockFullscreen() {
+      const modal = document.getElementById("clockModal");
+      if (modal.style.display === "flex") {
+        modal.style.display = "none";
+      } else {
+        modal.style.display = "flex";
+      }
+    }
+
+    // 조건 4 & 5. D-Day 처리 (가장 가까운 D-Day 상단 표기 & 전체 세로 목록 표기)
     const events = [
       { name: "중간고사", date: "2026-09-22" },
       { name: "체육대회", date: "2026-10-08" },
@@ -597,186 +517,68 @@
       { name: "겨울방학", date: "2027-01-06" }
     ];
 
-    // 디데이 화면에 띄우기
     function renderDday() {
-      const container = document.getElementById("ddayContainer");
+      const nearestDiv = document.getElementById("nearestDday");
+      const listDiv = document.getElementById("allDdayList");
       const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      let html = "";
+
+      let upcomingEvents = [];
+
       events.forEach(evt => {
         const targetDate = new Date(evt.date);
-        const diffTime = targetDate - todayDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
+        const diffDays = Math.floor((targetDate - todayDate) / (1000 * 60 * 60 * 24));
         if (diffDays >= 0) {
-          let countText = "";
-          let isTodayClass = "";
-          if (diffDays === 0) {
-            countText = "D-DAY";
-            isTodayClass = "today";
-          } else {
-            countText = `D-${diffDays}`;
-          }
-
-          html += `
-            <div class="dday-box">
-              <div class="dday-title">${evt.name}</div>
-              <div class="dday-count ${isTodayClass}">${countText}</div>
-              <div class="dday-date">${evt.date}</div>
-            </div>
-          `;
+          upcomingEvents.push({ ...evt, diffDays });
         }
       });
 
-      container.innerHTML = html || "<div style='color:#888; text-align:center; grid-column: 1/-1;'>남은 일정이 없습니다.</div>";
-    }
+      if (upcomingEvents.length > 0) {
+        // 일정이 가까운 순으로 정렬
+        upcomingEvents.sort((a, b) => a.diffDays - b.diffDays);
 
-    // 디데이 접었다 폈다 하는 거
-    function toggleDday() {
-      const container = document.getElementById("ddayContainer");
-      const btn = document.getElementById("ddayToggleBtn");
-      if (container.style.display === "none") {
-        container.style.display = "grid";
-        btn.textContent = "[접기]";
+        // 가장 가까운 디데이 1개
+        const first = upcomingEvents[0];
+        const firstText = first.diffDays === 0 ? "D-DAY" : `D-${first.diffDays}`;
+        nearestDiv.innerHTML = `${first.name} <span class="main-dday-sub">${firstText}</span>`;
+
+        // 조건 5. 세로로 작게 전체 디데이 리스트
+        let listHtml = "";
+        upcomingEvents.forEach(evt => {
+          const text = evt.diffDays === 0 ? "D-DAY" : `D-${evt.diffDays}`;
+          listHtml += `<div>${evt.name} (${evt.date}) : <strong>${text}</strong></div>`;
+        });
+        listDiv.innerHTML = listHtml;
       } else {
-        container.style.display = "none";
-        btn.textContent = "[펼치기]";
+        nearestDiv.textContent = "남은 학사일정이 없습니다.";
+        listDiv.innerHTML = "";
       }
     }
 
-    // 학교 기본 시간표 세팅
+    // 기본 시간표 세팅
     const defaultSchedules = {
       1: {
-        1: {
-          1: ["사회1", "수학1", "도덕", "영어", "음악", "국어1"],
-          2: ["미술", "과학1", "체육", "영어", "국어1", "기가", "사회1"],
-          3: ["과학1", "국어1", "A_스포츠", "체육", "기가", "영회", ""],
-          4: ["한문", "국어2", "체육", "사회2", "수학2", "수학1"],
-          5: ["과학2", "수학1", "도덕", "음악", "기가", "국어2"]
-        },
-        2: {
-          1: ["한문", "과학2", "국어1", "체육", "기가", "음악"],
-          2: ["수학1", "국어1", "수학2", "과학1", "체육", "사회1", "영회"],
-          3: ["기가", "영어", "A_스포츠", "도덕", "수학1", "국어1"],
-          4: ["수학1", "음악", "사회1", "기가", "국어2", "과학1"],
-          5: ["미술", "체육", "국어2", "사회2", "영어", "도덕"]
-        },
-        3: {
-          1: ["음악", "체육", "수학1", "국어1", "과학2", "과학1"],
-          2: ["영어", "B_스포츠", "기가", "사회1", "수학1", "도덕", "국어1"],
-          3: ["영어", "사회1", "체육", "수학1", "국어2", "기가"],
-          4: ["과학1", "체육", "영회", "도덕", "음악", "국어2"],
-          5: ["기가", "미술", "수학1", "국어1", "한문", "사회2"]
-        },
-        4: {
-          1: ["영어", "기가", "음악", "국어2", "체육", "도덕"],
-          2: ["체육", "B_스포츠", "수학1", "국어1", "영회", "과학1", "도덕"],
-          3: ["수학1", "기가", "사회1", "사회2", "국어1", "과학1"],
-          4: ["음악", "영어", "과학2", "수학1", "사회2", "국어1"],
-          5: ["수학1", "기가", "한문", "체육", "국어2", "미술"]
-        },
-        5: {
-          1: ["수학2", "국어1", "과학1", "과학2", "수학1", "체육"],
-          2: ["국어1", "도덕", "음악", "음악", "한문", "체육", "기가"],
-          3: ["C_스포츠", "수학1", "국어2", "영회", "사회1", "사회2"],
-          4: ["도덕", "국어1", "사회2", "체육", "기가", "영어"],
-          5: ["국어2", "과학1", "영어", "미술", "기가", "수학1"]
-        },
-        6: {
-          1: ["국어1", "도덕", "영어", "기가", "사회2", "수학1"],
-          2: ["음악", "음악", "사회2", "수학1", "수학2", "국어1", "과학1"],
-          3: ["C_스포츠", "국어1", "기가", "과학2", "체육", "사회1"],
-          4: ["기가", "한문", "수학1", "국어2", "영어", "체육"],
-          5: ["도덕", "영회", "체육", "과학1", "미술", "국어2"]
-        }
+        1: { 1: ["사회1", "수학1", "도덕", "영어", "음악", "국어1"], 2: ["미술", "과학1", "체육", "영어", "국어1", "기가", "사회1"], 3: ["과학1", "국어1", "A_스포츠", "체육", "기가", "영회", ""], 4: ["한문", "국어2", "체육", "사회2", "수학2", "수학1"], 5: ["과학2", "수학1", "도덕", "음악", "기가", "국어2"] },
+        2: { 1: ["한문", "과학2", "국어1", "체육", "기가", "음악"], 2: ["수학1", "국어1", "수학2", "과학1", "체육", "사회1", "영회"], 3: ["기가", "영어", "A_스포츠", "도덕", "수학1", "국어1"], 4: ["수학1", "음악", "사회1", "기가", "국어2", "과학1"], 5: ["미술", "체육", "국어2", "사회2", "영어", "도덕"] },
+        3: { 1: ["음악", "체육", "수학1", "국어1", "과학2", "과학1"], 2: ["영어", "B_스포츠", "기가", "사회1", "수학1", "도덕", "국어1"], 3: ["영어", "사회1", "체육", "수학1", "국어2", "기가"], 4: ["과학1", "체육", "영회", "도덕", "음악", "국어2"], 5: ["기가", "미술", "수학1", "국어1", "한문", "사회2"] },
+        4: { 1: ["영어", "기가", "음악", "국어2", "체육", "도덕"], 2: ["체육", "B_스포츠", "수학1", "국어1", "영회", "과학1", "도덕"], 3: ["수학1", "기가", "사회1", "사회2", "국어1", "과학1"], 4: ["음악", "영어", "과학2", "수학1", "사회2", "국어1"], 5: ["수학1", "기가", "한문", "체육", "국어2", "미술"] },
+        5: { 1: ["수학2", "국어1", "과학1", "과학2", "수학1", "체육"], 2: ["국어1", "도덕", "음악", "음악", "한문", "체육", "기가"], 3: ["C_스포츠", "수학1", "국어2", "영회", "사회1", "사회2"], 4: ["도덕", "국어1", "사회2", "체육", "기가", "영어"], 5: ["국어2", "과학1", "영어", "미술", "기가", "수학1"] },
+        6: { 1: ["국어1", "도덕", "영어", "기가", "사회2", "수학1"], 2: ["음악", "음악", "사회2", "수학1", "수학2", "국어1", "과학1"], 3: ["C_스포츠", "국어1", "기가", "과학2", "체육", "사회1"], 4: ["기가", "한문", "수학1", "국어2", "영어", "체육"], 5: ["도덕", "영회", "체육", "과학1", "미술", "국어2"] }
       },
       2: {
-        1: {
-          1: ["국어1", "영어", "과학1", "역사", "수학2", "기가"],
-          2: ["체육1", "미술", "국어1", "A_스포츠", "정보", "정보", "한문"],
-          3: ["한문", "체육1", "영어", "수학1", "역사", "과학2"],
-          4: ["역사", "수학2", "기가", "국어1", "진직", "과학1"],
-          5: ["영회", "수학2", "음악", "과학1", "체육2", "국어2"]
-        },
-        2: {
-          1: ["정보", "정보", "수학2", "한문", "역사", "체육1"],
-          2: ["영회", "국어1", "미술", "A_스포츠", "체육1", "역사", "과학1"],
-          3: ["국어1", "진직", "수학1", "영어", "과학1", "수학2"],
-          4: ["수학2", "과학1", "음악", "영어", "국어2", "기가"],
-          5: ["역사", "기가", "과학2", "국어1", "체육2", "한문"]
-        },
-        3: {
-          1: ["과학1", "수학2", "국어1", "정보", "정보", "한문"],
-          2: ["기가", "영어", "체육1", "한문", "미술", "수학2", "역사"],
-          3: ["진직", "역사", "기가", "B_스포츠", "국어1", "체육1"],
-          4: ["영회", "국어1", "체육1", "수학2", "과학1", "역사"],
-          5: ["국어2", "과학1", "영어", "수학1", "음악", "과학2"]
-        },
-        4: {
-          1: ["수학2", "역사", "기가", "수학1", "영어", "과학2"],
-          2: ["진직", "정보", "정보", "미술", "국어1", "과학1", "체육1"],
-          3: ["수학2", "과학1", "국어1", "B_스포츠", "음악", "영어"],
-          4: ["국어2", "영회", "과학1", "역사", "한문", "체육1"],
-          5: ["국어1", "한문", "수학2", "기가", "역사", "체육1"]
-        },
-        5: {
-          1: ["체육1", "기가", "영회", "수학2", "국어1", "과학1"],
-          2: ["역사", "진직", "C_스포츠", "과학1", "영어", "국어1", "기가"],
-          3: ["과학1", "수학2", "역사", "한문", "체육1", "미술"],
-          4: ["국어1", "정보", "정보", "과학2", "체육1", "한문"],
-          5: ["음악", "수학1", "국어2", "역사", "수학2", "영어"]
-        },
-        6: {
-          1: ["역사", "한문", "체육1", "과학1", "수학1", "국어1"],
-          2: ["과학1", "한문", "C_스포츠", "기가", "수학2", "국어2", "영어"],
-          3: ["체육1", "정보", "정보", "수학2", "미술", "국어1"],
-          4: ["기가", "체육1", "역사", "진직", "영회", "음악"],
-          5: ["과학1", "국어1", "역사", "영어", "과학2", "수학2"]
-        }
+        1: { 1: ["국어1", "영어", "과학1", "역사", "수학2", "기가"], 2: ["체육1", "미술", "국어1", "A_스포츠", "정보", "정보", "한문"], 3: ["한문", "체육1", "영어", "수학1", "역사", "과학2"], 4: ["역사", "수학2", "기가", "국어1", "진직", "과학1"], 5: ["영회", "수학2", "음악", "과학1", "체육2", "국어2"] },
+        2: { 1: ["정보", "정보", "수학2", "한문", "역사", "체육1"], 2: ["영회", "국어1", "미술", "A_스포츠", "체육1", "역사", "과학1"], 3: ["국어1", "진직", "수학1", "영어", "과학1", "수학2"], 4: ["수학2", "과학1", "음악", "영어", "국어2", "기가"], 5: ["역사", "기가", "과학2", "국어1", "체육2", "한문"] },
+        3: { 1: ["과학1", "수학2", "국어1", "정보", "정보", "한문"], 2: ["기가", "영어", "체육1", "한문", "미술", "수학2", "역사"], 3: ["진직", "역사", "기가", "B_스포츠", "국어1", "체육1"], 4: ["영회", "국어1", "체육1", "수학2", "과학1", "역사"], 5: ["국어2", "과학1", "영어", "수학1", "음악", "과학2"] },
+        4: { 1: ["수학2", "역사", "기가", "수학1", "영어", "과학2"], 2: ["진직", "정보", "정보", "미술", "국어1", "과학1", "체육1"], 3: ["수학2", "과학1", "국어1", "B_스포츠", "음악", "영어"], 4: ["국어2", "영회", "과학1", "역사", "한문", "체육1"], 5: ["국어1", "한문", "수학2", "기가", "역사", "체육1"] },
+        5: { 1: ["체육1", "기가", "영회", "수학2", "국어1", "과학1"], 2: ["역사", "진직", "C_스포츠", "과학1", "영어", "국어1", "기가"], 3: ["과학1", "수학2", "역사", "한문", "체육1", "미술"], 4: ["국어1", "정보", "정보", "과학2", "체육1", "한문"], 5: ["음악", "수학1", "국어2", "역사", "수학2", "영어"] },
+        6: { 1: ["역사", "한문", "체육1", "과학1", "수학1", "국어1"], 2: ["과학1", "한문", "C_스포츠", "기가", "수학2", "국어2", "영어"], 3: ["체육1", "정보", "정보", "수학2", "미술", "국어1"], 4: ["기가", "체육1", "역사", "진직", "영회", "음악"], 5: ["과학1", "국어1", "역사", "영어", "과학2", "수학2"] }
       },
       3: {
-        1: {
-          1: ["체육", "사회", "진직", "과학1", "영어A", "역사"],
-          2: ["A_스포츠", "영어A", "역사", "국어1", "기가", "음악", "수학"],
-          3: ["체육", "국어1", "사회", "과학1", "과학2", "도덕"],
-          4: ["국어2", "미술", "미술", "영어A", "수학", "기가"],
-          5: ["국어2", "수학", "체육", "도덕", "영회", "과학1"]
-        },
-        2: {
-          1: ["과학2", "수학", "영어A", "국어1", "역사", "기가"],
-          2: ["A_스포츠", "역사", "영회", "국어2", "과학1", "체육", "사회"],
-          3: ["도덕", "영어A", "체육", "음악", "과학1", "수학"],
-          4: ["사회", "도덕", "국어2", "과학1", "미술", "미술"],
-          5: ["진직", "영어A", "수학", "체육", "국어1", "기가"]
-        },
-        3: {
-          1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"],
-          2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"],
-          3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""],
-          4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"],
-          5: ["체육", "진직", "과학1", "수학", "과학2", "역사"]
-        },
-        4: {
-          1: ["국어2", "체육", "역사", "미술", "미술", "영회"],
-          2: ["국어2", "과학1", "수학", "체육", "B_스포츠", "사회", "영어A"],
-          3: ["음악", "과학1", "수학", "영어A", "도덕", "기가"],
-          4: ["체육", "기가", "국어1", "국어1", "도덕", "수학"],
-          5: ["과학1", "역사", "진직", "국어1", "사회", "영어A"]
-        },
-        5: {
-          1: ["기가", "진직", "사회", "체육", "국어2", "과학1"],
-          2: ["수학", "도덕", "도덕", "영어A", "음악", "미술", "미술"],
-          3: ["수학", "C_스포츠", "국어1", "체육", "영어A", "국어2"],
-          4: ["과학1", "체육", "수학", "역사", "과학2", "영어A"],
-          5: ["국어1", "사회", "기가", "역사", "과학1", "영회"]
-        },
-        6: {
-          1: ["미술", "미술", "국어1", "진직", "수학", "영어A"],
-          2: ["국어2", "사회", "체육", "기가", "도덕", "도덕", "과학1"],
-          3: ["영회", "C_스포츠", "음악", "과학2", "수학", "체육"],
-          4: ["역사", "영어A", "국어2", "기가", "과학1", "체육"],
-          5: ["사회", "과학1", "영어A", "국어1", "역사", "수학"]
-        }
+        1: { 1: ["체육", "사회", "진직", "과학1", "영어A", "역사"], 2: ["A_스포츠", "영어A", "역사", "국어1", "기가", "음악", "수학"], 3: ["체육", "국어1", "사회", "과학1", "과학2", "도덕"], 4: ["국어2", "미술", "미술", "영어A", "수학", "기가"], 5: ["국어2", "수학", "체육", "도덕", "영회", "과학1"] },
+        2: { 1: ["과학2", "수학", "영어A", "국어1", "역사", "기가"], 2: ["A_스포츠", "역사", "영회", "국어2", "과학1", "체육", "사회"], 3: ["도덕", "영어A", "체육", "음악", "과학1", "수학"], 4: ["사회", "도덕", "국어2", "과학1", "미술", "미술"], 5: ["진직", "영어A", "수학", "체육", "국어1", "기가"] },
+        3: { 1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"], 2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"], 3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""], 4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"], 5: ["체육", "진직", "과학1", "수학", "과학2", "역사"] },
+        4: { 1: ["국어2", "체육", "역사", "미술", "미술", "영회"], 2: ["국어2", "과학1", "수학", "체육", "B_스포츠", "사회", "영어A"], 3: ["음악", "과학1", "수학", "영어A", "도덕", "기가"], 4: ["체육", "기가", "국어1", "국어1", "도덕", "수학"], 5: ["과학1", "역사", "진직", "국어1", "사회", "영어A"] },
+        5: { 1: ["기가", "진직", "사회", "체육", "국어2", "과학1"], 2: ["수학", "도덕", "도덕", "영어A", "음악", "미술", "미술"], 3: ["수학", "C_스포츠", "국어1", "체육", "영어A", "국어2"], 4: ["과학1", "체육", "수학", "역사", "과학2", "영어A"], 5: ["국어1", "사회", "기가", "역사", "과학1", "영회"] },
+        6: { 1: ["미술", "미술", "국어1", "진직", "수학", "영어A"], 2: ["국어2", "사회", "체육", "기가", "도덕", "도덕", "과학1"], 3: ["영회", "C_스포츠", "음악", "과학2", "수학", "체육"], 4: ["역사", "영어A", "국어2", "기가", "과학1", "체육"], 5: ["사회", "과학1", "영어A", "국어1", "역사", "수학"] }
       }
     };
 
@@ -786,7 +588,6 @@
       return { g, c };
     }
 
-    // 수정해둔 시간표 불러오기 (수정한 거 없으면 기본 시간표로)
     function getStoredSchedule(g, c) {
       const key = `hagi_${g}_${c}_schedule`;
       const stored = localStorage.getItem(key);
@@ -805,19 +606,16 @@
       selectDay(currentDay);
     }
 
-    // 급식 날짜 꺾쇠로 넘기는 거
     function changeMealDate(offsetDays) {
       currentMealDate.setDate(currentMealDate.getDate() + offsetDays);
       fetchMealByDate(currentMealDate);
     }
 
-    // 오늘 급식으로 돌아가기 버튼
     function resetToTodayMeal() {
       currentMealDate = new Date();
       fetchMealByDate(currentMealDate);
     }
 
-    // 급식 API 가져오기
     async function fetchMealByDate(targetDate) {
       const mealDiv = document.getElementById("mealResult");
       const calDiv = document.getElementById("calorieResult");
@@ -836,12 +634,7 @@
         targetDate.getDate() === realToday.getDate()
       );
 
-      // 오늘 날짜면 '오늘 급식 보기' 버튼 숨김
-      if (isToday) {
-        resetBtn.style.display = "none";
-      } else {
-        resetBtn.style.display = "inline-block";
-      }
+      resetBtn.style.display = isToday ? "none" : "inline-block";
 
       const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
       const weekName = weekNames[targetDate.getDay()];
@@ -860,7 +653,6 @@
           const rawDish = row.DDISH_NM;
           const calorie = row.CAL_INFO || "";
           
-          // 알레르기 수치 글자 지우고 메뉴만 깔끔하게 나오게 바꿈
           mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
           calDiv.textContent = calorie ? `열량: ${calorie}` : "";
         } else {
@@ -873,7 +665,6 @@
       }
     }
 
-    // 날짜 눌렀을 때 나오는 한 달 급식 모달
     async function openMealModal() {
       const modal = document.getElementById("mealModal");
       const grid = document.getElementById("monthlyMealGrid");
@@ -897,10 +688,10 @@
             grid.innerHTML = rows.map(r => {
               const dayNum = r.MLSV_YMD.substring(6, 8);
               const dish = r.DDISH_NM.replace(/<br\/>/g, '<br/>').replace(/\([0-9.]+\)/g, '');
-              const cal = r.CAL_INFO ? `<div style="color:#059669; margin-top:2px;">${r.CAL_INFO}</div>` : '';
+              const cal = r.CAL_INFO ? `<div style="color:#8b5a2b; margin-top:2px;">${r.CAL_INFO}</div>` : '';
               return `
                 <div class="day-meal-box">
-                  <strong>${Number(dayNum)}일</strong>
+                  <strong style="color:#8b5a2b;">${Number(dayNum)}일</strong>
                   <div>${dish}</div>
                   ${cal}
                 </div>
@@ -921,7 +712,6 @@
       document.getElementById("mealModal").style.display = "none";
     }
 
-    // 월화수목금 요일 선택
     function selectDay(dayNum) {
       currentDay = dayNum;
       document.getElementById("selectedDayText").textContent = `(${dayNames[dayNum]} - ${maxPeriods[dayNum]}교시)`;
@@ -938,7 +728,6 @@
       }
     }
 
-    // 시간표 화면에 뿌려주는 거
     function renderScheduleView() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -961,7 +750,6 @@
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
     }
 
-    // 관리자 모드 버튼 누르면 수정 폼 켜지게 함
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
       const viewArea = document.getElementById("viewScheduleArea");
@@ -977,7 +765,6 @@
       }
     }
 
-    // 시간표 수정 입력 창 만들기
     function renderScheduleForm() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -988,16 +775,15 @@
       let html = "";
       for (let i = 0; i < count; i++) {
         html += `
-          <div class="edit-row">
-            <label>${i + 1}교시</label>
-            <input type="text" class="edit-input" id="period_${i}" value="${todayList[i] || ''}" placeholder="과목 입력">
+          <div style="display:flex; align-items:center; margin-bottom:8px; gap:10px;">
+            <label style="width:50px; font-weight:bold; color:#8b5a2b;">${i + 1}교시</label>
+            <input type="text" id="period_${i}" value="${todayList[i] || ''}" placeholder="과목 입력" style="flex:1; padding:8px; border:1px solid #8b5a2b; border-radius:6px;">
           </div>
         `;
       }
       formDiv.innerHTML = html;
     }
 
-    // 수정한 시간표 로컬 스토리지에 저장하기
     function saveSchedule() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -1017,7 +803,6 @@
       renderScheduleView();
     }
 
-    // 번호 추첨 뽑기
     function runLottery() {
       const total = parseInt(document.getElementById("lotteryCount").value);
       const resDiv = document.getElementById("lotteryResult");
