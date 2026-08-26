@@ -202,6 +202,7 @@
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
+    const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
     // 실시간 시계 업데이트
     function updateClock() {
@@ -231,7 +232,6 @@
       events.forEach(evt => {
         const targetDate = new Date(evt.date);
         const diffTime = targetDate - todayDate;
-        // D-day 1일 보정 계산
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
         if (diffDays >= 0) {
@@ -411,27 +411,11 @@
       return { g, c };
     }
 
-    // 1주일(7일) 자동 리셋 로직 적용된 시간표 로더
+    // 저장된 시간표 로더 (7일 자동 리셋 제거 -> 상시 유지)
     function getStoredSchedule(g, c) {
       const key = `hagi_${g}_${c}_schedule`;
-      const timeKey = `hagi_${g}_${c}_time`;
-      
       const stored = localStorage.getItem(key);
-      const storedTime = localStorage.getItem(timeKey);
-
-      if (stored && storedTime) {
-        const nowMs = new Date().getTime();
-        const savedMs = parseInt(storedTime, 10);
-        const diffDays = (nowMs - savedMs) / (1000 * 60 * 60 * 24);
-
-        if (diffDays >= 7) {
-          localStorage.removeItem(key);
-          localStorage.removeItem(timeKey);
-          return defaultSchedules[g][c];
-        }
-        return JSON.parse(stored);
-      }
-      return defaultSchedules[g][c];
+      return stored ? JSON.parse(stored) : defaultSchedules[g][c];
     }
 
     window.onload = () => {
@@ -561,7 +545,6 @@
     // 3. 시간표 조회 및 수정
     function selectDay(dayNum) {
       currentDay = dayNum;
-      const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
       document.getElementById("selectedDayText").textContent = `(${dayNames[dayNum]} - ${maxPeriods[dayNum]}교시)`;
       
       document.querySelectorAll(".day-btn").forEach((btn, idx) => {
@@ -598,7 +581,6 @@
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
     }
 
-    // 비밀번호 입력 없이 토글
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
       const viewArea = document.getElementById("viewScheduleArea");
@@ -645,9 +627,8 @@
 
       scheduleData[currentDay] = newList;
       localStorage.setItem(`hagi_${g}_${c}_schedule`, JSON.stringify(scheduleData));
-      localStorage.setItem(`hagi_${g}_${c}_time`, new Date().getTime().toString());
 
-      alert(`${g}학년 ${c}반 ${currentDay}요일 시간표가 저장되었습니다! (7일 후 초기화)`);
+      alert(`${g}학년 ${c}반 ${dayNames[currentDay]} 시간표가 저장되었습니다!`);
       document.getElementById("editScheduleArea").style.display = "none";
       document.getElementById("viewScheduleArea").style.display = "block";
       renderScheduleView();
