@@ -7,10 +7,9 @@
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background-color: #f4f6f9; color: #333; position: relative; min-height: 100vh; box-sizing: border-box; }
     
-    /* 헤더 및 실시간 시계 배치 (시계 클릭 가능) */
+    /* 헤더 및 실시간 시계 배치 */
     header { position: relative; text-align: center; margin-bottom: 25px; }
-    .current-time { position: absolute; left: 0; top: 0; font-size: 20px; font-weight: 800; color: #1e293b; background: #ffffff; padding: 8px 16px; border-radius: 20px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.06); cursor: pointer; user-select: none; }
-    .current-time:hover { background: #f8fafc; border-color: #059669; }
+    .current-time { position: absolute; left: 0; top: 0; font-size: 20px; font-weight: 800; color: #1e293b; background: #ffffff; padding: 8px 16px; border-radius: 20px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.06); user-select: none; }
     h1 { color: #1a365d; margin-bottom: 10px; margin-top: 10px; }
     
     .class-select-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
@@ -70,22 +69,6 @@
     .tool-row input, .tool-row select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
     .draw-result { font-size: 20px; font-weight: bold; color: #dc2626; text-align: center; margin-top: 10px; min-height: 30px; }
 
-    /* 2048 게임 스타일 */
-    #game2048Card { display: none; }
-    .g2048-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #bbada0; padding: 10px; border-radius: 8px; max-width: 320px; margin: 15px auto; touch-action: none; }
-    .g2048-cell { background: #ccc0b3; border-radius: 5px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: bold; color: #776e65; }
-    .g2048-cell[data-val="2"] { background: #eee4da; color: #776e65; }
-    .g2048-cell[data-val="4"] { background: #ede0c8; color: #776e65; }
-    .g2048-cell[data-val="8"] { background: #f2b179; color: #f9f6f2; }
-    .g2048-cell[data-val="16"] { background: #f59563; color: #f9f6f2; }
-    .g2048-cell[data-val="32"] { background: #f67c5f; color: #f9f6f2; }
-    .g2048-cell[data-val="64"] { background: #f65e3b; color: #f9f6f2; }
-    .g2048-cell[data-val="128"] { background: #edcf72; color: #f9f6f2; font-size: 18px; }
-    .g2048-cell[data-val="256"] { background: #edcc61; color: #f9f6f2; font-size: 18px; }
-    .g2048-cell[data-val="512"] { background: #edc850; color: #f9f6f2; font-size: 18px; }
-    .g2048-cell[data-val="1024"] { background: #edc53f; color: #f9f6f2; font-size: 16px; }
-    .g2048-cell[data-val="2048"] { background: #edc22e; color: #f9f6f2; font-size: 16px; }
-
     /* 월간 급식 모달 */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; }
@@ -106,8 +89,7 @@
 <body>
 
   <header>
-    <!-- 시계 누르면 2048 게임 토글 -->
-    <div id="clockDisplay" class="current-time" onclick="toggle2048Game()">00:00:00</div>
+    <div id="clockDisplay" class="current-time">00:00:00</div>
     <h1>대전하기중학교</h1>
     <div class="class-select-box">
       <select id="gradeSelect" onchange="changeClass()">
@@ -189,17 +171,6 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
-  <!-- 이스터에그: 2048 미니게임 카드 -->
-  <div class="card" id="game2048Card">
-    <h2>
-      <span>🎮 미니게임 2048</span>
-      <span style="font-size: 14px; color: #059669;">점수: <span id="gameScore">0</span></span>
-    </h2>
-    <div style="text-align: center; font-size: 12px; color: #64748b; margin-bottom: 5px;">키보드 방향키 또는 화면 스와이프로 타일을 합쳐보세요!</div>
-    <div id="g2048Board" class="g2048-board"></div>
-    <button class="btn-primary" style="margin-top: 10px;" onclick="init2048()">게임 새로 시작</button>
-  </div>
-
   <!-- 월간 급식 모달 -->
   <div id="mealModal" class="modal">
     <div class="modal-content">
@@ -223,7 +194,6 @@
     const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
-    const ADMIN_PW = "6158";
 
     const today = new Date();
     let currentMealDate = new Date(); // 현재 조회 중인 급식 날짜
@@ -261,7 +231,8 @@
       events.forEach(evt => {
         const targetDate = new Date(evt.date);
         const diffTime = targetDate - todayDate;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // D-day 1일 보정 계산
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
         if (diffDays >= 0) {
           let countText = "";
@@ -497,7 +468,6 @@
       const day = String(targetDate.getDate()).padStart(2, '0');
       const YYYYMMDD = `${year}${month}${day}`;
 
-      // 오늘 날짜와 현재 조회 중인 날짜 비교 (오늘이면 리셋 버튼 숨김, 다르면 표시)
       const realToday = new Date();
       const isToday = (
         targetDate.getFullYear() === realToday.getFullYear() &&
@@ -628,19 +598,15 @@
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
     }
 
+    // 비밀번호 입력 없이 토글
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
       const viewArea = document.getElementById("viewScheduleArea");
 
       if (editArea.style.display === "none") {
-        const pw = prompt("관리자 비밀번호를 입력하세요:");
-        if (pw === ADMIN_PW) {
-          editArea.style.display = "block";
-          viewArea.style.display = "none";
-          renderScheduleForm();
-        } else if (pw !== null) {
-          alert("비밀번호가 틀렸습니다.");
-        }
+        editArea.style.display = "block";
+        viewArea.style.display = "none";
+        renderScheduleForm();
       } else {
         editArea.style.display = "none";
         viewArea.style.display = "block";
@@ -701,139 +667,6 @@
         resDiv.textContent = `당첨!!: ${selected}번!`;
       }, 300);
     }
-
-    // 5. 이스터에그 2048 게임 토글
-    let board2048 = Array(4).fill().map(() => Array(4).fill(0));
-    let score2048 = 0;
-
-    function toggle2048Game() {
-      const card = document.getElementById("game2048Card");
-      if (card.style.display === "none" || card.style.display === "") {
-        card.style.display = "block";
-        init2048();
-        card.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        card.style.display = "none";
-      }
-    }
-
-    function init2048() {
-      board2048 = Array(4).fill().map(() => Array(4).fill(0));
-      score2048 = 0;
-      addRandomTile2048();
-      addRandomTile2048();
-      updateBoard2048();
-    }
-
-    function addRandomTile2048() {
-      let emptyCells = [];
-      for(let r=0; r<4; r++){
-        for(let c=0; c<4; c++){
-          if(board2048[r][c] === 0) emptyCells.push({r, c});
-        }
-      }
-      if(emptyCells.length > 0) {
-        let rand = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-        board2048[rand.r][rand.c] = Math.random() < 0.9 ? 2 : 4;
-      }
-    }
-
-    function updateBoard2048() {
-      const container = document.getElementById("g2048Board");
-      container.innerHTML = "";
-      document.getElementById("gameScore").textContent = score2048;
-
-      for(let r=0; r<4; r++){
-        for(let c=0; c<4; c++){
-          let val = board2048[r][c];
-          let cell = document.createElement("div");
-          cell.className = "g2048-cell";
-          if(val > 0) {
-            cell.textContent = val;
-            cell.setAttribute("data-val", val);
-          }
-          container.appendChild(cell);
-        }
-      }
-    }
-
-    function slide2048(row) {
-      let arr = row.filter(val => val);
-      for(let i=0; i<arr.length-1; i++){
-        if(arr[i] === arr[i+1]){
-          arr[i] *= 2;
-          score2048 += arr[i];
-          arr[i+1] = 0;
-        }
-      }
-      arr = arr.filter(val => val);
-      while(arr.length < 4) arr.push(0);
-      return arr;
-    }
-
-    function move2048(dir) {
-      let moved = false;
-      let prevBoard = JSON.stringify(board2048);
-
-      if(dir === 'left') {
-        for(let r=0; r<4; r++) board2048[r] = slide2048(board2048[r]);
-      } else if(dir === 'right') {
-        for(let r=0; r<4; r++) board2048[r] = slide2048(board2048[r].reverse()).reverse();
-      } else if(dir === 'up') {
-        for(let c=0; c<4; c++){
-          let col = [board2048[0][c], board2048[1][c], board2048[2][c], board2048[3][c]];
-          col = slide2048(col);
-          for(let r=0; r<4; r++) board2048[r][c] = col[r];
-        }
-      } else if(dir === 'down') {
-        for(let c=0; c<4; c++){
-          let col = [board2048[0][c], board2048[1][c], board2048[2][c], board2048[3][c]];
-          col = slide2048(col.reverse()).reverse();
-          for(let r=0; r<4; r++) board2048[r][c] = col[r];
-        }
-      }
-
-      if(prevBoard !== JSON.stringify(board2048)) {
-        addRandomTile2048();
-        updateBoard2048();
-      }
-    }
-
-    // 키보드 조작 이벤트
-    window.addEventListener("keydown", (e) => {
-      if(document.getElementById("game2048Card").style.display === "block") {
-        if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-          e.preventDefault();
-          if(e.key === "ArrowUp") move2048('up');
-          if(e.key === "ArrowDown") move2048('down');
-          if(e.key === "ArrowLeft") move2048('left');
-          if(e.key === "ArrowRight") move2048('right');
-        }
-      }
-    });
-
-    // 터치 모바일 스와이프 조작 이벤트
-    let touchStartX = 0, touchStartY = 0;
-    const boardElem = document.getElementById("g2048Board");
-
-    boardElem.addEventListener("touchstart", (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }, {passive: true});
-
-    boardElem.addEventListener("touchend", (e) => {
-      if(!touchStartX || !touchStartY) return;
-      let dx = e.changedTouches[0].clientX - touchStartX;
-      let dy = e.changedTouches[0].clientY - touchStartY;
-
-      if(Math.abs(dx) > Math.abs(dy)) {
-        if(dx > 30) move2048('right');
-        else if(dx < -30) move2048('left');
-      } else {
-        if(dy > 30) move2048('down');
-        else if(dy < -30) move2048('up');
-      }
-    }, {passive: true});
   </script>
 </body>
 </html>
