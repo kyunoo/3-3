@@ -17,22 +17,6 @@
       box-sizing: border-box;
     }
 
-    /* 화면 전체 연한 워터마크 배경 */
-    body::before {
-      content: "제작자 박현우";
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-25deg);
-      font-size: clamp(40px, 8vw, 90px);
-      font-weight: 900;
-      color: rgba(0, 0, 0, 0.08);
-      white-space: nowrap;
-      pointer-events: none;
-      z-index: 9999;
-      user-select: none;
-    }
-    
     header {
       position: relative;
       text-align: center;
@@ -40,18 +24,19 @@
       z-index: 1;
     }
 
+    /* 시계 크기 확대 */
     .current-time {
       position: absolute;
       left: 0;
       top: 0;
-      font-size: 20px;
+      font-size: 26px;
       font-weight: 800;
       color: #1e293b;
       background: #ffffff;
-      padding: 8px 16px;
+      padding: 10px 20px;
       border-radius: 20px;
-      border: 1.5px solid #cbd5e1;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+      border: 2px solid #cbd5e1;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
       user-select: none;
     }
 
@@ -99,7 +84,7 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.92);
+      background: #ffffff;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -437,9 +422,11 @@
       z-index: 1;
     }
 
+    /* 맨 밑 제작자 글씨 크기를 키움 (14px, bold) */
     .footer-credits {
-      font-size: 12px;
-      color: #64748b;
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
       line-height: 1.4;
     }
 
