@@ -24,7 +24,6 @@
       z-index: 1;
     }
 
-    /* 시계 크기 확대 */
     .current-time {
       position: absolute;
       left: 0;
@@ -40,12 +39,43 @@
       user-select: none;
     }
 
-    h1 {
-      color: #1a365d;
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
       margin-bottom: 10px;
       margin-top: 10px;
     }
-    
+
+    h1 {
+      color: #1a365d;
+      margin: 0;
+    }
+
+    /* 공지사항(필독) 버튼 */
+    .header-notice-btn {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 10px 20px;
+      background: #059669;
+      color: #ffffff;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(5, 150, 105, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .header-notice-btn:hover {
+      background: #047857;
+      transform: translateY(-50%) scale(1.06);
+    }
+
     .class-select-box {
       display: flex;
       justify-content: center;
@@ -81,6 +111,18 @@
         display: inline-block;
         margin-bottom: 10px;
       }
+      .title-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .header-notice-btn {
+        position: static;
+        transform: none;
+        margin-top: 5px;
+      }
+      .header-notice-btn:hover {
+        transform: scale(1.05);
+      }
     }
 
     .card {
@@ -113,6 +155,25 @@
       color: #059669;
       cursor: pointer;
       font-weight: normal;
+    }
+
+    /* 강조된 시간표 수정 버튼 스타일 */
+    .edit-schedule-btn {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffffff;
+      background-color: #059669;
+      border: none;
+      border-radius: 16px;
+      padding: 6px 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(5, 150, 105, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .edit-schedule-btn:hover {
+      background-color: #047857;
+      transform: scale(1.05);
     }
 
     .meal-date-title {
@@ -329,9 +390,10 @@
       gap: 10px;
       margin-bottom: 10px;
       align-items: center;
+      justify-content: center;
     }
 
-    .tool-row input, .tool-row select {
+    .tool-row input {
       padding: 6px 10px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
@@ -343,7 +405,7 @@
       font-weight: bold;
       color: #dc2626;
       text-align: center;
-      margin-top: 10px;
+      margin-top: 15px;
       min-height: 30px;
     }
 
@@ -422,7 +484,6 @@
       z-index: 1;
     }
 
-    /* 맨 밑 제작자 글씨 크기를 키움 (14px, bold) */
     .footer-credits {
       font-size: 14px;
       font-weight: 600;
@@ -435,7 +496,7 @@
       text-decoration: none;
     }
 
-    .admin-bottom-btn {
+    .footer-btn {
       padding: 8px 14px;
       background: #ffffff;
       border: 1.5px solid #cbd5e1;
@@ -446,10 +507,18 @@
       cursor: pointer;
     }
 
-    .admin-bottom-btn:hover {
+    .footer-btn:hover {
       background: #f1f5f9;
-      border-color: #2563eb;
-      color: #2563eb;
+      border-color: #059669;
+      color: #059669;
+    }
+
+    .notice-text-content {
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.8;
+      white-space: pre-line;
+      padding: 10px 5px;
     }
   </style>
 </head>
@@ -457,7 +526,10 @@
 
   <header>
     <div id="clockDisplay" class="current-time">00:00:00</div>
-    <h1>대전하기중학교</h1>
+    <div class="title-row">
+      <h1>대전하기중학교</h1>
+      <button class="header-notice-btn" onclick="openNoticeModal()">공지사항(필독)</button>
+    </div>
     <div class="class-select-box">
       <select id="gradeSelect" onchange="changeClass()">
         <option value="1">1학년</option>
@@ -479,6 +551,7 @@
     <div class="card">
       <h2>
         <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
+        <button class="edit-schedule-btn" onclick="toggleAdminMode()">시간표 수정</button>
       </h2>
 
       <div class="day-selector">
@@ -503,14 +576,14 @@
         <h2>
           <span>급식</span>
         </h2>
-        
+
         <div class="meal-date-title">
           <span class="date-click" onclick="openMealModal()" id="mealDateBtn">날짜 불러오는 중...</span>
         </div>
 
         <div class="meal-content-row">
           <button class="meal-circle-btn" onclick="changeMealDate(-1)">&lt;</button>
-          
+
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
             <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
             <div id="calorieResult" class="calorie-info"></div>
@@ -519,21 +592,11 @@
           <button class="meal-circle-btn" onclick="changeMealDate(1)">&gt;</button>
         </div>
       </div>
-      
+
       <div class="meal-footer">
         <button id="todayMealResetBtn" class="today-reset-btn" onclick="resetToTodayMeal()">오늘 급식 보기</button>
       </div>
     </div>
-  </div>
-
-  <div class="card">
-    <h2>번호 제비뽑기</h2>
-    <div class="tool-row">
-      <label>전체 인원수:</label>
-      <input type="number" id="lotteryCount" value="25" min="1" max="50" style="width: 70px;">
-      <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
-    </div>
-    <div id="lotteryResult" class="draw-result"></div>
   </div>
 
   <div class="card">
@@ -544,7 +607,8 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
-  <div id="mealModal" class="modal">
+  <!-- 급식 월간 모달 -->
+  <div id="mealModal" class="modal" onclick="closeModalOnBg(event, 'mealModal')">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modalTitle" style="margin:0;">이번 달 전체 급식표</h3>
@@ -554,15 +618,45 @@
     </div>
   </div>
 
+  <!-- 공지사항 모달 -->
+  <div id="noticeModal" class="modal" onclick="closeModalOnBg(event, 'noticeModal')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="margin:0; color: #1e293b;">공지사항(필독)</h3>
+        <button class="close-btn" onclick="closeNoticeModal()">&times;</button>
+      </div>
+      <div class="notice-text-content">기본 시간표에서 과목 변경이 생기면, 각 반 반장/부반장이나 친구들이 컴시간을 확인한 뒤 [시간표 수정] 버튼을 눌러주세요.
+
+수정한 시간표는 본인 핸드폰/컴퓨터 브라우저에만 저장되기 때문에, 내가 바꾼 시간표가 다른 기기에서 똑같이 바뀌지는 않는 점 참고해 주세요.
+
+아직 부족한게 많을 수 있습니다. 오류나 추가 기능은 개인톡이나 개인디엠으로 문의해주세요 감사합니다</div>
+    </div>
+  </div>
+
+  <!-- 제비뽑기 모달 -->
+  <div id="lotteryModal" class="modal" onclick="closeModalOnBg(event, 'lotteryModal')">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 style="margin:0; color: #1e293b;">번호 제비뽑기</h3>
+        <button class="close-btn" onclick="closeLotteryModal()">&times;</button>
+      </div>
+      <div class="tool-row">
+        <label style="font-weight: bold; color: #475569;">전체 인원수:</label>
+        <input type="number" id="lotteryCount" value="25" min="1" max="50" style="width: 70px;">
+        <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
+      </div>
+      <div id="lotteryResult" class="draw-result"></div>
+    </div>
+  </div>
+
   <footer>
     <div class="footer-credits">
       제작자: 박현우 | <a href="mailto:hwpark719@gmail.com">hwpark719@gmail.com</a>
     </div>
-    <button class="admin-bottom-btn" onclick="toggleAdminMode()">시간표 수정</button>
+    <button class="footer-btn" onclick="openLotteryModal()">제비뽑기</button>
   </footer>
 
   <script>
-    // 나이스 API 사용
     const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
@@ -570,14 +664,12 @@
     const today = new Date();
     let currentMealDate = new Date();
 
-    // 주말엔 그냥 월요일로 보여주기
     let currentDay = today.getDay();
     if (currentDay === 0 || currentDay === 6) currentDay = 1;
 
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
-    // 시계 1초마다 갱신하는 거
     function updateClock() {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
@@ -586,7 +678,6 @@
       document.getElementById("clockDisplay").textContent = `${hours}:${minutes}:${seconds}`;
     }
 
-    // 시험이랑 학사일정 계산용
     const events = [
       { name: "중간고사", date: "2026-09-22" },
       { name: "체육대회", date: "2026-10-08" },
@@ -597,17 +688,16 @@
       { name: "겨울방학", date: "2027-01-06" }
     ];
 
-    // 디데이 화면에 띄우기
     function renderDday() {
       const container = document.getElementById("ddayContainer");
       const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
+
       let html = "";
       events.forEach(evt => {
         const targetDate = new Date(evt.date);
         const diffTime = targetDate - todayDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays >= 0) {
           let countText = "";
           let isTodayClass = "";
@@ -631,7 +721,6 @@
       container.innerHTML = html || "<div style='color:#888; text-align:center; grid-column: 1/-1;'>남은 일정이 없습니다.</div>";
     }
 
-    // 디데이 접었다 폈다 하는 거
     function toggleDday() {
       const container = document.getElementById("ddayContainer");
       const btn = document.getElementById("ddayToggleBtn");
@@ -644,7 +733,6 @@
       }
     }
 
-    // 학교 기본 시간표 세팅
     const defaultSchedules = {
       1: {
         1: {
@@ -786,7 +874,6 @@
       return { g, c };
     }
 
-    // 수정해둔 시간표 불러오기 (수정한 거 없으면 기본 시간표로)
     function getStoredSchedule(g, c) {
       const key = `hagi_${g}_${c}_schedule`;
       const stored = localStorage.getItem(key);
@@ -805,19 +892,16 @@
       selectDay(currentDay);
     }
 
-    // 급식 날짜 꺾쇠로 넘기는 거
     function changeMealDate(offsetDays) {
       currentMealDate.setDate(currentMealDate.getDate() + offsetDays);
       fetchMealByDate(currentMealDate);
     }
 
-    // 오늘 급식으로 돌아가기 버튼
     function resetToTodayMeal() {
       currentMealDate = new Date();
       fetchMealByDate(currentMealDate);
     }
 
-    // 급식 API 가져오기
     async function fetchMealByDate(targetDate) {
       const mealDiv = document.getElementById("mealResult");
       const calDiv = document.getElementById("calorieResult");
@@ -836,7 +920,6 @@
         targetDate.getDate() === realToday.getDate()
       );
 
-      // 오늘 날짜면 '오늘 급식 보기' 버튼 숨김
       if (isToday) {
         resetBtn.style.display = "none";
       } else {
@@ -859,8 +942,7 @@
           const row = data.mealServiceDietInfo[1].row[0];
           const rawDish = row.DDISH_NM;
           const calorie = row.CAL_INFO || "";
-          
-          // 알레르기 수치 글자 지우고 메뉴만 깔끔하게 나오게 바꿈
+
           mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
           calDiv.textContent = calorie ? `열량: ${calorie}` : "";
         } else {
@@ -873,7 +955,6 @@
       }
     }
 
-    // 날짜 눌렀을 때 나오는 한 달 급식 모달
     async function openMealModal() {
       const modal = document.getElementById("mealModal");
       const grid = document.getElementById("monthlyMealGrid");
@@ -921,11 +1002,32 @@
       document.getElementById("mealModal").style.display = "none";
     }
 
-    // 월화수목금 요일 선택
+    function openNoticeModal() {
+      document.getElementById("noticeModal").style.display = "flex";
+    }
+
+    function closeNoticeModal() {
+      document.getElementById("noticeModal").style.display = "none";
+    }
+
+    function openLotteryModal() {
+      document.getElementById("lotteryModal").style.display = "flex";
+    }
+
+    function closeLotteryModal() {
+      document.getElementById("lotteryModal").style.display = "none";
+    }
+
+    function closeModalOnBg(e, modalId) {
+      if (e.target.id === modalId) {
+        document.getElementById(modalId).style.display = "none";
+      }
+    }
+
     function selectDay(dayNum) {
       currentDay = dayNum;
       document.getElementById("selectedDayText").textContent = `(${dayNames[dayNum]} - ${maxPeriods[dayNum]}교시)`;
-      
+
       document.querySelectorAll(".day-btn").forEach((btn, idx) => {
         btn.classList.toggle("active", idx + 1 === dayNum);
       });
@@ -938,7 +1040,6 @@
       }
     }
 
-    // 시간표 화면에 뿌려주는 거
     function renderScheduleView() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -961,7 +1062,6 @@
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
     }
 
-    // 관리자 모드 버튼 누르면 수정 폼 켜지게 함
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
       const viewArea = document.getElementById("viewScheduleArea");
@@ -977,7 +1077,6 @@
       }
     }
 
-    // 시간표 수정 입력 창 만들기
     function renderScheduleForm() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -997,7 +1096,6 @@
       formDiv.innerHTML = html;
     }
 
-    // 수정한 시간표 로컬 스토리지에 저장하기
     function saveSchedule() {
       const { g, c } = getCurrentGradeClass();
       const scheduleData = getStoredSchedule(g, c);
@@ -1017,20 +1115,34 @@
       renderScheduleView();
     }
 
-    // 번호 추첨 뽑기
-    function runLottery() {
-      const total = parseInt(document.getElementById("lotteryCount").value);
-      const resDiv = document.getElementById("lotteryResult");
-      if (!total || total < 1) {
-        alert("올바른 인원수를 입력하세요.");
-        return;
-      }
-      resDiv.textContent = "추첨 중...";
-      setTimeout(() => {
-        const selected = Math.floor(Math.random() * total) + 1;
-        resDiv.textContent = `당첨!!: ${selected}번!`;
-      }, 300);
+ function runLottery() {
+  const total = parseInt(document.getElementById("lotteryCount").value);
+  const resDiv = document.getElementById("lotteryResult");
+  if (!total || total < 1) {
+    alert("올바른 인원수를 입력하세요.");
+    return;
+  }
+
+  let count = 0;
+  resDiv.textContent = "추첨 중...";
+
+  // 0.2초(200ms)마다 "ㄷㄱ"을 덧붙이는 타이머
+  const intervalId = setInterval(() => {
+    count++;
+    let text = "추첨 중... ";
+    for (let i = 0; i < count; i++) {
+      text += "ㄷㄱ";
     }
+    resDiv.textContent = text;
+  }, 200);
+
+  // 5초(5000ms) 뒤에 타이머를 멈추고 랜덤 결과 출력
+  setTimeout(() => {
+    clearInterval(intervalId);
+    const selected = Math.floor(Math.random() * total) + 1;
+    resDiv.textContent = `당첨: ${selected}번!`;
+  }, 5000);
+}
   </script>
 </body>
 </html>
