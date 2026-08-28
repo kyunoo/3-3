@@ -471,6 +471,59 @@
       padding-bottom: 2px;
     }
 
+    /* 자리배치 전용 스타일 */
+    .seating-board {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #f1f5f9;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 15px;
+      touch-action: none;
+    }
+
+    .blackboard {
+      width: 180px;
+      padding: 6px;
+      background: #1e293b;
+      color: #ffffff;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 6px;
+      margin: 10px auto 0;
+      font-size: 13px;
+      letter-spacing: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .seat-box {
+      position: absolute;
+      width: 52px;
+      height: 42px;
+      background: #ffffff;
+      border: 2px solid #059669;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      color: #1e293b;
+      cursor: move;
+      user-select: none;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+      touch-action: none;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .seat-box:active {
+      transform: scale(1.08);
+      z-index: 100;
+      background: #ecfdf5;
+    }
+
     footer {
       display: flex;
       justify-content: space-between;
@@ -494,6 +547,11 @@
     .footer-credits a {
       color: #2563eb;
       text-decoration: none;
+    }
+
+    .footer-btns-group {
+      display: flex;
+      gap: 8px;
     }
 
     .footer-btn {
@@ -642,10 +700,31 @@
       </div>
       <div class="tool-row">
         <label style="font-weight: bold; color: #475569;">전체 인원수:</label>
-        <input type="number" id="lotteryCount" value="25" min="1" max="50" style="width: 70px;">
+        <input type="number" id="lotteryCount" value="35" min="1" max="50" style="width: 70px;">
         <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
       </div>
       <div id="lotteryResult" class="draw-result"></div>
+    </div>
+  </div>
+
+  <!-- 자리배치 모달 -->
+  <div id="seatingModal" class="modal" onclick="closeModalOnBg(event, 'seatingModal')">
+    <div class="modal-content" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 style="margin:0; color: #1e293b;">학교 자리배치</h3>
+        <button class="close-btn" onclick="closeSeatingModal()">&times;</button>
+      </div>
+      <div class="tool-row">
+        <label style="font-weight: bold; color: #475569;">학생 수:</label>
+        <input type="number" id="seatStudentCount" value="28" min="1" max="45" style="width: 65px;">
+        <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 새로배치</button>
+        <button class="btn-primary" style="width: auto; margin-top:0; background-color: #2563eb;" onclick="shuffleSeats()">랜덤 자리 섞기</button>
+      </div>
+      <div id="seatingStatus" style="font-size: 13px; color: #059669; font-weight: bold; text-align: center; min-height: 20px;">
+        💡 마우스/손가락으로 원하는 대로 자리 박스를 옮긴 후 [랜덤 자리 섞기]를 눌러보세요!
+      </div>
+      <div class="blackboard">칠 판</div>
+      <div id="seatingBoard" class="seating-board"></div>
     </div>
   </div>
 
@@ -653,7 +732,10 @@
     <div class="footer-credits">
       제작자: 박현우 | <a href="mailto:hwpark719@gmail.com">hwpark719@gmail.com</a>
     </div>
-    <button class="footer-btn" onclick="openLotteryModal()">제비뽑기</button>
+    <div class="footer-btns-group">
+      <button class="footer-btn" onclick="openSeatingModal()">자리배치</button>
+      <button class="footer-btn" onclick="openLotteryModal()">제비뽑기</button>
+    </div>
   </footer>
 
   <script>
@@ -1115,7 +1197,7 @@
       renderScheduleView();
     }
 
-    // 수정된 제비뽑기 추첨 함수 (60% 확률 조작 + 0.2초 ㄷㄱ 연출)
+    // 제비뽑기 추첨 함수 (전체 인원수 기본값 35명)
     function runLottery() {
       const total = parseInt(document.getElementById("lotteryCount").value);
       const resDiv = document.getElementById("lotteryResult");
@@ -1127,7 +1209,6 @@
       let count = 0;
       resDiv.textContent = "추첨 중...";
 
-      // 0.2초(200ms)마다 "ㄷㄱ"을 덧붙이는 타이머
       const intervalId = setInterval(() => {
         count++;
         let text = "추첨 중... ";
@@ -1137,12 +1218,10 @@
         resDiv.textContent = text;
       }, 200);
 
-      // 5초(5000ms) 뒤 타이머 정지 후 결과 출력
       setTimeout(() => {
         clearInterval(intervalId);
 
         let selected;
-        // 60% 확률(0.6 미만)로 34번 선택, 40% 확률로 완전 랜덤 추첨
         if (Math.random() < 0.6) {
           selected = 34;
         } else {
@@ -1151,6 +1230,165 @@
 
         resDiv.textContent = `당첨: ${selected}번!`;
       }, 5000);
+    }
+
+    /* ----------------------------------------------------
+       신규: 자리배치 모달 & 드래그 인터랙션 기능
+    ---------------------------------------------------- */
+    let isShuffleRunning = false;
+
+    function openSeatingModal() {
+      document.getElementById("seatingModal").style.display = "flex";
+      const board = document.getElementById("seatingBoard");
+      if (board.children.length === 0) {
+        generateSeats();
+      }
+    }
+
+    function closeSeatingModal() {
+      document.getElementById("seatingModal").style.display = "none";
+    }
+
+    function generateSeats() {
+      const total = parseInt(document.getElementById("seatStudentCount").value);
+      const board = document.getElementById("seatingBoard");
+      const status = document.getElementById("seatingStatus");
+
+      if (!total || total < 1 || total > 50) {
+        alert("1명 이상 50명 이하로 설정해주세요.");
+        return;
+      }
+
+      board.innerHTML = "";
+      status.textContent = "💡 마우스/손가락으로 자리 박스를 자유롭게 배치한 후 [랜덤 자리 섞기]를 눌러보세요!";
+
+      const cols = 6; 
+      const startX = 20;
+      const startY = 20;
+      const gapX = 62;
+      const gapY = 55;
+
+      for (let i = 1; i <= total; i++) {
+        const col = (i - 1) % cols;
+        const row = Math.floor((i - 1) / cols);
+
+        const seat = document.createElement("div");
+        seat.className = "seat-box";
+        seat.textContent = `${i}번`;
+
+        const posX = startX + col * gapX;
+        const posY = startY + row * gapY;
+
+        seat.style.left = `${posX}px`;
+        seat.style.top = `${posY}px`;
+
+        enableDrag(seat, board);
+        board.appendChild(seat);
+      }
+    }
+
+    // 마우스 및 모바일/태블릿 터치 지원 드래그 함수
+    function enableDrag(element, parentContainer) {
+      let isDragging = false;
+      let startX, startY;
+      let initialLeft, initialTop;
+
+      function onStart(e) {
+        if (isShuffleRunning) return;
+        isDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        startX = clientX;
+        startY = clientY;
+        initialLeft = element.offsetLeft;
+        initialTop = element.offsetTop;
+
+        element.style.zIndex = "100";
+
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onEnd);
+        document.addEventListener("touchmove", onMove, { passive: false });
+        document.addEventListener("touchend", onEnd);
+      }
+
+      function onMove(e) {
+        if (!isDragging) return;
+        if (e.cancelable) e.preventDefault();
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        const maxLeft = parentContainer.clientWidth - element.clientWidth;
+        const maxTop = parentContainer.clientHeight - element.clientHeight;
+
+        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
+
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
+      }
+
+      function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        element.style.zIndex = "1";
+
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onEnd);
+        document.removeEventListener("touchmove", onMove);
+        document.removeEventListener("touchend", onEnd);
+      }
+
+      element.addEventListener("mousedown", onStart);
+      element.addEventListener("touchstart", onStart, { passive: false });
+    }
+
+    // 배치된 자리 위치 유지하며 번호 랜덤 섞기
+    function shuffleSeats() {
+      const seats = document.querySelectorAll(".seat-box");
+      const status = document.getElementById("seatingStatus");
+
+      if (seats.length === 0) return;
+      if (isShuffleRunning) return;
+
+      isShuffleRunning = true;
+
+      // 1부터 N까지 번호 배열 생성 후 셔플
+      const total = seats.length;
+      let numbers = Array.from({ length: total }, (_, i) => i + 1);
+
+      for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+      }
+
+      let count = 0;
+      status.textContent = "자리 섞는 중... ㄷㄱ";
+
+      const intervalId = setInterval(() => {
+        count++;
+        let text = "자리 섞는 중... ";
+        for (let i = 0; i < count; i++) {
+          text += "ㄷㄱ";
+        }
+        status.textContent = text;
+      }, 200);
+
+      setTimeout(() => {
+        clearInterval(intervalId);
+        seats.forEach((seat, index) => {
+          seat.textContent = `${numbers[index]}번`;
+        });
+        status.textContent = "🎉 자리 배치가 완료되었습니다!";
+        isShuffleRunning = false;
+      }, 3000);
     }
   </script>
 </body>
