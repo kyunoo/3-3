@@ -53,7 +53,6 @@
       margin: 0;
     }
 
-    /* 공지사항(필독) 버튼 */
     .header-notice-btn {
       position: absolute;
       right: 0;
@@ -515,7 +514,10 @@
       user-select: none;
       box-shadow: 0 3px 6px rgba(0,0,0,0.08);
       touch-action: none;
-      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .seat-box.animating {
+      transition: left 0.12s ease-in-out, top 0.12s ease-in-out;
     }
 
     .seat-box:active {
@@ -665,7 +667,6 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
-  <!-- 급식 월간 모달 -->
   <div id="mealModal" class="modal" onclick="closeModalOnBg(event, 'mealModal')">
     <div class="modal-content">
       <div class="modal-header">
@@ -676,7 +677,6 @@
     </div>
   </div>
 
-  <!-- 공지사항 모달 -->
   <div id="noticeModal" class="modal" onclick="closeModalOnBg(event, 'noticeModal')">
     <div class="modal-content">
       <div class="modal-header">
@@ -691,7 +691,6 @@
     </div>
   </div>
 
-  <!-- 제비뽑기 모달 -->
   <div id="lotteryModal" class="modal" onclick="closeModalOnBg(event, 'lotteryModal')">
     <div class="modal-content" style="max-width: 400px;">
       <div class="modal-header">
@@ -707,7 +706,6 @@
     </div>
   </div>
 
-  <!-- 자리배치 모달 -->
   <div id="seatingModal" class="modal" onclick="closeModalOnBg(event, 'seatingModal')">
     <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
@@ -715,27 +713,28 @@
         <button class="close-btn" onclick="closeSeatingModal()">&times;</button>
       </div>
       <div class="tool-row">
-        <label style="font-weight: bold; color: #475569;">학생수:</label>
-        <input type="number" id="seatStudentCount" value="28" min="1" max="45" style="width: 50px;">
+        <label style="font-weight: bold; color: #475569;">최대 번호:</label>
+        <input type="number" id="seatMaxNumInput" value="35" min="1" max="60" style="width: 45px;">
+
+        <label style="font-weight: bold; color: #475569; margin-left: 5px;">제외 번호:</label>
+        <input type="text" id="seatExcludeInput" value="14-20" placeholder="예: 14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호">
 
         <label style="font-weight: bold; color: #475569; margin-left: 5px;">형태:</label>
         <select id="seatTypeSelect">
-          <option value="pair">2인 짝꿍</option>
-          <option value="single">1인 단독</option>
+          <option value="pair">짝꿍</option>
+          <option value="single">혼자</option>
         </select>
 
         <label style="font-weight: bold; color: #475569; margin-left: 5px;">배열:</label>
-        <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 45px;" title="줄 수(N)">
+        <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 40px;" title="줄 수(N)">
         <span style="font-weight:bold;">줄 ×</span>
-        <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 45px;" title="열 수(X)">
+        <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 40px;" title="열 수(X)">
         <span style="font-weight:bold;">열</span>
 
         <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 배치생성</button>
-        <button class="btn-primary" style="width: auto; margin-top:0; background-color: #2563eb;" onclick="shuffleSeats()">랜덤 자리 섞기</button>
+        <button class="btn-primary" style="width: auto; margin-top:0; background-color: #2563eb;" onclick="shuffleSeats()">자리섞기</button>
       </div>
-      <div id="seatingStatus" style="font-size: 13px; color: #059669; font-weight: bold; text-align: center; min-height: 20px;">
-        💡 마우스/손가락으로 원하는 대로 자리 박스를 옮긴 후 [랜덤 자리 섞기]를 눌러보세요!
-      </div>
+      <div id="seatingStatus" style="font-size: 13px; color: #059669; font-weight: bold; text-align: center; min-height: 20px;"></div>
       <div class="blackboard">칠 판</div>
       <div id="seatingBoard" class="seating-board"></div>
     </div>
@@ -1210,7 +1209,6 @@
       renderScheduleView();
     }
 
-    // 제비뽑기 추첨 함수 (기본값 35명)
     function runLottery() {
       const total = parseInt(document.getElementById("lotteryCount").value);
       const resDiv = document.getElementById("lotteryResult");
@@ -1246,9 +1244,10 @@
     }
 
     /* ----------------------------------------------------
-       자리배치 모달 & N*X / 짝꿍-혼자 설정 드래그 기능
+       자리배치 모달 & N*X / 제외 번호 / 10초 야바위 모션 / 중앙정렬
     ---------------------------------------------------- */
     let isShuffleRunning = false;
+    let targetPositions = []; // 최종 정렬 정 위치 보관용
 
     function openSeatingModal() {
       document.getElementById("seatingModal").style.display = "flex";
@@ -1262,8 +1261,34 @@
       document.getElementById("seatingModal").style.display = "none";
     }
 
+    // 제외 번호 파싱 함수 (예: "14-20, 36")
+    function parseExcludedNumbers(str) {
+      const set = new Set();
+      if (!str.trim()) return set;
+
+      const parts = str.split(",");
+      parts.forEach(p => {
+        p = p.trim();
+        if (p.includes("-")) {
+          const [start, end] = p.split("-").map(Number);
+          if (!isNaN(start) && !isNaN(end)) {
+            for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
+              set.add(i);
+            }
+          }
+        } else {
+          const num = Number(p);
+          if (!isNaN(num)) set.add(num);
+        }
+      });
+      return set;
+    }
+
     function generateSeats() {
-      const total = parseInt(document.getElementById("seatStudentCount").value);
+      if (isShuffleRunning) return;
+
+      const maxNum = parseInt(document.getElementById("seatMaxNumInput").value) || 35;
+      const excludeStr = document.getElementById("seatExcludeInput").value;
       const seatType = document.getElementById("seatTypeSelect").value;
       const rows = parseInt(document.getElementById("seatRowsInput").value) || 5;
       const cols = parseInt(document.getElementById("seatColsInput").value) || 6;
@@ -1271,53 +1296,71 @@
       const board = document.getElementById("seatingBoard");
       const status = document.getElementById("seatingStatus");
 
-      if (!total || total < 1 || total > 50) {
-        alert("1명 이상 50명 이하로 설정해주세요.");
+      const excludedSet = parseExcludedNumbers(excludeStr);
+      const validStudentNumbers = [];
+      for (let i = 1; i <= maxNum; i++) {
+        if (!excludedSet.has(i)) {
+          validStudentNumbers.push(i);
+        }
+      }
+
+      if (validStudentNumbers.length === 0) {
+        alert("배치할 학생 번호가 없습니다. 제외 번호를 확인해 주세요.");
         return;
       }
 
       board.innerHTML = "";
-      status.textContent = "💡 배치된 위치 박스를 자유롭게 옮긴 후 [랜덤 자리 섞기]를 눌러보세요!";
+      status.textContent = "";
 
-      const startX = 20;
-      const startY = 20;
       const seatW = 52;
+      const seatH = 42;
       const gapY = 55;
 
-      for (let i = 1; i <= total; i++) {
-        const col = (i - 1) % cols;
-        const row = Math.floor((i - 1) / cols);
+      // 전체 배치 너비 계산하여 가운데 정렬 기준 startX 결정
+      let totalWidth = 0;
+      if (seatType === "pair") {
+        const pairGroups = Math.ceil(cols / 2);
+        totalWidth = pairGroups * 135 - 20; 
+      } else {
+        totalWidth = cols * 68 - 16;
+      }
 
-        if (row >= rows) {
-          // 지정된 N*X의 칸수를 넘어서는 인원도 판 내에 배치되도록 구사
-        }
+      const boardWidth = board.clientWidth || 680;
+      let startX = Math.max(20, (boardWidth - totalWidth) / 2);
+      const startY = 25;
 
-        const seat = document.createElement("div");
-        seat.className = "seat-box";
-        seat.textContent = `${i}번`;
+      targetPositions = [];
+
+      validStudentNumbers.forEach((studentNum, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
 
         let posX = startX;
         let posY = startY + row * gapY;
 
         if (seatType === "pair") {
-          // 2인 짝꿍 설정: 짝수 번째 자리는 살짝 붙고, 모둠 간 간격을 넓힘
           const pairGroup = Math.floor(col / 2);
           const isOddInPair = col % 2;
           posX = startX + pairGroup * 135 + isOddInPair * (seatW + 4);
         } else {
-          // 1인 단독 설정: 65px씩 균등 배치
           posX = startX + col * 68;
         }
+
+        targetPositions.push({ left: posX, top: posY });
+
+        const seat = document.createElement("div");
+        seat.className = "seat-box";
+        seat.textContent = `${studentNum}번`;
+        seat.setAttribute("data-num", studentNum);
 
         seat.style.left = `${posX}px`;
         seat.style.top = `${posY}px`;
 
         enableDrag(seat, board);
         board.appendChild(seat);
-      }
+      });
     }
 
-    // 마우스 및 모바일 터치 드래그 지원 함수
     function enableDrag(element, parentContainer) {
       let isDragging = false;
       let startX, startY;
@@ -1380,44 +1423,58 @@
       element.addEventListener("touchstart", onStart, { passive: false });
     }
 
-    // 배치 형태 유지한 채 랜덤 번호 섞기
+    // 10초간 우왕좌왕(야바위) 움직임 구현 자리섞기
     function shuffleSeats() {
-      const seats = document.querySelectorAll(".seat-box");
+      const seats = Array.from(document.querySelectorAll(".seat-box"));
       const status = document.getElementById("seatingStatus");
+      const board = document.getElementById("seatingBoard");
 
-      if (seats.length === 0) return;
-      if (isShuffleRunning) return;
+      if (seats.length === 0 || isShuffleRunning) return;
 
       isShuffleRunning = true;
+      status.textContent = "자리 섞는 중...";
 
-      const total = seats.length;
-      let numbers = Array.from({ length: total }, (_, i) => i + 1);
-
-      for (let i = numbers.length - 1; i > 0; i--) {
+      // 번호 랜덤 셔플
+      let studentNums = seats.map(s => parseInt(s.getAttribute("data-num")));
+      for (let i = studentNums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        [studentNums[i], studentNums[j]] = [studentNums[j], studentNums[i]];
       }
 
-      let count = 0;
-      status.textContent = "자리 섞는 중... ㄷㄱ";
+      seats.forEach(s => s.classList.add("animating"));
 
-      const intervalId = setInterval(() => {
-        count++;
-        let text = "자리 섞는 중... ";
-        for (let i = 0; i < count; i++) {
-          text += "ㄷㄱ";
-        }
-        status.textContent = text;
-      }, 200);
+      const maxW = board.clientWidth - 55;
+      const maxH = board.clientHeight - 45;
 
-      setTimeout(() => {
-        clearInterval(intervalId);
-        seats.forEach((seat, index) => {
-          seat.textContent = `${numbers[index]}번`;
+      // 10초 동안 120ms마다 임의의 위치로 박스들이 우왕좌왕 이동
+      const moveInterval = setInterval(() => {
+        seats.forEach(seat => {
+          const randomX = Math.floor(Math.random() * maxW);
+          const randomY = Math.floor(Math.random() * maxH);
+          seat.style.left = `${randomX}px`;
+          seat.style.top = `${randomY}px`;
         });
-        status.textContent = "🎉 자리 배치가 완료되었습니다!";
-        isShuffleRunning = false;
-      }, 3000);
+      }, 120);
+
+      // 10초(10000ms) 후 딱 제자리 위치 정렬 및 번호 적용
+      setTimeout(() => {
+        clearInterval(moveInterval);
+
+        seats.forEach((seat, idx) => {
+          const target = targetPositions[idx] || { left: 20, top: 20 };
+          seat.style.left = `${target.left}px`;
+          seat.style.top = `${target.top}px`;
+          seat.textContent = `${studentNums[idx]}번`;
+          seat.setAttribute("data-num", studentNums[idx]);
+        });
+
+        setTimeout(() => {
+          seats.forEach(s => s.classList.remove("animating"));
+          status.textContent = "자리 배치가 완료되었습니다.";
+          isShuffleRunning = false;
+        }, 200);
+
+      }, 10000);
     }
   </script>
 </body>
