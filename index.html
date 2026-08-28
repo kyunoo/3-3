@@ -386,17 +386,17 @@
     .tool-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 10px;
       align-items: center;
       justify-content: center;
     }
 
-    .tool-row input {
-      padding: 6px 10px;
+    .tool-row input, .tool-row select {
+      padding: 6px 8px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .draw-result {
@@ -428,7 +428,7 @@
       border-radius: 12px;
       width: 90%;
       max-width: 700px;
-      max-height: 80vh;
+      max-height: 85vh;
       overflow-y: auto;
     }
 
@@ -700,7 +700,7 @@
       </div>
       <div class="tool-row">
         <label style="font-weight: bold; color: #475569;">전체 인원수:</label>
-        <input type="number" id="lotteryCount" value="35" min="1" max="50" style="width: 70px;">
+        <input type="number" id="lotteryCount" value="35" min="1" max="50" style="width: 60px;">
         <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
       </div>
       <div id="lotteryResult" class="draw-result"></div>
@@ -709,15 +709,28 @@
 
   <!-- 자리배치 모달 -->
   <div id="seatingModal" class="modal" onclick="closeModalOnBg(event, 'seatingModal')">
-    <div class="modal-content" style="max-width: 680px;">
+    <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
         <h3 style="margin:0; color: #1e293b;">학교 자리배치</h3>
         <button class="close-btn" onclick="closeSeatingModal()">&times;</button>
       </div>
       <div class="tool-row">
-        <label style="font-weight: bold; color: #475569;">학생 수:</label>
-        <input type="number" id="seatStudentCount" value="28" min="1" max="45" style="width: 65px;">
-        <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 새로배치</button>
+        <label style="font-weight: bold; color: #475569;">학생수:</label>
+        <input type="number" id="seatStudentCount" value="28" min="1" max="45" style="width: 50px;">
+
+        <label style="font-weight: bold; color: #475569; margin-left: 5px;">형태:</label>
+        <select id="seatTypeSelect">
+          <option value="pair">2인 짝꿍</option>
+          <option value="single">1인 단독</option>
+        </select>
+
+        <label style="font-weight: bold; color: #475569; margin-left: 5px;">배열:</label>
+        <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 45px;" title="줄 수(N)">
+        <span style="font-weight:bold;">줄 ×</span>
+        <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 45px;" title="열 수(X)">
+        <span style="font-weight:bold;">열</span>
+
+        <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 배치생성</button>
         <button class="btn-primary" style="width: auto; margin-top:0; background-color: #2563eb;" onclick="shuffleSeats()">랜덤 자리 섞기</button>
       </div>
       <div id="seatingStatus" style="font-size: 13px; color: #059669; font-weight: bold; text-align: center; min-height: 20px;">
@@ -1197,7 +1210,7 @@
       renderScheduleView();
     }
 
-    // 제비뽑기 추첨 함수 (전체 인원수 기본값 35명)
+    // 제비뽑기 추첨 함수 (기본값 35명)
     function runLottery() {
       const total = parseInt(document.getElementById("lotteryCount").value);
       const resDiv = document.getElementById("lotteryResult");
@@ -1233,7 +1246,7 @@
     }
 
     /* ----------------------------------------------------
-       신규: 자리배치 모달 & 드래그 인터랙션 기능
+       자리배치 모달 & N*X / 짝꿍-혼자 설정 드래그 기능
     ---------------------------------------------------- */
     let isShuffleRunning = false;
 
@@ -1251,6 +1264,10 @@
 
     function generateSeats() {
       const total = parseInt(document.getElementById("seatStudentCount").value);
+      const seatType = document.getElementById("seatTypeSelect").value;
+      const rows = parseInt(document.getElementById("seatRowsInput").value) || 5;
+      const cols = parseInt(document.getElementById("seatColsInput").value) || 6;
+
       const board = document.getElementById("seatingBoard");
       const status = document.getElementById("seatingStatus");
 
@@ -1260,24 +1277,37 @@
       }
 
       board.innerHTML = "";
-      status.textContent = "💡 마우스/손가락으로 자리 박스를 자유롭게 배치한 후 [랜덤 자리 섞기]를 눌러보세요!";
+      status.textContent = "💡 배치된 위치 박스를 자유롭게 옮긴 후 [랜덤 자리 섞기]를 눌러보세요!";
 
-      const cols = 6; 
       const startX = 20;
       const startY = 20;
-      const gapX = 62;
+      const seatW = 52;
       const gapY = 55;
 
       for (let i = 1; i <= total; i++) {
         const col = (i - 1) % cols;
         const row = Math.floor((i - 1) / cols);
 
+        if (row >= rows) {
+          // 지정된 N*X의 칸수를 넘어서는 인원도 판 내에 배치되도록 구사
+        }
+
         const seat = document.createElement("div");
         seat.className = "seat-box";
         seat.textContent = `${i}번`;
 
-        const posX = startX + col * gapX;
-        const posY = startY + row * gapY;
+        let posX = startX;
+        let posY = startY + row * gapY;
+
+        if (seatType === "pair") {
+          // 2인 짝꿍 설정: 짝수 번째 자리는 살짝 붙고, 모둠 간 간격을 넓힘
+          const pairGroup = Math.floor(col / 2);
+          const isOddInPair = col % 2;
+          posX = startX + pairGroup * 135 + isOddInPair * (seatW + 4);
+        } else {
+          // 1인 단독 설정: 65px씩 균등 배치
+          posX = startX + col * 68;
+        }
 
         seat.style.left = `${posX}px`;
         seat.style.top = `${posY}px`;
@@ -1287,7 +1317,7 @@
       }
     }
 
-    // 마우스 및 모바일/태블릿 터치 지원 드래그 함수
+    // 마우스 및 모바일 터치 드래그 지원 함수
     function enableDrag(element, parentContainer) {
       let isDragging = false;
       let startX, startY;
@@ -1350,7 +1380,7 @@
       element.addEventListener("touchstart", onStart, { passive: false });
     }
 
-    // 배치된 자리 위치 유지하며 번호 랜덤 섞기
+    // 배치 형태 유지한 채 랜덤 번호 섞기
     function shuffleSeats() {
       const seats = document.querySelectorAll(".seat-box");
       const status = document.getElementById("seatingStatus");
@@ -1360,7 +1390,6 @@
 
       isShuffleRunning = true;
 
-      // 1부터 N까지 번호 배열 생성 후 셔플
       const total = seats.length;
       let numbers = Array.from({ length: total }, (_, i) => i + 1);
 
