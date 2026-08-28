@@ -1285,197 +1285,135 @@
     }
 
     function generateSeats() {
-      if (isShuffleRunning) return;
+  if (isShuffleRunning) return;
 
-      const maxNum = parseInt(document.getElementById("seatMaxNumInput").value) || 35;
-      const excludeStr = document.getElementById("seatExcludeInput").value;
-      const seatType = document.getElementById("seatTypeSelect").value;
-      const rows = parseInt(document.getElementById("seatRowsInput").value) || 5;
-      const cols = parseInt(document.getElementById("seatColsInput").value) || 6;
+  const maxNum = parseInt(document.getElementById("seatMaxNumInput").value) || 35;
+  const excludeStr = document.getElementById("seatExcludeInput").value;
+  const seatType = document.getElementById("seatTypeSelect").value;
+  const rows = parseInt(document.getElementById("seatRowsInput").value) || 5;
+  const cols = parseInt(document.getElementById("seatColsInput").value) || 6;
 
-      const board = document.getElementById("seatingBoard");
-      const status = document.getElementById("seatingStatus");
+  const board = document.getElementById("seatingBoard");
+  const status = document.getElementById("seatingStatus");
 
-      const excludedSet = parseExcludedNumbers(excludeStr);
-      const validStudentNumbers = [];
-      for (let i = 1; i <= maxNum; i++) {
-        if (!excludedSet.has(i)) {
-          validStudentNumbers.push(i);
-        }
-      }
+  const excludedSet = parseExcludedNumbers(excludeStr);
+  const validStudentNumbers = [];
+  for (let i = 1; i <= maxNum; i++) {
+    if (!excludedSet.has(i)) {
+      validStudentNumbers.push(i);
+    }
+  }
 
-      if (validStudentNumbers.length === 0) {
-        alert("배치할 학생 번호가 없습니다. 제외 번호를 확인해 주세요.");
-        return;
-      }
+  if (validStudentNumbers.length === 0) {
+    alert("배치할 학생 번호가 없습니다. 제외 번호를 확인해 주세요.");
+    return;
+  }
 
-      board.innerHTML = "";
-      status.textContent = "";
+  board.innerHTML = "";
+  status.textContent = "";
 
-      const seatW = 52;
-      const seatH = 42;
-      const gapY = 55;
+  const seatW = 52;
+  const gapY = 55;
 
-      // 전체 배치 너비 계산하여 가운데 정렬 기준 startX 결정
-      let totalWidth = 0;
-      if (seatType === "pair") {
-        const pairGroups = Math.ceil(cols / 2);
-        totalWidth = pairGroups * 135 - 20; 
-      } else {
-        totalWidth = cols * 68 - 16;
-      }
+  let totalWidth = 0;
+  if (seatType === "pair") {
+    const pairGroups = Math.ceil(cols / 2);
+    totalWidth = pairGroups * 135 - 20; 
+  } else {
+    totalWidth = cols * 68 - 16;
+  }
 
-      const boardWidth = board.clientWidth || 680;
-      let startX = Math.max(20, (boardWidth - totalWidth) / 2);
-      const startY = 25;
+  const boardWidth = board.clientWidth || 680;
+  let startX = Math.max(20, (boardWidth - totalWidth) / 2);
+  const startY = 25;
 
-      targetPositions = [];
+  validStudentNumbers.forEach((studentNum, idx) => {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
 
-      validStudentNumbers.forEach((studentNum, idx) => {
-        const col = idx % cols;
-        const row = Math.floor(idx / cols);
+    let posX = startX;
+    let posY = startY + row * gapY;
 
-        let posX = startX;
-        let posY = startY + row * gapY;
-
-        if (seatType === "pair") {
-          const pairGroup = Math.floor(col / 2);
-          const isOddInPair = col % 2;
-          posX = startX + pairGroup * 135 + isOddInPair * (seatW + 4);
-        } else {
-          posX = startX + col * 68;
-        }
-
-        targetPositions.push({ left: posX, top: posY });
-
-        const seat = document.createElement("div");
-        seat.className = "seat-box";
-        seat.textContent = `${studentNum}번`;
-        seat.setAttribute("data-num", studentNum);
-
-        seat.style.left = `${posX}px`;
-        seat.style.top = `${posY}px`;
-
-        enableDrag(seat, board);
-        board.appendChild(seat);
-      });
+    if (seatType === "pair") {
+      const pairGroup = Math.floor(col / 2);
+      const isOddInPair = col % 2;
+      posX = startX + pairGroup * 135 + isOddInPair * (seatW + 4);
+    } else {
+      posX = startX + col * 68;
     }
 
-    function enableDrag(element, parentContainer) {
-      let isDragging = false;
-      let startX, startY;
-      let initialLeft, initialTop;
+    const seat = document.createElement("div");
+    seat.className = "seat-box";
+    seat.textContent = `${studentNum}번`;
+    seat.setAttribute("data-num", studentNum);
 
-      function onStart(e) {
-        if (isShuffleRunning) return;
-        isDragging = true;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    seat.style.left = `${posX}px`;
+    seat.style.top = `${posY}px`;
 
-        startX = clientX;
-        startY = clientY;
-        initialLeft = element.offsetLeft;
-        initialTop = element.offsetTop;
+    enableDrag(seat, board);
+    board.appendChild(seat);
+  });
+}
 
-        element.style.zIndex = "100";
+// 직접 옮긴 자리를 기억하고 그 자리 그대로 우왕좌왕 섞인 뒤 복귀하는 자리섞기
+function shuffleSeats() {
+  const seats = Array.from(document.querySelectorAll(".seat-box"));
+  const status = document.getElementById("seatingStatus");
+  const board = document.getElementById("seatingBoard");
 
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onEnd);
-        document.addEventListener("touchmove", onMove, { passive: false });
-        document.addEventListener("touchend", onEnd);
-      }
+  if (seats.length === 0 || isShuffleRunning) return;
 
-      function onMove(e) {
-        if (!isDragging) return;
-        if (e.cancelable) e.preventDefault();
+  isShuffleRunning = true;
+  status.textContent = "자리 섞는 중...";
 
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  // 현재 배치되어 있는 각 박스의 실제 좌표(직접 옮긴 위치 포함)를 기록
+  const currentPositions = seats.map(seat => ({
+    left: parseFloat(seat.style.left),
+    top: parseFloat(seat.style.top)
+  }));
 
-        const deltaX = clientX - startX;
-        const deltaY = clientY - startY;
+  // 번호 랜덤 셔플
+  let studentNums = seats.map(s => parseInt(s.getAttribute("data-num")));
+  for (let i = studentNums.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [studentNums[i], studentNums[j]] = [studentNums[j], studentNums[i]];
+  }
 
-        let newLeft = initialLeft + deltaX;
-        let newTop = initialTop + deltaY;
+  seats.forEach(s => s.classList.add("animating"));
 
-        const maxLeft = parentContainer.clientWidth - element.clientWidth;
-        const maxTop = parentContainer.clientHeight - element.clientHeight;
+  const maxW = board.clientWidth - 55;
+  const maxH = board.clientHeight - 45;
 
-        newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-        newTop = Math.max(0, Math.min(newTop, maxTop));
+  // 10초 동안 우왕좌왕 이동
+  const moveInterval = setInterval(() => {
+    seats.forEach(seat => {
+      const randomX = Math.floor(Math.random() * maxW);
+      const randomY = Math.floor(Math.random() * maxH);
+      seat.style.left = `${randomX}px`;
+      seat.style.top = `${randomY}px`;
+    });
+  }, 120);
 
-        element.style.left = `${newLeft}px`;
-        element.style.top = `${newTop}px`;
-      }
+  // 10초 후 사용자가 배치했던 그 위치로 돌아오고 번호만 교체
+  setTimeout(() => {
+    clearInterval(moveInterval);
 
-      function onEnd() {
-        if (!isDragging) return;
-        isDragging = false;
-        element.style.zIndex = "1";
+    seats.forEach((seat, idx) => {
+      const target = currentPositions[idx];
+      seat.style.left = `${target.left}px`;
+      seat.style.top = `${target.top}px`;
+      seat.textContent = `${studentNums[idx]}번`;
+      seat.setAttribute("data-num", studentNums[idx]);
+    });
 
-        document.removeEventListener("mousemove", onMove);
-        document.removeEventListener("mouseup", onEnd);
-        document.removeEventListener("touchmove", onMove);
-        document.removeEventListener("touchend", onEnd);
-      }
+    setTimeout(() => {
+      seats.forEach(s => s.classList.remove("animating"));
+      status.textContent = "자리 배치가 완료되었습니다.";
+      isShuffleRunning = false;
+    }, 200);
 
-      element.addEventListener("mousedown", onStart);
-      element.addEventListener("touchstart", onStart, { passive: false });
-    }
-
-    // 10초간 우왕좌왕(야바위) 움직임 구현 자리섞기
-    function shuffleSeats() {
-      const seats = Array.from(document.querySelectorAll(".seat-box"));
-      const status = document.getElementById("seatingStatus");
-      const board = document.getElementById("seatingBoard");
-
-      if (seats.length === 0 || isShuffleRunning) return;
-
-      isShuffleRunning = true;
-      status.textContent = "자리 섞는 중...";
-
-      // 번호 랜덤 셔플
-      let studentNums = seats.map(s => parseInt(s.getAttribute("data-num")));
-      for (let i = studentNums.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [studentNums[i], studentNums[j]] = [studentNums[j], studentNums[i]];
-      }
-
-      seats.forEach(s => s.classList.add("animating"));
-
-      const maxW = board.clientWidth - 55;
-      const maxH = board.clientHeight - 45;
-
-      // 10초 동안 120ms마다 임의의 위치로 박스들이 우왕좌왕 이동
-      const moveInterval = setInterval(() => {
-        seats.forEach(seat => {
-          const randomX = Math.floor(Math.random() * maxW);
-          const randomY = Math.floor(Math.random() * maxH);
-          seat.style.left = `${randomX}px`;
-          seat.style.top = `${randomY}px`;
-        });
-      }, 120);
-
-      // 10초(10000ms) 후 딱 제자리 위치 정렬 및 번호 적용
-      setTimeout(() => {
-        clearInterval(moveInterval);
-
-        seats.forEach((seat, idx) => {
-          const target = targetPositions[idx] || { left: 20, top: 20 };
-          seat.style.left = `${target.left}px`;
-          seat.style.top = `${target.top}px`;
-          seat.textContent = `${studentNums[idx]}번`;
-          seat.setAttribute("data-num", studentNums[idx]);
-        });
-
-        setTimeout(() => {
-          seats.forEach(s => s.classList.remove("animating"));
-          status.textContent = "자리 배치가 완료되었습니다.";
-          isShuffleRunning = false;
-        }, 200);
-
-      }, 10000);
-    }
+  }, 10000);
+}
   </script>
 </body>
 </html>
