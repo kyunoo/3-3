@@ -795,24 +795,23 @@
       </div>
       <div class="tool-row">
         <label style="font-weight: bold; color: #475569;">최대 번호:</label>
-        <input type="number" id="seatMaxNumInput" value="35" min="1" max="60" style="width: 45px;">
+        <input type="number" id="seatMaxNumInput" value="35" min="1" max="60" style="width: 45px;" onchange="generateSeats()" oninput="generateSeats()">
 
         <label style="font-weight: bold; color: #475569; margin-left: 5px;">제외 번호:</label>
-        <input type="text" id="seatExcludeInput" value="14-20" placeholder="예: 14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호">
+        <input type="text" id="seatExcludeInput" value="14-20" placeholder="예: 14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호" onchange="generateSeats()" oninput="generateSeats()">
 
         <label style="font-weight: bold; color: #475569; margin-left: 5px;">형태:</label>
-        <select id="seatTypeSelect">
+        <select id="seatTypeSelect" onchange="generateSeats()">
           <option value="pair">짝꿍</option>
           <option value="single">혼자</option>
         </select>
 
         <label style="font-weight: bold; color: #475569; margin-left: 5px;">배열:</label>
-        <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 40px;" title="줄 수(N)">
+        <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 40px;" title="줄 수(N)" onchange="generateSeats()" oninput="generateSeats()">
         <span style="font-weight:bold;">줄 ×</span>
-        <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 40px;" title="열 수(X)">
+        <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 40px;" title="열 수(X)" onchange="generateSeats()" oninput="generateSeats()">
         <span style="font-weight:bold;">열</span>
 
-        <button class="btn-primary" style="width: auto; margin-top:0;" onclick="generateSeats()">자리 배치생성</button>
         <button class="btn-primary" style="width: auto; margin-top:0; background-color: #2563eb;" onclick="shuffleSeats()">자리섞기</button>
       </div>
       <div id="seatingStatus" style="font-size: 13px; color: #059669; font-weight: bold; text-align: center; min-height: 20px;"></div>
@@ -836,12 +835,12 @@
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
 
-    // 연출용 미디어 파일 경로 설정 (본인의 파일 경로로 수정해서 사용하세요)
+    // 연출용 미디어 파일 경로 설정
     const MEDIA_PATHS = {
-      video1: "intro.mp4",        // 첫 번째 영상 파일 경로
-      video2: "outro.mp4",        // 두 번째 영상 파일 경로
-      shuffleSfx: "shuffle.mp3",  // 뒤죽박죽 효과음 파일 경로
-      explosionSfx: "explosion.mp3" // 폭발 효과음 파일 경로
+      video1: "intro.mp4",        
+      video2: "outro.mp4",        
+      shuffleSfx: "shuffle.mp3",  
+      explosionSfx: "explosion.mp3" 
     };
 
     const today = new Date();
@@ -1324,7 +1323,6 @@
       setTimeout(() => {
         clearInterval(intervalId);
 
-        // 확률 조작 없이 1부터 total까지 100% 순수 무작위 추출
         const selected = Math.floor(Math.random() * total) + 1;
 
         resDiv.textContent = `당첨: ${selected}번!`;
@@ -1392,7 +1390,8 @@
       }
 
       if (validStudentNumbers.length === 0) {
-        alert("배치할 학생 번호가 없습니다. 제외 번호를 확인해 주세요.");
+        board.innerHTML = "";
+        status.textContent = "배치할 학생 번호가 없습니다.";
         return;
       }
 
@@ -1504,7 +1503,6 @@
       element.addEventListener("touchstart", onStart, { passive: false });
     }
 
-    // 커튼 닫기/열기 헬퍼 함수
     function setCurtainClosed(closed) {
       const container = document.getElementById("curtainContainer");
       if (closed) {
@@ -1517,7 +1515,6 @@
       }
     }
 
-    // 비디오 재생 헬퍼 함수 (Promise 반환)
     function playVideoSequence(videoSrc) {
       return new Promise((resolve) => {
         const overlay = document.getElementById("videoOverlay");
@@ -1546,7 +1543,6 @@
       });
     }
 
-    // 오디오 재생 헬퍼 함수
     function playAudio(audioSrc, loop = false) {
       const audio = new Audio(audioSrc);
       audio.loop = loop;
@@ -1554,9 +1550,6 @@
       return audio;
     }
 
-    /* ----------------------------------------------------
-       시네마틱 커튼 연출이 적용된 100% 무작위 자리섞기
-    ---------------------------------------------------- */
     async function shuffleSeats() {
       const seats = Array.from(document.querySelectorAll(".seat-box"));
       const status = document.getElementById("seatingStatus");
@@ -1567,25 +1560,21 @@
       isShuffleRunning = true;
       status.textContent = "운명의 자리 섞는 중...";
 
-      // 현재 배치 좌표 저장
       const currentPositions = seats.map(seat => ({
         left: parseFloat(seat.style.left),
         top: parseFloat(seat.style.top)
       }));
 
-      // 100% 완전 무작위(Fisher-Yates) 번호 섞기
       let studentNums = seats.map(s => parseInt(s.getAttribute("data-num")));
       for (let i = studentNums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [studentNums[i], studentNums[j]] = [studentNums[j], studentNums[i]];
       }
 
-      // [1단계] 커튼이 닫히고 첫 번째 웅장한 비디오 재생
       setCurtainClosed(true);
-      await new Promise(r => setTimeout(r, 850)); // 커튼이 완전히 닫힐 때까지 대기
+      await new Promise(r => setTimeout(r, 850));
       await playVideoSequence(MEDIA_PATHS.video1);
 
-      // [2단계] 커튼이 열리면서 10초간 뒤죽박죽 애니메이션 + 뒤죽박죽 효과음
       setCurtainClosed(false);
       seats.forEach(s => s.classList.add("animating"));
 
@@ -1603,17 +1592,14 @@
         });
       }, 120);
 
-      // 10초간 섞기 실행
       await new Promise(r => setTimeout(r, 10000));
 
       clearInterval(moveInterval);
-      shuffleAudio.pause(); // 뒤죽박죽 효과음 정지
+      shuffleAudio.pause();
 
-      // [3단계] 다시 커튼이 닫히며 두 번째 비디오 재생
       setCurtainClosed(true);
       await new Promise(r => setTimeout(r, 850));
 
-      // 커튼 가림막 안에서 최종 위치 및 섞인 번호 확정 세팅
       seats.forEach((seat, idx) => {
         const target = currentPositions[idx];
         seat.style.left = `${target.left}px`;
@@ -1624,7 +1610,6 @@
 
       await playVideoSequence(MEDIA_PATHS.video2);
 
-      // [4단계] 폭발 효과음 재생 + 커튼 열리기 + 완성
       playAudio(MEDIA_PATHS.explosionSfx, false);
       setCurtainClosed(false);
 
