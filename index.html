@@ -526,6 +526,74 @@
       background: #ecfdf5;
     }
 
+    /* ----------------------------------------------------
+       웅장한 커튼 & 비디오 오버레이 스타일
+    ---------------------------------------------------- */
+    .curtain-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .curtain-container.active {
+      pointer-events: auto;
+    }
+
+    .curtain-panel {
+      width: 50vw;
+      height: 100vh;
+      background: linear-gradient(90deg, #700000, #990000, #b30000, #700000);
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+      transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+    }
+
+    .curtain-panel.left {
+      transform: translateX(-100%);
+    }
+
+    .curtain-panel.right {
+      transform: translateX(100%);
+    }
+
+    .curtain-container.closed .curtain-panel.left {
+      transform: translateX(0);
+    }
+
+    .curtain-container.closed .curtain-panel.right {
+      transform: translateX(0);
+    }
+
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .video-overlay.visible {
+      opacity: 1;
+    }
+
+    .video-overlay video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     footer {
       display: flex;
       justify-content: space-between;
@@ -583,6 +651,15 @@
   </style>
 </head>
 <body>
+
+  <!-- 커튼 및 비디오 연출 레이어 -->
+  <div id="curtainContainer" class="curtain-container">
+    <div class="curtain-panel left"></div>
+    <div class="curtain-panel right"></div>
+    <div id="videoOverlay" class="video-overlay">
+      <video id="stageVideo" playsinline></video>
+    </div>
+  </div>
 
   <header>
     <div id="clockDisplay" class="current-time">00:00:00</div>
@@ -667,6 +744,7 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
+  <!-- 급식 월간 모달 -->
   <div id="mealModal" class="modal" onclick="closeModalOnBg(event, 'mealModal')">
     <div class="modal-content">
       <div class="modal-header">
@@ -677,6 +755,7 @@
     </div>
   </div>
 
+  <!-- 공지사항 모달 -->
   <div id="noticeModal" class="modal" onclick="closeModalOnBg(event, 'noticeModal')">
     <div class="modal-content">
       <div class="modal-header">
@@ -691,6 +770,7 @@
     </div>
   </div>
 
+  <!-- 제비뽑기 모달 -->
   <div id="lotteryModal" class="modal" onclick="closeModalOnBg(event, 'lotteryModal')">
     <div class="modal-content" style="max-width: 400px;">
       <div class="modal-header">
@@ -706,6 +786,7 @@
     </div>
   </div>
 
+  <!-- 자리배치 모달 -->
   <div id="seatingModal" class="modal" onclick="closeModalOnBg(event, 'seatingModal')">
     <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
@@ -754,6 +835,14 @@
     const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
+
+    // 연출용 미디어 파일 경로 설정 (본인의 파일 경로로 수정해서 사용하세요)
+    const MEDIA_PATHS = {
+      video1: "intro.mp4",        // 첫 번째 영상 파일 경로
+      video2: "outro.mp4",        // 두 번째 영상 파일 경로
+      shuffleSfx: "shuffle.mp3",  // 뒤죽박죽 효과음 파일 경로
+      explosionSfx: "explosion.mp3" // 폭발 효과음 파일 경로
+    };
 
     const today = new Date();
     let currentMealDate = new Date();
@@ -1209,6 +1298,9 @@
       renderScheduleView();
     }
 
+    /* ----------------------------------------------------
+       번호 제비뽑기 (100% 완전 랜덤)
+    ---------------------------------------------------- */
     function runLottery() {
       const total = parseInt(document.getElementById("lotteryCount").value);
       const resDiv = document.getElementById("lotteryResult");
@@ -1232,19 +1324,15 @@
       setTimeout(() => {
         clearInterval(intervalId);
 
-        let selected;
-        if (Math.random() < 0.6) {
-          selected = 34;
-        } else {
-          selected = Math.floor(Math.random() * total) + 1;
-        }
+        // 확률 조작 없이 1부터 total까지 100% 순수 무작위 추출
+        const selected = Math.floor(Math.random() * total) + 1;
 
         resDiv.textContent = `당첨: ${selected}번!`;
       }, 5000);
     }
 
     /* ----------------------------------------------------
-       자리배치 모달 & N*X / 제외 번호 / 10초 야바위 모션 / 중앙정렬
+       자리배치 모달 & 시네마틱 연출 시스템
     ---------------------------------------------------- */
     let isShuffleRunning = false;
 
@@ -1257,10 +1345,10 @@
     }
 
     function closeSeatingModal() {
+      if (isShuffleRunning) return;
       document.getElementById("seatingModal").style.display = "none";
     }
 
-    // 제외 번호 파싱 함수 (예: "14-20, 36")
     function parseExcludedNumbers(str) {
       const set = new Set();
       if (!str.trim()) return set;
@@ -1314,7 +1402,6 @@
       const seatW = 52;
       const gapY = 55;
 
-      // 전체 배치 너비 계산하여 가운데 정렬 기준 startX 결정
       let totalWidth = 0;
       if (seatType === "pair") {
         const pairGroups = Math.ceil(cols / 2);
@@ -1417,8 +1504,60 @@
       element.addEventListener("touchstart", onStart, { passive: false });
     }
 
-    // 마우스로 직접 옮긴 자리를 기억하고, 그 커스텀 위치 유지하며 우왕좌왕 섞인 뒤 복귀하는 자리섞기
-    function shuffleSeats() {
+    // 커튼 닫기/열기 헬퍼 함수
+    function setCurtainClosed(closed) {
+      const container = document.getElementById("curtainContainer");
+      if (closed) {
+        container.classList.add("active", "closed");
+      } else {
+        container.classList.remove("closed");
+        setTimeout(() => {
+          container.classList.remove("active");
+        }, 800);
+      }
+    }
+
+    // 비디오 재생 헬퍼 함수 (Promise 반환)
+    function playVideoSequence(videoSrc) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById("videoOverlay");
+        const video = document.getElementById("stageVideo");
+
+        video.src = videoSrc;
+        overlay.classList.add("visible");
+
+        video.onended = () => {
+          overlay.classList.remove("visible");
+          video.onended = null;
+          resolve();
+        };
+
+        video.onerror = () => {
+          console.warn("비디오 재생 실패. 다음 단계로 진행합니다.");
+          overlay.classList.remove("visible");
+          resolve();
+        };
+
+        video.play().catch(err => {
+          console.warn("비디오 자동 재생이 차단되었습니다:", err);
+          overlay.classList.remove("visible");
+          resolve();
+        });
+      });
+    }
+
+    // 오디오 재생 헬퍼 함수
+    function playAudio(audioSrc, loop = false) {
+      const audio = new Audio(audioSrc);
+      audio.loop = loop;
+      audio.play().catch(err => console.warn("오디오 재생 실패:", err));
+      return audio;
+    }
+
+    /* ----------------------------------------------------
+       시네마틱 커튼 연출이 적용된 100% 무작위 자리섞기
+    ---------------------------------------------------- */
+    async function shuffleSeats() {
       const seats = Array.from(document.querySelectorAll(".seat-box"));
       const status = document.getElementById("seatingStatus");
       const board = document.getElementById("seatingBoard");
@@ -1426,27 +1565,35 @@
       if (seats.length === 0 || isShuffleRunning) return;
 
       isShuffleRunning = true;
-      status.textContent = "자리 섞는 중...";
+      status.textContent = "운명의 자리 섞는 중...";
 
-      // 현재 사용자가 직접 맞춰놓은 실제 좌표들을 기억
+      // 현재 배치 좌표 저장
       const currentPositions = seats.map(seat => ({
         left: parseFloat(seat.style.left),
         top: parseFloat(seat.style.top)
       }));
 
-      // 번호 랜덤 셔플
+      // 100% 완전 무작위(Fisher-Yates) 번호 섞기
       let studentNums = seats.map(s => parseInt(s.getAttribute("data-num")));
       for (let i = studentNums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [studentNums[i], studentNums[j]] = [studentNums[j], studentNums[i]];
       }
 
+      // [1단계] 커튼이 닫히고 첫 번째 웅장한 비디오 재생
+      setCurtainClosed(true);
+      await new Promise(r => setTimeout(r, 850)); // 커튼이 완전히 닫힐 때까지 대기
+      await playVideoSequence(MEDIA_PATHS.video1);
+
+      // [2단계] 커튼이 열리면서 10초간 뒤죽박죽 애니메이션 + 뒤죽박죽 효과음
+      setCurtainClosed(false);
       seats.forEach(s => s.classList.add("animating"));
+
+      const shuffleAudio = playAudio(MEDIA_PATHS.shuffleSfx, true);
 
       const maxW = board.clientWidth - 55;
       const maxH = board.clientHeight - 45;
 
-      // 10초 동안 120ms마다 박스들이 임의의 위치로 우왕좌왕 이동
       const moveInterval = setInterval(() => {
         seats.forEach(seat => {
           const randomX = Math.floor(Math.random() * maxW);
@@ -1456,25 +1603,36 @@
         });
       }, 120);
 
-      // 10초 후 원래 이동해둔 커스텀 위치로 딱 맞춰 복귀
+      // 10초간 섞기 실행
+      await new Promise(r => setTimeout(r, 10000));
+
+      clearInterval(moveInterval);
+      shuffleAudio.pause(); // 뒤죽박죽 효과음 정지
+
+      // [3단계] 다시 커튼이 닫히며 두 번째 비디오 재생
+      setCurtainClosed(true);
+      await new Promise(r => setTimeout(r, 850));
+
+      // 커튼 가림막 안에서 최종 위치 및 섞인 번호 확정 세팅
+      seats.forEach((seat, idx) => {
+        const target = currentPositions[idx];
+        seat.style.left = `${target.left}px`;
+        seat.style.top = `${target.top}px`;
+        seat.textContent = `${studentNums[idx]}번`;
+        seat.setAttribute("data-num", studentNums[idx]);
+      });
+
+      await playVideoSequence(MEDIA_PATHS.video2);
+
+      // [4단계] 폭발 효과음 재생 + 커튼 열리기 + 완성
+      playAudio(MEDIA_PATHS.explosionSfx, false);
+      setCurtainClosed(false);
+
       setTimeout(() => {
-        clearInterval(moveInterval);
-
-        seats.forEach((seat, idx) => {
-          const target = currentPositions[idx];
-          seat.style.left = `${target.left}px`;
-          seat.style.top = `${target.top}px`;
-          seat.textContent = `${studentNums[idx]}번`;
-          seat.setAttribute("data-num", studentNums[idx]);
-        });
-
-        setTimeout(() => {
-          seats.forEach(s => s.classList.remove("animating"));
-          status.textContent = "자리 배치가 완료되었습니다.";
-          isShuffleRunning = false;
-        }, 200);
-
-      }, 10000);
+        seats.forEach(s => s.classList.remove("animating"));
+        status.textContent = "자리 배치가 완료되었습니다!";
+        isShuffleRunning = false;
+      }, 500);
     }
   </script>
 </body>
