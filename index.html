@@ -698,7 +698,7 @@
     <div id="clockDisplay" class="current-time">00:00:00</div>
     <div class="title-row">
       <h1>대전하기중학교</h1>
-      <button class="header-notice-btn" onclick="openNoticeModal()">공지사항(필독)</button>
+      <button class="header-notice-btn" onclick="openNoticeModal()">사용방법(필독)</button>
     </div>
     <div class="class-select-box">
       <select id="gradeSelect" onchange="changeClass()">
@@ -788,18 +788,16 @@
     </div>
   </div>
 
-  <!-- 공지사항 모달 -->
+  <!-- 사용방법 모달 -->
   <div id="noticeModal" class="modal" onclick="closeModalOnBg(event, 'noticeModal')">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 style="margin:0; color: #1e293b;">공지사항(필독)</h3>
+        <h3 style="margin:0; color: #1e293b;">사용방법(필독)</h3>
         <button class="close-btn" onclick="closeNoticeModal()">&times;</button>
       </div>
       <div class="notice-text-content">기본 시간표에서 과목 변경이 생기면, 각 반 반장/부반장이나 친구들이 컴시간을 확인한 뒤 [시간표 수정] 버튼을 눌러주세요.
 
-수정한 시간표는 수정한 주가 지나고 월요일이 되면 자동으로 기본 시간표로 초기화됩니다.
-
-아직 부족한게 많을 수 있습니다. 오류나 추가 기능은 개인톡이나 개인디엠으로 문의해주세요 감사합니다</div>
+수정한 시간표는 수정한 주가 지나고 월요일이 되면 자동으로 기본 시간표로 초기화됩니다.</div>
     </div>
   </div>
 
@@ -1690,7 +1688,7 @@
       isShuffleRunning = true;
       status.textContent = "운명의 자리 섞는 중...";
 
-      // 페이크 스킵 버튼 시작
+      // 페이크 스킵 버튼 시작 (인트로 영상 중에 표시)
       showFakeSkipButton();
 
       const currentPositions = seats.map(seat => ({
@@ -1707,6 +1705,9 @@
       setCurtainClosed(true);
       await new Promise(r => setTimeout(r, 850));
       await playVideoSequence(MEDIA_PATHS.video1);
+
+      // ★ 인트로(비디오1)가 끝나자마자 스킵 버튼 삭제
+      hideFakeSkipButton();
 
       setCurtainClosed(false);
       seats.forEach(s => s.classList.add("animating"));
@@ -1745,9 +1746,6 @@
 
       playAudio(MEDIA_PATHS.explosionSfx, false);
       setCurtainClosed(false);
-
-      // 연출 종료 후 페이크 스킵 버튼 삭제
-      hideFakeSkipButton();
 
       setTimeout(() => {
         seats.forEach(s => s.classList.remove("animating"));
