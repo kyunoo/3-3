@@ -384,18 +384,53 @@
 
     .tool-row {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      flex-direction: column;
+      gap: 10px;
       margin-bottom: 10px;
       align-items: center;
       justify-content: center;
     }
 
-    .tool-row input, .tool-row select {
+    .tool-controls-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tool-controls-group input, .tool-controls-group select {
       padding: 6px 8px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       font-size: 13px;
+    }
+
+    .action-btn-group {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .shuffle-action-btn {
+      width: 100%;
+      max-width: 240px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: bold;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(37, 99, 235, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .shuffle-action-btn:hover {
+      background-color: #1d4ed8;
+      transform: translateY(-2px);
     }
 
     .draw-result {
@@ -526,9 +561,7 @@
       background: #ecfdf5;
     }
 
-    /* ----------------------------------------------------
-       웅장한 커튼 & 비디오 오버레이 스타일
-    ---------------------------------------------------- */
+    /* 커튼 & 비디오 오버레이 스타일 */
     .curtain-container {
       position: fixed;
       top: 0;
@@ -764,7 +797,7 @@
       </div>
       <div class="notice-text-content">기본 시간표에서 과목 변경이 생기면, 각 반 반장/부반장이나 친구들이 컴시간을 확인한 뒤 [시간표 수정] 버튼을 눌러주세요.
 
-수정한 시간표는 본인 핸드폰/컴퓨터 브라우저에만 저장되기 때문에, 내가 바꾼 시간표가 다른 기기에서 똑같이 바뀌지는 않는 점 참고해 주세요.
+수정한 시간표는 수정한 주가 지나고 월요일이 되면 자동으로 기본 시간표로 초기화됩니다.
 
 아직 부족한게 많을 수 있습니다. 오류나 추가 기능은 개인톡이나 개인디엠으로 문의해주세요 감사합니다</div>
     </div>
@@ -777,7 +810,7 @@
         <h3 style="margin:0; color: #1e293b;">번호 제비뽑기</h3>
         <button class="close-btn" onclick="closeLotteryModal()">&times;</button>
       </div>
-      <div class="tool-row">
+      <div class="tool-controls-group">
         <label style="font-weight: bold; color: #475569;">전체 인원수:</label>
         <input type="number" id="lotteryCount" value="35" min="1" max="50" style="width: 60px;">
         <button class="btn-primary" style="width: auto; margin-top:0;" onclick="runLottery()">추첨하기</button>
@@ -793,27 +826,34 @@
         <h3 style="margin:0; color: #1e293b;">학교 자리배치</h3>
         <button class="close-btn" onclick="closeSeatingModal()">&times;</button>
       </div>
+      
+      <!-- 레이어 구분을 명확히 하여 컴퓨터/전자칠판 모두 똑같은 정렬을 유지 -->
       <div class="tool-row">
-        <label style="font-weight: bold; color: #475569;">최대 번호:</label>
-        <input type="number" id="seatMaxNumInput" value="35" min="1" max="60" style="width: 45px;" onchange="generateSeats()" oninput="generateSeats()">
+        <div class="tool-controls-group">
+          <label style="font-weight: bold; color: #475569;">최대 번호:</label>
+          <input type="number" id="seatMaxNumInput" value="35" min="1" max="60" style="width: 45px;" onchange="generateSeats()" oninput="generateSeats()">
 
-        <label style="font-weight: bold; color: #475569; margin-left: 5px;">제외 번호:</label>
-        <input type="text" id="seatExcludeInput" value="14-20" placeholder="예: 14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호" onchange="generateSeats()" oninput="generateSeats()">
+          <label style="font-weight: bold; color: #475569; margin-left: 5px;">제외 번호:</label>
+          <input type="text" id="seatExcludeInput" value="14-20" placeholder="예: 14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호" onchange="generateSeats()" oninput="generateSeats()">
 
-        <label style="font-weight: bold; color: #475569; margin-left: 5px;">형태:</label>
-        <select id="seatTypeSelect" onchange="generateSeats()">
-          <option value="pair">짝꿍</option>
-          <option value="single">혼자</option>
-        </select>
+          <label style="font-weight: bold; color: #475569; margin-left: 5px;">형태:</label>
+          <select id="seatTypeSelect" onchange="generateSeats()">
+            <option value="pair">짝꿍</option>
+            <option value="single">혼자</option>
+          </select>
 
-        <label style="font-weight: bold; color: #475569; margin-left: 5px;">배열:</label>
-        <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 40px;" title="줄 수(N)" onchange="generateSeats()" oninput="generateSeats()">
-        <span style="font-weight:bold;">줄 ×</span>
-        <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 40px;" title="열 수(X)" onchange="generateSeats()" oninput="generateSeats()">
-        <span style="font-weight:bold;">열</span>
+          <label style="font-weight: bold; color: #475569; margin-left: 5px;">배열:</label>
+          <input type="number" id="seatRowsInput" value="5" min="1" max="10" style="width: 40px;" title="줄 수(N)" onchange="generateSeats()" oninput="generateSeats()">
+          <span style="font-weight:bold;">줄 ×</span>
+          <input type="number" id="seatColsInput" value="6" min="1" max="10" style="width: 40px;" title="열 수(X)" onchange="generateSeats()" oninput="generateSeats()">
+          <span style="font-weight:bold;">열</span>
+        </div>
 
-        <button class="btn-primary" style="width: auto; margin-top:0; background-color: #2563eb;" onclick="shuffleSeats()">자리섞기</button>
+        <div class="action-btn-group">
+          <button class="shuffle-action-btn" onclick="shuffleSeats()">자리섞기</button>
+        </div>
       </div>
+
       <div id="seatingStatus" style="font-size: 13px; color: #059669; font-weight: bold; text-align: center; min-height: 20px;"></div>
       <div class="blackboard">칠 판</div>
       <div id="seatingBoard" class="seating-board"></div>
@@ -1050,16 +1090,40 @@
       }
     };
 
+    // 현재 기준 주(Week)의 월요일 날짜 구하기 (YYYY-MM-DD 식별자)
+    function getMondayOfWeek(d) {
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1); // 월요일로 설정
+      const monday = new Date(date.setDate(diff));
+      return monday.toISOString().split('T')[0];
+    }
+
     function getCurrentGradeClass() {
       const g = document.getElementById("gradeSelect").value;
       const c = document.getElementById("classSelect").value;
       return { g, c };
     }
 
+    // 주차가 지나 월요일이 되면 수정한 시간표 자동 초기화
     function getStoredSchedule(g, c) {
       const key = `hagi_${g}_${c}_schedule`;
       const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : defaultSchedules[g][c];
+      if (!stored) return defaultSchedules[g][c];
+
+      try {
+        const parsed = JSON.parse(stored);
+        const currentMonday = getMondayOfWeek(new Date());
+
+        // 저장되었던 주차의 월요일과 현재 주차의 월요일이 다르면 데이터 초기화
+        if (parsed.savedMonday !== currentMonday) {
+          localStorage.removeItem(key);
+          return defaultSchedules[g][c];
+        }
+        return parsed.data;
+      } catch (e) {
+        return defaultSchedules[g][c];
+      }
     }
 
     window.onload = () => {
@@ -1280,7 +1344,13 @@
 
     function saveSchedule() {
       const { g, c } = getCurrentGradeClass();
-      const scheduleData = getStoredSchedule(g, c);
+      const key = `hagi_${g}_${c}_schedule`;
+      
+      // 현재 주차 데이터 불러오기
+      let currentSchedule = getStoredSchedule(g, c);
+      // 깊은 복사 진행
+      let updatedSchedule = JSON.parse(JSON.stringify(currentSchedule));
+
       const newList = [];
       const count = maxPeriods[currentDay];
 
@@ -1288,10 +1358,17 @@
         newList.push(document.getElementById(`period_${i}`).value.trim());
       }
 
-      scheduleData[currentDay] = newList;
-      localStorage.setItem(`hagi_${g}_${c}_schedule`, JSON.stringify(scheduleData));
+      updatedSchedule[currentDay] = newList;
 
-      alert(`${g}학년 ${c}반 ${dayNames[currentDay]} 시간표가 저장되었습니다!`);
+      // 주차 정보(savedMonday)를 함께 세트로 저장
+      const saveObject = {
+        savedMonday: getMondayOfWeek(new Date()),
+        data: updatedSchedule
+      };
+
+      localStorage.setItem(key, JSON.stringify(saveObject));
+
+      alert(`${g}학년 ${c}반 ${dayNames[currentDay]} 시간표가 저장되었습니다!\n(이 수정한 시간표는 다음 주 월요일에 자동 초기화됩니다.)`);
       document.getElementById("editScheduleArea").style.display = "none";
       document.getElementById("viewScheduleArea").style.display = "block";
       renderScheduleView();
