@@ -1479,7 +1479,7 @@
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (안정적인 데이터 API 연결 방식)
+       축구 스코어 (시즌 연도 자동 계산 추가)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
@@ -1537,9 +1537,13 @@
       listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
 
       const targetDate = getFormattedDate(selectedDateOffset);
+      const targetYear = parseInt(targetDate.split("-")[0]);
+      const targetMonth = parseInt(targetDate.split("-")[1]);
 
-      // 날짜와 리그 매개변수로 API 요청
-      const url = `https://v3.football.api-sports.io/fixtures?date=${targetDate}&league=${selectedLeagueId}`;
+      // 추춘제 시즌 자동 계산 (8월 이후는 해당 연도 시즌, 8월 이전은 전년도 시즌)
+      const seasonYear = targetMonth >= 8 ? targetYear : targetYear - 1;
+
+      const url = `https://v3.football.api-sports.io/fixtures?league=${selectedLeagueId}&season=${seasonYear}&date=${targetDate}`;
 
       try {
         const response = await fetch(url, {
@@ -1551,10 +1555,10 @@
 
         const data = await response.json();
 
-        // API 일일 쿼터 초과 또는 키 오류 시 알림
+        // API 에러 수신 여부 체크
         if (data.errors && Object.keys(data.errors).length > 0) {
-          const errDetail = JSON.stringify(data.errors);
-          listDiv.innerHTML = `<div style='text-align:center; color:#dc2626; padding:20px; font-size:13px;'>API 키 일일 제한(100회) 초과 또는 오류입니다.<br>오류 내용: ${errDetail}</div>`;
+          const errMsg = JSON.stringify(data.errors);
+          listDiv.innerHTML = `<div style='text-align:center; color:#dc2626; padding:20px; font-size:13px;'>API 에러 발생: ${errMsg}</div>`;
           return;
         }
 
