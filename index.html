@@ -156,6 +156,32 @@
       font-weight: normal;
     }
 
+    .schedule-header-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .com-link-btn {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffffff;
+      background-color: #2563eb;
+      border: none;
+      border-radius: 16px;
+      padding: 6px 14px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+
+    .com-link-btn:hover {
+      background-color: #1d4ed8;
+      transform: scale(1.05);
+    }
+
     .edit-schedule-btn {
       font-size: 13px;
       font-weight: bold;
@@ -802,7 +828,10 @@
     <div class="card">
       <h2>
         <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
-        <button class="edit-schedule-btn" onclick="toggleAdminMode()">시간표 수정</button>
+        <div class="schedule-header-actions">
+          <a href="http://www.xn--s39aj90b0nb2xw6xh.kr/" target="_blank" class="com-link-btn">컴시간 바로가기</a>
+          <button class="edit-schedule-btn" onclick="toggleAdminMode()">시간표 수정</button>
+        </div>
       </h2>
 
       <div class="day-selector">
