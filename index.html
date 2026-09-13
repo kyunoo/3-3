@@ -1476,7 +1476,7 @@
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (TheSportsDB 무료 오픈 API 연결)
+       축구 스코어 (한국 시간 시차 자동 보정 로직)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
@@ -1533,34 +1533,67 @@
       const listDiv = document.getElementById("sportsScoreList");
       listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
 
-      const targetDate = getFormattedDate(selectedDateOffset);
+      // 한국 시간 기준 선택 날짜 (YYYY-MM-DD)
+      const targetDateStr = getFormattedDate(selectedDateOffset);
 
-      // 더스포츠DB (TheSportsDB) 오픈 라이브 API 사용
-      const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${targetDate}&l=${selectedLeagueId}`;
+      const baseDate = new Date();
+      baseDate.setDate(baseDate.getDate() + selectedDateOffset);
+
+      // 유럽 시차가 뒤처져 있으므로 선택일 전후 날짜까지 넉넉하게 API 데이터 조회
+      const prevDate = new Date(baseDate); prevDate.setDate(prevDate.getDate() - 1);
+      const nextDate = new Date(baseDate); nextDate.setDate(nextDate.getDate() + 1);
+
+      const datesToFetch = [
+        prevDate.toISOString().split('T')[0],
+        targetDateStr,
+        nextDate.toISOString().split('T')[0]
+      ];
 
       try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const matches = data.events;
+        let allEvents = [];
+        for (const d of datesToFetch) {
+          const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${d}&l=${selectedLeagueId}`;
+          const response = await fetch(url);
+          const data = await response.json();
+          if (data && data.events) {
+            allEvents = allEvents.concat(data.events);
+          }
+        }
 
-        if (!matches || matches.length === 0) {
-          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDate})에는 진행되거나 예정된 경기가 없습니다.</div>`;
+        // 한국 시간(Asia/Seoul)으로 변환 후 정확히 선택한 날짜에 속하는 경기만 필터링
+        const filteredMatches = allEvents.filter(m => {
+          if (!m.dateEvent) return false;
+          const timeStr = m.strTime ? m.strTime : "00:00:00";
+          const matchDateUtc = new Date(`${m.dateEvent}T${timeStr}Z`);
+          
+          const matchDateKst = matchDateUtc.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+          return matchDateKst === targetDateStr;
+        });
+
+        // 중복 경기 제거
+        const uniqueMatches = Array.from(new Set(filteredMatches.map(m => m.idEvent)))
+          .map(id => filteredMatches.find(m => m.idEvent === id));
+
+        if (uniqueMatches.length === 0) {
+          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDateStr})에는 진행되거나 예정된 경기가 없습니다.</div>`;
           return;
         }
 
         let html = "";
-        matches.forEach(m => {
+        uniqueMatches.forEach(m => {
           const leagueName = m.strLeague || "리그";
           const homeTeam = m.strHomeTeam || "홈팀";
           const awayTeam = m.strAwayTeam || "원정팀";
           const homeScore = m.intHomeScore ?? "-";
           const awayScore = m.intAwayScore ?? "-";
           
-          let timeText = m.strStatus || "예정";
-          if (m.strTime) {
-            const timePart = m.strTime.substring(0, 5);
-            timeText = `${timeText} (${timePart})`;
-          }
+          // 한국 시간으로 변환된 경기 시간 표시
+          const timeStr = m.strTime ? m.strTime : "00:00:00";
+          const matchDateUtc = new Date(`${m.dateEvent}T${timeStr}Z`);
+          const timeTextKst = matchDateUtc.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' });
+
+          let statusText = m.strStatus || "예정";
+          if (statusText === "Match Finished" || statusText === "FT") statusText = "종료";
 
           html += `
             <div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:8px; margin-bottom:2px;">${leagueName}</div>
@@ -1568,7 +1601,7 @@
               <span class="sports-team home">${homeTeam}</span>
               <div>
                 <div class="sports-score-badge">${homeScore} : ${awayScore}</div>
-                <span class="sports-time-badge">${timeText}</span>
+                <span class="sports-time-badge">${statusText} (${timeTextKst})</span>
               </div>
               <span class="sports-team away">${awayTeam}</span>
             </div>
