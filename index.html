@@ -866,11 +866,11 @@
         <button class="close-btn" onclick="closeSportsModal()">&times;</button>
       </div>
 
-      <!-- 리그 선택 필터 -->
+      <!-- 리그 선택 필터 (TheSportsDB ID) -->
       <div class="filter-btn-group">
-        <button class="filter-btn active" onclick="selectLeague(39, this)">EPL</button>
-        <button class="filter-btn" onclick="selectLeague(140, this)">라리가</button>
-        <button class="filter-btn" onclick="selectLeague(78, this)">분데스리가</button>
+        <button class="filter-btn active" onclick="selectLeague('4328', this)">EPL</button>
+        <button class="filter-btn" onclick="selectLeague('4335', this)">라리가</button>
+        <button class="filter-btn" onclick="selectLeague('4331', this)">분데스리가</button>
       </div>
 
       <!-- 날짜 선택 필터 -->
@@ -980,9 +980,6 @@
     const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
-
-    // API-Sports 키
-    const SPORTS_API_KEY = "0fcf6ef6187e7b5f138a8e514283278d";
 
     // 연출용 미디어 파일 경로 설정
     const MEDIA_PATHS = {
@@ -1479,13 +1476,13 @@
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (시즌 연도 자동 계산 추가)
+       축구 스코어 (TheSportsDB 무료 오픈 API 연결)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
 
-    let selectedLeagueId = 39;  // 기본값: EPL (39: EPL, 140: 라리가, 78: 분데스리가)
-    let selectedDateOffset = 0; // 기본값: 오늘 (0: 오늘, -1: 어제, 1: 내일)
+    let selectedLeagueId = "4328";  // 기본값: EPL (4328: EPL, 4335: 라리가, 4331: 분데스리가)
+    let selectedDateOffset = 0;    // 기본값: 오늘 (0: 오늘, -1: 어제, 1: 내일)
 
     function handleAuthorClick() {
       authorClickCount++;
@@ -1537,55 +1534,32 @@
       listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
 
       const targetDate = getFormattedDate(selectedDateOffset);
-      const targetYear = parseInt(targetDate.split("-")[0]);
-      const targetMonth = parseInt(targetDate.split("-")[1]);
 
-      // 추춘제 시즌 자동 계산 (8월 이후는 해당 연도 시즌, 8월 이전은 전년도 시즌)
-      const seasonYear = targetMonth >= 8 ? targetYear : targetYear - 1;
-
-      const url = `https://v3.football.api-sports.io/fixtures?league=${selectedLeagueId}&season=${seasonYear}&date=${targetDate}`;
+      // 더스포츠DB (TheSportsDB) 오픈 라이브 API 사용
+      const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${targetDate}&l=${selectedLeagueId}`;
 
       try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "x-apisports-key": SPORTS_API_KEY
-          }
-        });
-
+        const response = await fetch(url);
         const data = await response.json();
-
-        // API 에러 수신 여부 체크
-        if (data.errors && Object.keys(data.errors).length > 0) {
-          const errMsg = JSON.stringify(data.errors);
-          listDiv.innerHTML = `<div style='text-align:center; color:#dc2626; padding:20px; font-size:13px;'>API 에러 발생: ${errMsg}</div>`;
-          return;
-        }
-
-        const matches = data.response;
+        const matches = data.events;
 
         if (!matches || matches.length === 0) {
-          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDate})에는 경기가 없습니다.</div>`;
+          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDate})에는 진행되거나 예정된 경기가 없습니다.</div>`;
           return;
         }
 
         let html = "";
         matches.forEach(m => {
-          const leagueName = m.league ? m.league.name : "리그";
-          const homeTeam = m.teams.home ? m.teams.home.name : "홈팀";
-          const awayTeam = m.teams.away ? m.teams.away.name : "원정팀";
-          const homeScore = m.goals.home ?? 0;
-          const awayScore = m.goals.away ?? 0;
+          const leagueName = m.strLeague || "리그";
+          const homeTeam = m.strHomeTeam || "홈팀";
+          const awayTeam = m.strAwayTeam || "원정팀";
+          const homeScore = m.intHomeScore ?? "-";
+          const awayScore = m.intAwayScore ?? "-";
           
-          const statusShort = m.fixture.status.short;
-          let timeText = "진행중";
-          
-          if (statusShort === "FT") timeText = "종료";
-          else if (statusShort === "NS") {
-            const matchTime = new Date(m.fixture.date).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-            timeText = `예정 (${matchTime})`;
-          } else if (m.fixture.status.elapsed) {
-            timeText = `${m.fixture.status.elapsed}' Live`;
+          let timeText = m.strStatus || "예정";
+          if (m.strTime) {
+            const timePart = m.strTime.substring(0, 5);
+            timeText = `${timeText} (${timePart})`;
           }
 
           html += `
@@ -1604,7 +1578,7 @@
         listDiv.innerHTML = html;
 
       } catch (err) {
-        listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>네트워크 오류가 발생했습니다.</div>";
+        listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>경기 스코어 데이터를 불러오지 못했습니다.</div>";
       }
     }
 
