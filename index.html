@@ -1370,7 +1370,11 @@
 
     function closeModalOnBg(e, modalId) {
       if (e.target.id === modalId) {
-        document.getElementById(modalId).style.display = "none";
+        if (modalId === 'sportsModal') {
+          closeSportsModal();
+        } else {
+          document.getElementById(modalId).style.display = "none";
+        }
       }
     }
 
@@ -1476,13 +1480,14 @@
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (한국 시간 시차 자동 보정 로직)
+       축구 스코어 (10초 자동 새로고침 적용)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
 
     let selectedLeagueId = "4328";  // 기본값: EPL (4328: EPL, 4335: 라리가, 4331: 분데스리가)
     let selectedDateOffset = 0;    // 기본값: 오늘 (0: 오늘, -1: 어제, 1: 내일)
+    let liveScoreTimer = null;     // 실시간 자동 갱신 타이머
 
     function handleAuthorClick() {
       authorClickCount++;
@@ -1501,10 +1506,23 @@
     function openSportsModal() {
       document.getElementById("sportsModal").style.display = "flex";
       fetchLiveScores();
+
+      // 모달이 열리면 10초(10000ms)마다 자동으로 스코어 데이터를 받아옴
+      if (liveScoreTimer) clearInterval(liveScoreTimer);
+      liveScoreTimer = setInterval(() => {
+        if (document.getElementById("sportsModal").style.display === "flex") {
+          fetchLiveScores();
+        }
+      }, 10000);
     }
 
     function closeSportsModal() {
       document.getElementById("sportsModal").style.display = "none";
+      // 모달을 닫으면 타이머 정지
+      if (liveScoreTimer) {
+        clearInterval(liveScoreTimer);
+        liveScoreTimer = null;
+      }
     }
 
     function selectLeague(leagueId, btn) {
@@ -1531,7 +1549,9 @@
 
     async function fetchLiveScores() {
       const listDiv = document.getElementById("sportsScoreList");
-      listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
+      if (!listDiv.children.length || listDiv.textContent.includes("불러오는 중")) {
+        listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
+      }
 
       // 한국 시간 기준 선택 날짜 (YYYY-MM-DD)
       const targetDateStr = getFormattedDate(selectedDateOffset);
