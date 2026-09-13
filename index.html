@@ -505,7 +505,7 @@
       padding-bottom: 2px;
     }
 
-    /* 실시간 스포츠 스코어 필터 & 카드 전용 스타일 */
+    /* 축구 필터 & 카드 스타일 */
     .filter-btn-group {
       display: flex;
       gap: 6px;
@@ -573,7 +573,7 @@
       text-align: center;
     }
 
-    /* 더블클릭 및 선택 방지 */
+    /* 선택 방지 */
     .easter-egg-trigger {
       cursor: pointer;
       user-select: none;
@@ -858,19 +858,19 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
-  <!-- 스포츠 스코어 이스터에그 모달 (3대 리그 + 날짜 선택) -->
+  <!-- 스포츠 모달 (축구로 단어 및 UI 간소화) -->
   <div id="sportsModal" class="modal" onclick="closeModalOnBg(event, 'sportsModal')">
     <div class="modal-content" style="max-width: 650px;">
       <div class="modal-header">
-        <h3 style="margin:0; color: #1e293b;">⚽ 유럽 3대 리그 스코어</h3>
+        <h3 style="margin:0; color: #1e293b;">축구</h3>
         <button class="close-btn" onclick="closeSportsModal()">&times;</button>
       </div>
 
       <!-- 리그 선택 필터 -->
       <div class="filter-btn-group">
-        <button class="filter-btn active" onclick="selectLeague(39, this)">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
-        <button class="filter-btn" onclick="selectLeague(140, this)">🇪🇸 라리가</button>
-        <button class="filter-btn" onclick="selectLeague(78, this)">🇩🇪 분데스리가</button>
+        <button class="filter-btn active" onclick="selectLeague(39, this)">EPL</button>
+        <button class="filter-btn" onclick="selectLeague(140, this)">라리가</button>
+        <button class="filter-btn" onclick="selectLeague(78, this)">분데스리가</button>
       </div>
 
       <!-- 날짜 선택 필터 -->
@@ -1479,7 +1479,7 @@
     }
 
     /* ----------------------------------------------------
-       실시간 스포츠 스코어 (3대 리그 + 날짜 선택 시스템)
+       축구 스코어 (2025-2026 추춘제 시즌 데이터 조회)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
@@ -1534,12 +1534,12 @@
 
     async function fetchLiveScores() {
       const listDiv = document.getElementById("sportsScoreList");
-      listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>⚽ 경기 데이터를 불러오는 중...</div>";
+      listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
 
       const targetDate = getFormattedDate(selectedDateOffset);
 
-      // 해당 리그와 지정된 날짜 경기 데이터 요청
-      const url = `https://v3.football.api-sports.io/fixtures?league=${selectedLeagueId}&season=2026&date=${targetDate}`;
+      // 2025-2026 시즌 데이터를 요청하기 위해 season=2025로 설정
+      const url = `https://v3.football.api-sports.io/fixtures?league=${selectedLeagueId}&season=2025&date=${targetDate}`;
 
       try {
         const response = await fetch(url, {
@@ -1577,7 +1577,7 @@
           }
 
           html += `
-            <div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:8px; margin-bottom:2px;">🏆 ${leagueName}</div>
+            <div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:8px; margin-bottom:2px;">${leagueName}</div>
             <div class="sports-card">
               <span class="sports-team home">${homeTeam}</span>
               <div>
@@ -1592,7 +1592,7 @@
         listDiv.innerHTML = html;
 
       } catch (err) {
-        listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>경기 스코어 데이터를 불러오지 못했습니다. (네트워크 상태 또는 API 제한 확인 필요)</div>";
+        listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>경기 데이터를 불러오지 못했습니다.</div>";
       }
     }
 
