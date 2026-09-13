@@ -858,7 +858,7 @@
     <div id="ddayContainer" class="dday-grid"></div>
   </div>
 
-  <!-- 스포츠 모달 (축구로 단어 및 UI 간소화) -->
+  <!-- 축구 스코어 모달 -->
   <div id="sportsModal" class="modal" onclick="closeModalOnBg(event, 'sportsModal')">
     <div class="modal-content" style="max-width: 650px;">
       <div class="modal-header">
@@ -1479,7 +1479,7 @@
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (2025-2026 추춘제 시즌 데이터 조회)
+       축구 스코어 (안정적인 데이터 API 연결 방식)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
@@ -1538,8 +1538,8 @@
 
       const targetDate = getFormattedDate(selectedDateOffset);
 
-      // 2025-2026 시즌 데이터를 요청하기 위해 season=2025로 설정
-      const url = `https://v3.football.api-sports.io/fixtures?league=${selectedLeagueId}&season=2025&date=${targetDate}`;
+      // 날짜와 리그 매개변수로 API 요청
+      const url = `https://v3.football.api-sports.io/fixtures?date=${targetDate}&league=${selectedLeagueId}`;
 
       try {
         const response = await fetch(url, {
@@ -1550,10 +1550,18 @@
         });
 
         const data = await response.json();
+
+        // API 일일 쿼터 초과 또는 키 오류 시 알림
+        if (data.errors && Object.keys(data.errors).length > 0) {
+          const errDetail = JSON.stringify(data.errors);
+          listDiv.innerHTML = `<div style='text-align:center; color:#dc2626; padding:20px; font-size:13px;'>API 키 일일 제한(100회) 초과 또는 오류입니다.<br>오류 내용: ${errDetail}</div>`;
+          return;
+        }
+
         const matches = data.response;
 
         if (!matches || matches.length === 0) {
-          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDate})에는 진행되거나 예정된 경기가 없습니다.</div>`;
+          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDate})에는 경기가 없습니다.</div>`;
           return;
         }
 
@@ -1562,8 +1570,8 @@
           const leagueName = m.league ? m.league.name : "리그";
           const homeTeam = m.teams.home ? m.teams.home.name : "홈팀";
           const awayTeam = m.teams.away ? m.teams.away.name : "원정팀";
-          const homeScore = m.goals.home ?? (m.score && m.score.fulltime ? m.score.fulltime.home : 0) ?? 0;
-          const awayScore = m.goals.away ?? (m.score && m.score.fulltime ? m.score.fulltime.away : 0) ?? 0;
+          const homeScore = m.goals.home ?? 0;
+          const awayScore = m.goals.away ?? 0;
           
           const statusShort = m.fixture.status.short;
           let timeText = "진행중";
@@ -1592,7 +1600,7 @@
         listDiv.innerHTML = html;
 
       } catch (err) {
-        listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>경기 데이터를 불러오지 못했습니다.</div>";
+        listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>네트워크 오류가 발생했습니다.</div>";
       }
     }
 
