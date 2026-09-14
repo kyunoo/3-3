@@ -895,7 +895,7 @@
         <button class="close-btn" onclick="closeSportsModal()">&times;</button>
       </div>
 
-      <!-- 리그 선택 필터 (TheSportsDB ID) -->
+      <!-- 리그 선택 필터 -->
       <div class="filter-btn-group">
         <button class="filter-btn active" onclick="selectLeague('4328', this)">EPL</button>
         <button class="filter-btn" onclick="selectLeague('4335', this)">라리가</button>
@@ -1010,7 +1010,6 @@
     const ATPT_CODE = "G10";
     const SCHOOL_CODE = "7451051"; 
 
-    // 연출용 미디어 파일 경로 설정
     const MEDIA_PATHS = {
       video1: "intro.mp4",        
       video2: "outro.mp4",        
@@ -1029,11 +1028,18 @@
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
     function updateClock() {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById("clockDisplay").textContent = `${hours}:${minutes}:${seconds}`;
+      try {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const clockElem = document.getElementById("clockDisplay");
+        if (clockElem) {
+          clockElem.textContent = hours + ":" + minutes + ":" + seconds;
+        }
+      } catch (e) {
+        // 시계 오류 방지
+      }
     }
 
     const events = [
@@ -1047,41 +1053,43 @@
     ];
 
     function renderDday() {
-      const container = document.getElementById("ddayContainer");
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      try {
+        const container = document.getElementById("ddayContainer");
+        if (!container) return;
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-      let html = "";
-      events.forEach(evt => {
-        const targetDate = new Date(evt.date);
-        const diffTime = targetDate - todayDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        let html = "";
+        events.forEach(evt => {
+          const targetDate = new Date(evt.date);
+          const diffTime = targetDate - todayDate;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays >= 0) {
-          let countText = "";
-          let isTodayClass = "";
-          if (diffDays === 0) {
-            countText = "D-DAY";
-            isTodayClass = "today";
-          } else {
-            countText = `D-${diffDays}`;
+          if (diffDays >= 0) {
+            let countText = "";
+            let isTodayClass = "";
+            if (diffDays === 0) {
+              countText = "D-DAY";
+              isTodayClass = "today";
+            } else {
+              countText = "D-" + diffDays;
+            }
+
+            html += '<div class="dday-box">' +
+                    '<div class="dday-title">' + evt.name + '</div>' +
+                    '<div class="dday-count ' + isTodayClass + '">' + countText + '</div>' +
+                    '<div class="dday-date">' + evt.date + '</div>' +
+                    '</div>';
           }
+        });
 
-          html += `
-            <div class="dday-box">
-              <div class="dday-title">${evt.name}</div>
-              <div class="dday-count ${isTodayClass}">${countText}</div>
-              <div class="dday-date">${evt.date}</div>
-            </div>
-          `;
-        }
-      });
-
-      container.innerHTML = html || "<div style='color:#888; text-align:center; grid-column: 1/-1;'>남은 일정이 없습니다.</div>";
+        container.innerHTML = html || "<div style='color:#888; text-align:center; grid-column: 1/-1;'>남은 일정이 없습니다.</div>";
+      } catch (e) {}
     }
 
     function toggleDday() {
       const container = document.getElementById("ddayContainer");
       const btn = document.getElementById("ddayToggleBtn");
+      if (!container || !btn) return;
       if (container.style.display === "none") {
         container.style.display = "grid";
         btn.textContent = "[접기]";
@@ -1237,15 +1245,15 @@
     function getCurrentGradeClass() {
       const g = document.getElementById("gradeSelect").value;
       const c = document.getElementById("classSelect").value;
-      return { g, c };
+      return { g: g, c: c };
     }
 
     function getStoredSchedule(g, c) {
-      const key = `hagi_${g}_${c}_schedule`;
-      const stored = localStorage.getItem(key);
-      if (!stored) return defaultSchedules[g][c];
-
       try {
+        const key = "hagi_" + g + "_" + c + "_schedule";
+        const stored = localStorage.getItem(key);
+        if (!stored) return defaultSchedules[g][c];
+
         const parsed = JSON.parse(stored);
         const currentMonday = getMondayOfWeek(new Date());
 
@@ -1259,7 +1267,7 @@
       }
     }
 
-    window.onload = () => {
+    window.onload = function() {
       updateClock();
       setInterval(updateClock, 1000);
       renderDday();
@@ -1281,7 +1289,7 @@
       fetchMealByDate(currentMealDate);
     }
 
-    async function fetchMealByDate(targetDate) {
+    function fetchMealByDate(targetDate) {
       const mealDiv = document.getElementById("mealResult");
       const calDiv = document.getElementById("calorieResult");
       const dateBtn = document.getElementById("mealDateBtn");
@@ -1290,7 +1298,7 @@
       const year = targetDate.getFullYear();
       const month = String(targetDate.getMonth() + 1).padStart(2, '0');
       const day = String(targetDate.getDate()).padStart(2, '0');
-      const YYYYMMDD = `${year}${month}${day}`;
+      const YYYYMMDD = "" + year + month + day;
 
       const realToday = new Date();
       const isToday = (
@@ -1308,73 +1316,69 @@
       const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
       const weekName = weekNames[targetDate.getDay()];
 
-      dateBtn.textContent = `${year}.${month}.${day}(${weekName})`;
+      dateBtn.textContent = year + "." + month + "." + day + "(" + weekName + ")";
       mealDiv.textContent = "급식을 불러오는 중...";
       calDiv.textContent = "";
 
-      const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YMD=${YYYYMMDD}`;
+      const url = "https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=" + API_KEY + "&Type=json&ATPT_OFCDC_SC_CODE=" + ATPT_CODE + "&SD_SCHUL_CODE=" + SCHOOL_CODE + "&MLSV_YMD=" + YYYYMMDD;
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.mealServiceDietInfo) {
-          const row = data.mealServiceDietInfo[1].row[0];
-          const rawDish = row.DDISH_NM;
-          const calorie = row.CAL_INFO || "";
+      fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.mealServiceDietInfo) {
+            const row = data.mealServiceDietInfo[1].row[0];
+            const rawDish = row.DDISH_NM || "";
+            const calorie = row.CAL_INFO || "";
 
-          mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
-          calDiv.textContent = calorie ? `열량: ${calorie}` : "";
-        } else {
-          mealDiv.textContent = "해당 날짜의 급식 정보가 없습니다. (주말/휴교일)";
+            mealDiv.textContent = rawDish.replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
+            calDiv.textContent = calorie ? "열량: " + calorie : "";
+          } else {
+            mealDiv.textContent = "해당 날짜의 급식 정보가 없습니다. (주말/휴교일)";
+            calDiv.textContent = "";
+          }
+        })
+        .catch(function(err) {
+          mealDiv.textContent = "급식 정보를 불러오지 못했습니다.";
           calDiv.textContent = "";
-        }
-      } catch (err) {
-        mealDiv.textContent = "급식 정보를 불러오지 못했습니다.";
-        calDiv.textContent = "";
-      }
+        });
     }
 
-    async function openMealModal() {
+    function openMealModal() {
       const modal = document.getElementById("mealModal");
       const grid = document.getElementById("monthlyMealGrid");
       const year = currentMealDate.getFullYear();
       const month = String(currentMealDate.getMonth() + 1).padStart(2, '0');
-      const YYYYMM = `${year}${month}`;
+      const YYYYMM = "" + year + month;
 
-      document.getElementById("modalTitle").textContent = `${year}년 ${Number(month)}월 전체 급식표`;
+      document.getElementById("modalTitle").textContent = year + "년 " + Number(month) + "월 전체 급식표";
       modal.style.display = "flex";
       grid.innerHTML = "불러오는 중...";
 
-      const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHOOL_CODE}&MLSV_YM=${YYYYMM}`;
+      const url = "https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=" + API_KEY + "&Type=json&ATPT_OFCDC_SC_CODE=" + ATPT_CODE + "&SD_SCHUL_CODE=" + SCHOOL_CODE + "&MLSV_YM=" + YYYYMM;
 
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.mealServiceDietInfo) {
-          const rows = data.mealServiceDietInfo[1].row;
-          if (rows && rows.length > 0) {
-            rows.sort((a, b) => a.MLSV_YMD.localeCompare(b.MLSV_YMD));
-            grid.innerHTML = rows.map(r => {
-              const dayNum = r.MLSV_YMD.substring(6, 8);
-              const dish = r.DDISH_NM.replace(/<br\/>/g, '<br/>').replace(/\([0-9.]+\)/g, '');
-              const cal = r.CAL_INFO ? `<div style="color:#059669; margin-top:2px;">${r.CAL_INFO}</div>` : '';
-              return `
-                <div class="day-meal-box">
-                  <strong>${Number(dayNum)}일</strong>
-                  <div>${dish}</div>
-                  ${cal}
-                </div>
-              `;
-            }).join('');
+      fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.mealServiceDietInfo) {
+            const rows = data.mealServiceDietInfo[1].row;
+            if (rows && rows.length > 0) {
+              rows.sort(function(a, b) { return a.MLSV_YMD.localeCompare(b.MLSV_YMD); });
+              grid.innerHTML = rows.map(function(r) {
+                const dayNum = r.MLSV_YMD.substring(6, 8);
+                const dish = (r.DDISH_NM || "").replace(/<br\/>/g, '<br/>').replace(/\([0-9.]+\)/g, '');
+                const cal = r.CAL_INFO ? '<div style="color:#059669; margin-top:2px;">' + r.CAL_INFO + '</div>' : '';
+                return '<div class="day-meal-box"><strong>' + Number(dayNum) + '일</strong><div>' + dish + '</div>' + cal + '</div>';
+              }).join('');
+            } else {
+              grid.textContent = "이번 달 급식 데이터가 없습니다.";
+            }
           } else {
             grid.textContent = "이번 달 급식 데이터가 없습니다.";
           }
-        } else {
-          grid.textContent = "이번 달 급식 데이터가 없습니다.";
-        }
-      } catch (err) {
-        grid.textContent = "월간 급식 정보를 불러오지 못했습니다.";
-      }
+        })
+        .catch(function(err) {
+          grid.textContent = "월간 급식 정보를 불러오지 못했습니다.";
+        });
     }
 
     function closeMealModal() {
@@ -1409,11 +1413,16 @@
 
     function selectDay(dayNum) {
       currentDay = dayNum;
-      document.getElementById("selectedDayText").textContent = `(${dayNames[dayNum]} - ${maxPeriods[dayNum]}교시)`;
+      document.getElementById("selectedDayText").textContent = "(" + dayNames[dayNum] + " - " + maxPeriods[dayNum] + "교시)";
 
-      document.querySelectorAll(".day-btn").forEach((btn, idx) => {
-        btn.classList.toggle("active", idx + 1 === dayNum);
-      });
+      const buttons = document.querySelectorAll(".day-btn");
+      for (let i = 0; i < buttons.length; i++) {
+        if (i + 1 === dayNum) {
+          buttons[i].classList.add("active");
+        } else {
+          buttons[i].classList.remove("active");
+        }
+      }
 
       const editArea = document.getElementById("editScheduleArea");
       if (editArea.style.display === "block") {
@@ -1424,8 +1433,8 @@
     }
 
     function renderScheduleView() {
-      const { g, c } = getCurrentGradeClass();
-      const scheduleData = getStoredSchedule(g, c);
+      const gc = getCurrentGradeClass();
+      const scheduleData = getStoredSchedule(gc.g, gc.c);
       const todayList = scheduleData[currentDay] || [];
       const viewDiv = document.getElementById("viewScheduleArea");
       const count = maxPeriods[currentDay];
@@ -1434,12 +1443,7 @@
       for (let i = 0; i < count; i++) {
         const subject = todayList[i] || "";
         if (subject) {
-          html += `
-            <div class="schedule-item">
-              <span class="period">${i + 1}교시</span>
-              <span class="subject">${subject}</span>
-            </div>
-          `;
+          html += '<div class="schedule-item"><span class="period">' + (i + 1) + '교시</span><span class="subject">' + subject + '</span></div>';
         }
       }
       viewDiv.innerHTML = html || "<div style='color:#888; text-align:center;'>등록된 시간표가 없습니다.</div>";
@@ -1461,36 +1465,32 @@
     }
 
     function renderScheduleForm() {
-      const { g, c } = getCurrentGradeClass();
-      const scheduleData = getStoredSchedule(g, c);
+      const gc = getCurrentGradeClass();
+      const scheduleData = getStoredSchedule(gc.g, gc.c);
       const todayList = scheduleData[currentDay] || [];
       const formDiv = document.getElementById("inputForm");
       const count = maxPeriods[currentDay];
 
       let html = "";
       for (let i = 0; i < count; i++) {
-        html += `
-          <div class="edit-row">
-            <label>${i + 1}교시</label>
-            <input type="text" class="edit-input" id="period_${i}" value="${todayList[i] || ''}" placeholder="과목 입력">
-          </div>
-        `;
+        html += '<div class="edit-row"><label>' + (i + 1) + '교시</label><input type="text" class="edit-input" id="period_' + i + '" value="' + (todayList[i] || '') + '" placeholder="과목 입력"></div>';
       }
       formDiv.innerHTML = html;
     }
 
     function saveSchedule() {
-      const { g, c } = getCurrentGradeClass();
-      const key = `hagi_${g}_${c}_schedule`;
+      const gc = getCurrentGradeClass();
+      const key = "hagi_" + gc.g + "_" + gc.c + "_schedule";
       
-      let currentSchedule = getStoredSchedule(g, c);
+      const currentSchedule = getStoredSchedule(gc.g, gc.c);
       let updatedSchedule = JSON.parse(JSON.stringify(currentSchedule));
 
       const newList = [];
       const count = maxPeriods[currentDay];
 
       for (let i = 0; i < count; i++) {
-        newList.push(document.getElementById(`period_${i}`).value.trim());
+        const inputElem = document.getElementById("period_" + i);
+        newList.push(inputElem ? inputElem.value.trim() : "");
       }
 
       updatedSchedule[currentDay] = newList;
@@ -1502,21 +1502,21 @@
 
       localStorage.setItem(key, JSON.stringify(saveObject));
 
-      alert(`${g}학년 ${c}반 ${dayNames[currentDay]} 시간표가 저장되었습니다!\n(이 수정한 시간표는 다음 주 월요일에 자동 초기화됩니다.)`);
+      alert(gc.g + "학년 " + gc.c + "반 " + dayNames[currentDay] + " 시간표가 저장되었습니다!\n(이 수정한 시간표는 다음 주 월요일에 자동 초기화됩니다.)");
       document.getElementById("editScheduleArea").style.display = "none";
       document.getElementById("viewScheduleArea").style.display = "block";
       renderScheduleView();
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (10초 자동 새로고침 적용)
+       축구 스코어 (구버전 전자칠판 호환용 안전 코드)
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
 
-    let selectedLeagueId = "4328";  // 기본값: EPL (4328: EPL, 4335: 라리가, 4331: 분데스리가)
-    let selectedDateOffset = 0;    // 기본값: 오늘 (0: 오늘, -1: 어제, 1: 내일)
-    let liveScoreTimer = null;     // 실시간 자동 갱신 타이머
+    let selectedLeagueId = "4328";  
+    let selectedDateOffset = 0;    
+    let liveScoreTimer = null;     
 
     function handleAuthorClick() {
       authorClickCount++;
@@ -1526,7 +1526,7 @@
         authorClickCount = 0;
         openSportsModal();
       } else {
-        authorClickTimer = setTimeout(() => {
+        authorClickTimer = setTimeout(function() {
           authorClickCount = 0;
         }, 1200);
       }
@@ -1536,10 +1536,10 @@
       document.getElementById("sportsModal").style.display = "flex";
       fetchLiveScores();
 
-      // 모달이 열리면 10초(10000ms)마다 자동으로 스코어 데이터를 받아옴
       if (liveScoreTimer) clearInterval(liveScoreTimer);
-      liveScoreTimer = setInterval(() => {
-        if (document.getElementById("sportsModal").style.display === "flex") {
+      liveScoreTimer = setInterval(function() {
+        const modal = document.getElementById("sportsModal");
+        if (modal && modal.style.display === "flex") {
           fetchLiveScores();
         }
       }, 10000);
@@ -1547,7 +1547,6 @@
 
     function closeSportsModal() {
       document.getElementById("sportsModal").style.display = "none";
-      // 모달을 닫으면 타이머 정지
       if (liveScoreTimer) {
         clearInterval(liveScoreTimer);
         liveScoreTimer = null;
@@ -1557,7 +1556,9 @@
     function selectLeague(leagueId, btn) {
       selectedLeagueId = leagueId;
       const buttons = btn.parentElement.querySelectorAll(".filter-btn");
-      buttons.forEach(b => b.classList.remove("active"));
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+      }
       btn.classList.add("active");
       fetchLiveScores();
     }
@@ -1565,7 +1566,9 @@
     function selectDateOffset(offset, btn) {
       selectedDateOffset = offset;
       const buttons = btn.parentElement.querySelectorAll(".filter-btn");
-      buttons.forEach(b => b.classList.remove("active"));
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+      }
       btn.classList.add("active");
       fetchLiveScores();
     }
@@ -1576,19 +1579,18 @@
       return d.toISOString().split('T')[0];
     }
 
-    async function fetchLiveScores() {
+    function fetchLiveScores() {
       const listDiv = document.getElementById("sportsScoreList");
-      if (!listDiv.children.length || listDiv.textContent.includes("불러오는 중")) {
+      if (!listDiv) return;
+      
+      if (!listDiv.children.length || listDiv.textContent.indexOf("불러오는 중") !== -1) {
         listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>경기 데이터를 불러오는 중...</div>";
       }
 
-      // 한국 시간 기준 선택 날짜 (YYYY-MM-DD)
       const targetDateStr = getFormattedDate(selectedDateOffset);
-
       const baseDate = new Date();
       baseDate.setDate(baseDate.getDate() + selectedDateOffset);
 
-      // 유럽 시차가 뒤처져 있으므로 선택일 전후 날짜까지 넉넉하게 API 데이터 조회
       const prevDate = new Date(baseDate); prevDate.setDate(prevDate.getDate() - 1);
       const nextDate = new Date(baseDate); nextDate.setDate(nextDate.getDate() + 1);
 
@@ -1598,78 +1600,89 @@
         nextDate.toISOString().split('T')[0]
       ];
 
-      try {
+      // Promise.all을 활용한 안전한 비동기 호출
+      Promise.all(datesToFetch.map(function(d) {
+        const url = "https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=" + d + "&l=" + selectedLeagueId;
+        return fetch(url).then(function(res) { return res.json(); }).catch(function() { return null; });
+      })).then(function(results) {
         let allEvents = [];
-        for (const d of datesToFetch) {
-          const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${d}&l=${selectedLeagueId}`;
-          const response = await fetch(url);
-          const data = await response.json();
+        results.forEach(function(data) {
           if (data && data.events) {
             allEvents = allEvents.concat(data.events);
           }
-        }
-
-        // 한국 시간(Asia/Seoul)으로 변환 후 정확히 선택한 날짜에 속하는 경기만 필터링
-        const filteredMatches = allEvents.filter(m => {
-          if (!m.dateEvent) return false;
-          const timeStr = m.strTime ? m.strTime : "00:00:00";
-          const matchDateUtc = new Date(`${m.dateEvent}T${timeStr}Z`);
-          
-          const matchDateKst = matchDateUtc.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
-          return matchDateKst === targetDateStr;
         });
 
-        // 중복 경기 제거
-        const uniqueMatches = Array.from(new Set(filteredMatches.map(m => m.idEvent)))
-          .map(id => filteredMatches.find(m => m.idEvent === id));
+        const filteredMatches = allEvents.filter(function(m) {
+          if (!m.dateEvent) return false;
+          const timeStr = m.strTime ? m.strTime : "00:00:00";
+          const matchDateUtc = new Date(m.dateEvent + "T" + timeStr + "Z");
+          try {
+            const matchDateKst = matchDateUtc.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+            return matchDateKst === targetDateStr;
+          } catch (e) {
+            return m.dateEvent === targetDateStr;
+          }
+        });
+
+        const uniqueMatches = [];
+        const seenIds = {};
+        filteredMatches.forEach(function(m) {
+          if (!seenIds[m.idEvent]) {
+            seenIds[m.idEvent] = true;
+            uniqueMatches.push(m);
+          }
+        });
 
         if (uniqueMatches.length === 0) {
-          listDiv.innerHTML = `<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(${targetDateStr})에는 진행되거나 예정된 경기가 없습니다.</div>`;
+          listDiv.innerHTML = "<div style='text-align:center; color:#64748b; padding:20px;'>해당 날짜(" + targetDateStr + ")에는 진행되거나 예정된 경기가 없습니다.</div>";
           return;
         }
 
         let html = "";
-        uniqueMatches.forEach(m => {
+        uniqueMatches.forEach(function(m) {
           const leagueName = m.strLeague || "리그";
           const homeTeam = m.strHomeTeam || "홈팀";
           const awayTeam = m.strAwayTeam || "원정팀";
-          const homeScore = m.intHomeScore ?? "-";
-          const awayScore = m.intAwayScore ?? "-";
+          const homeScore = (m.intHomeScore !== null && m.intHomeScore !== undefined) ? m.intHomeScore : "-";
+          const awayScore = (m.intAwayScore !== null && m.intAwayScore !== undefined) ? m.intAwayScore : "-";
           
-          // 한국 시간으로 변환된 경기 시간 표시
           const timeStr = m.strTime ? m.strTime : "00:00:00";
-          const matchDateUtc = new Date(`${m.dateEvent}T${timeStr}Z`);
-          const timeTextKst = matchDateUtc.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' });
+          const matchDateUtc = new Date(m.dateEvent + "T" + timeStr + "Z");
+          let timeTextKst = "시간 미정";
+          try {
+            timeTextKst = matchDateUtc.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' });
+          } catch (e) {
+            timeTextKst = timeStr.substring(0, 5);
+          }
 
           let statusText = m.strStatus || "예정";
           if (statusText === "Match Finished" || statusText === "FT") statusText = "종료";
 
-          html += `
-            <div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:8px; margin-bottom:2px;">${leagueName}</div>
-            <div class="sports-card">
-              <span class="sports-team home">${homeTeam}</span>
-              <div>
-                <div class="sports-score-badge">${homeScore} : ${awayScore}</div>
-                <span class="sports-time-badge">${statusText} (${timeTextKst})</span>
-              </div>
-              <span class="sports-team away">${awayTeam}</span>
-            </div>
-          `;
+          html += '<div style="font-size:11px; color:#64748b; font-weight:bold; margin-top:8px; margin-bottom:2px;">' + leagueName + '</div>' +
+                  '<div class="sports-card">' +
+                  '<span class="sports-team home">' + homeTeam + '</span>' +
+                  '<div>' +
+                  '<div class="sports-score-badge">' + homeScore + ' : ' + awayScore + '</div>' +
+                  '<span class="sports-time-badge">' + statusText + ' (' + timeTextKst + ')</span>' +
+                  '</div>' +
+                  '<span class="sports-team away">' + awayTeam + '</span>' +
+                  '</div>';
         });
 
         listDiv.innerHTML = html;
 
-      } catch (err) {
+      }).catch(function(err) {
         listDiv.innerHTML = "<div style='text-align:center; color:#dc2626; padding:20px;'>경기 스코어 데이터를 불러오지 못했습니다.</div>";
-      }
+      });
     }
 
     /* ----------------------------------------------------
-       번호 제비뽑기 (100% 완전 랜덤)
+       번호 제비뽑기
     ---------------------------------------------------- */
     function runLottery() {
-      const total = parseInt(document.getElementById("lotteryCount").value);
+      const totalInput = document.getElementById("lotteryCount");
       const resDiv = document.getElementById("lotteryResult");
+      const total = parseInt(totalInput.value);
       if (!total || total < 1) {
         alert("올바른 인원수를 입력하세요.");
         return;
@@ -1678,7 +1691,7 @@
       let count = 0;
       resDiv.textContent = "추첨 중...";
 
-      const intervalId = setInterval(() => {
+      const intervalId = setInterval(function() {
         count++;
         let text = "추첨 중... ";
         for (let i = 0; i < count; i++) {
@@ -1687,17 +1700,15 @@
         resDiv.textContent = text;
       }, 200);
 
-      setTimeout(() => {
+      setTimeout(function() {
         clearInterval(intervalId);
-
         const selected = Math.floor(Math.random() * total) + 1;
-
-        resDiv.textContent = `당첨: ${selected}번!`;
+        resDiv.textContent = "당첨: " + selected + "번!";
       }, 5000);
     }
 
     /* ----------------------------------------------------
-       자리배치 모달 & 페이크 스킵 시스템 & 시네마틱 연출
+       자리배치 모달 & 연출
     ---------------------------------------------------- */
     let isShuffleRunning = false;
     let fakeSkipInterval = null;
@@ -1716,22 +1727,22 @@
     }
 
     function parseExcludedNumbers(str) {
-      const set = new Set();
+      const set = {};
       if (!str.trim()) return set;
 
       const parts = str.split(",");
-      parts.forEach(p => {
+      parts.forEach(function(p) {
         p = p.trim();
-        if (p.includes("-")) {
-          const [start, end] = p.split("-").map(Number);
-          if (!isNaN(start) && !isNaN(end)) {
-            for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
-              set.add(i);
-            }
+        if (p.indexOf("-") !== -1) {
+          const range = p.split("-").map(Number);
+          const start = Math.min(range[0], range[1]);
+          const end = Math.max(range[0], range[1]);
+          for (let i = start; i <= end; i++) {
+            set[i] = true;
           }
         } else {
           const num = Number(p);
-          if (!isNaN(num)) set.add(num);
+          if (!isNaN(num)) set[num] = true;
         }
       });
       return set;
@@ -1743,16 +1754,15 @@
       const maxNum = parseInt(document.getElementById("seatMaxNumInput").value) || 35;
       const excludeStr = document.getElementById("seatExcludeInput").value;
       const seatType = document.getElementById("seatTypeSelect").value;
-      const rows = parseInt(document.getElementById("seatRowsInput").value) || 5;
       const cols = parseInt(document.getElementById("seatColsInput").value) || 6;
 
       const board = document.getElementById("seatingBoard");
       const status = document.getElementById("seatingStatus");
 
-      const excludedSet = parseExcludedNumbers(excludeStr);
+      const excludedMap = parseExcludedNumbers(excludeStr);
       const validStudentNumbers = [];
       for (let i = 1; i <= maxNum; i++) {
-        if (!excludedSet.has(i)) {
+        if (!excludedMap[i]) {
           validStudentNumbers.push(i);
         }
       }
@@ -1781,7 +1791,7 @@
       let startX = Math.max(20, (boardWidth - totalWidth) / 2);
       const startY = 25;
 
-      validStudentNumbers.forEach((studentNum, idx) => {
+      validStudentNumbers.forEach(function(studentNum, idx) {
         const col = idx % cols;
         const row = Math.floor(idx / cols);
 
@@ -1798,11 +1808,11 @@
 
         const seat = document.createElement("div");
         seat.className = "seat-box";
-        seat.textContent = `${studentNum}번`;
+        seat.textContent = studentNum + "번";
         seat.setAttribute("data-num", studentNum);
 
-        seat.style.left = `${posX}px`;
-        seat.style.top = `${posY}px`;
+        seat.style.left = posX + "px";
+        seat.style.top = posY + "px";
 
         enableDrag(seat, board);
         board.appendChild(seat);
@@ -1852,8 +1862,8 @@
         newLeft = Math.max(0, Math.min(newLeft, maxLeft));
         newTop = Math.max(0, Math.min(newTop, maxTop));
 
-        element.style.left = `${newLeft}px`;
-        element.style.top = `${newTop}px`;
+        element.style.left = newLeft + "px";
+        element.style.top = newTop + "px";
       }
 
       function onEnd() {
@@ -1877,14 +1887,14 @@
         container.classList.add("active", "closed");
       } else {
         container.classList.remove("closed");
-        setTimeout(() => {
+        setTimeout(function() {
           container.classList.remove("active");
         }, 800);
       }
     }
 
-    function playVideoSequence(videoSrc, isMuted = false) {
-      return new Promise((resolve) => {
+    function playVideoSequence(videoSrc, isMuted) {
+      return new Promise(function(resolve) {
         const overlay = document.getElementById("videoOverlay");
         const video = document.getElementById("stageVideo");
 
@@ -1892,30 +1902,28 @@
         video.muted = isMuted;
         overlay.classList.add("visible");
 
-        video.onended = () => {
+        video.onended = function() {
           overlay.classList.remove("visible");
           video.onended = null;
           resolve();
         };
 
-        video.onerror = () => {
-          console.warn("비디오 재생 실패. 다음 단계로 진행합니다.");
+        video.onerror = function() {
           overlay.classList.remove("visible");
           resolve();
         };
 
-        video.play().catch(err => {
-          console.warn("비디오 자동 재생이 차단되었습니다:", err);
+        video.play().catch(function() {
           overlay.classList.remove("visible");
           resolve();
         });
       });
     }
 
-    function playAudio(audioSrc, loop = false) {
+    function playAudio(audioSrc, loop) {
       const audio = new Audio(audioSrc);
       audio.loop = loop;
-      audio.play().catch(err => console.warn("오디오 재생 실패:", err));
+      audio.play().catch(function() {});
       return audio;
     }
 
@@ -1926,29 +1934,14 @@
       if (!skipBtn) {
         skipBtn = document.createElement("button");
         skipBtn.id = "fakeSkipBtn";
-        skipBtn.style.cssText = `
-          position: absolute;
-          bottom: 30px;
-          right: 30px;
-          padding: 12px 24px;
-          background: rgba(0, 0, 0, 0.75);
-          color: #ffffff;
-          border: 2px solid #ffffff;
-          border-radius: 30px;
-          font-size: 16px;
-          font-weight: bold;
-          cursor: pointer;
-          z-index: 10000;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-          transition: all 0.2s ease;
-        `;
+        skipBtn.style.cssText = "position: absolute; bottom: 30px; right: 30px; padding: 12px 24px; background: rgba(0, 0, 0, 0.75); color: #ffffff; border: 2px solid #ffffff; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: all 0.2s ease;";
         container.appendChild(skipBtn);
       }
 
       skipBtn.style.display = "block";
       startFakeSkipCountdown(skipBtn);
 
-      skipBtn.onclick = () => {
+      skipBtn.onclick = function() {
         clearInterval(fakeSkipInterval);
         startFakeSkipCountdown(skipBtn);
       };
@@ -1956,12 +1949,12 @@
 
     function startFakeSkipCountdown(button) {
       let seconds = 5;
-      button.textContent = `${seconds}초 뒤에 스킵 가능`;
+      button.textContent = seconds + "초 뒤에 스킵 가능";
 
-      fakeSkipInterval = setInterval(() => {
+      fakeSkipInterval = setInterval(function() {
         seconds--;
         if (seconds > 0) {
-          button.textContent = `${seconds}초 뒤에 스킵 가능`;
+          button.textContent = seconds + "초 뒤에 스킵 가능";
         } else {
           clearInterval(fakeSkipInterval);
           button.textContent = "눌러서 스킵";
@@ -1988,23 +1981,27 @@
       status.textContent = "운명의 자리 섞는 중...";
 
       const introAudio = new Audio(MEDIA_PATHS.introBgm);
-      introAudio.play().catch(err => console.warn("BGM 오토플레이 제약으로 플레이 불가:", err));
+      introAudio.play().catch(function() {});
 
       showFakeSkipButton();
 
-      const currentPositions = seats.map(seat => ({
-        left: parseFloat(seat.style.left),
-        top: parseFloat(seat.style.top)
-      }));
+      const currentPositions = seats.map(function(seat) {
+        return {
+          left: parseFloat(seat.style.left),
+          top: parseFloat(seat.style.top)
+        };
+      });
 
-      let studentNums = seats.map(s => parseInt(s.getAttribute("data-num")));
+      let studentNums = seats.map(function(s) { return parseInt(s.getAttribute("data-num")); });
       for (let i = studentNums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [studentNums[i], studentNums[j]] = [studentNums[j], studentNums[i]];
+        const temp = studentNums[i];
+        studentNums[i] = studentNums[j];
+        studentNums[j] = temp;
       }
 
       setCurtainClosed(true);
-      await new Promise(r => setTimeout(r, 850));
+      await new Promise(function(r) { setTimeout(r, 850); });
 
       await playVideoSequence(MEDIA_PATHS.video1, true);
 
@@ -2013,35 +2010,35 @@
       hideFakeSkipButton();
 
       setCurtainClosed(false);
-      seats.forEach(s => s.classList.add("animating"));
+      seats.forEach(function(s) { s.classList.add("animating"); });
 
       const shuffleAudio = playAudio(MEDIA_PATHS.shuffleSfx, true);
 
       const maxW = board.clientWidth - 55;
       const maxH = board.clientHeight - 45;
 
-      const moveInterval = setInterval(() => {
-        seats.forEach(seat => {
+      const moveInterval = setInterval(function() {
+        seats.forEach(function(seat) {
           const randomX = Math.floor(Math.random() * maxW);
           const randomY = Math.floor(Math.random() * maxH);
-          seat.style.left = `${randomX}px`;
-          seat.style.top = `${randomY}px`;
+          seat.style.left = randomX + "px";
+          seat.style.top = randomY + "px";
         });
       }, 120);
 
-      await new Promise(r => setTimeout(r, 10000));
+      await new Promise(function(r) { setTimeout(r, 10000); });
 
       clearInterval(moveInterval);
       shuffleAudio.pause();
 
       setCurtainClosed(true);
-      await new Promise(r => setTimeout(r, 850));
+      await new Promise(function(r) { setTimeout(r, 850); });
 
-      seats.forEach((seat, idx) => {
+      seats.forEach(function(seat, idx) {
         const target = currentPositions[idx];
-        seat.style.left = `${target.left}px`;
-        seat.style.top = `${target.top}px`;
-        seat.textContent = `${studentNums[idx]}번`;
+        seat.style.left = target.left + "px";
+        seat.style.top = target.top + "px";
+        seat.textContent = studentNums[idx] + "번";
         seat.setAttribute("data-num", studentNums[idx]);
       });
 
@@ -2050,8 +2047,8 @@
       playAudio(MEDIA_PATHS.explosionSfx, false);
       setCurtainClosed(false);
 
-      setTimeout(() => {
-        seats.forEach(s => s.classList.remove("animating"));
+      setTimeout(function() {
+        seats.forEach(function(s) { s.classList.remove("animating"); });
         status.textContent = "자리 배치가 완료되었습니다!";
         isShuffleRunning = false;
       }, 500);
