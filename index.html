@@ -374,7 +374,7 @@
     .edit-row label {
       font-size: 14px;
       font-weight: bold;
-      width: 140px;
+      width: 90px;
       color: #059669;
     }
 
@@ -549,7 +549,7 @@
       padding-bottom: 2px;
     }
 
-    /* 반별 공지 팝업 스타일 (10분간 유지) */
+    /* 공지 팝업 스타일 (10분간 유지) */
     .class-popup {
       position: fixed;
       top: 20px;
@@ -557,12 +557,12 @@
       transform: translateX(-50%) translateY(-120px);
       background: #1e293b;
       color: #ffffff;
-      padding: 18px 30px;
+      padding: 20px 32px;
       border-radius: 14px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       z-index: 99999;
       text-align: center;
-      font-size: 19px;
+      font-size: 21px;
       font-weight: bold;
       border: 3px solid #d97706;
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -841,10 +841,9 @@
     </div>
   </div>
 
-  <!-- 반별 자동 공지 팝업 창 -->
+  <!-- 공지 팝업 창 (오직 공지 내용만 깔끔하게 출력) -->
   <div id="classPopup" class="class-popup">
-    <div id="classPopupText" style="margin-bottom: 4px;">알림</div>
-    <div style="font-size: 12px; color: #94a3b8; font-weight: normal;">[시간별 자동 공지]</div>
+    <div id="classPopupText">알림</div>
   </div>
 
   <header>
@@ -898,7 +897,7 @@
         <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
       </div>
 
-      <!-- 반별 공지 입력 영역 -->
+      <!-- 공지 설정 영역 -->
       <div id="editClassNoticeArea" style="display: none; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px dashed #d97706; margin-top: 10px;">
         <div style="font-weight: bold; color: #b45309; margin-bottom: 10px; font-size: 15px;" id="noticeEditTitle">자동 공지 설정 (빈칸이면 안 뜸)</div>
         <div id="classInputForm"></div>
@@ -1080,15 +1079,15 @@
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
-    // 시간별 공지 설정 (1교시 시작 전 08:30 추가)
+    // 시간대별 설정 (입력 폼에 깔끔하게 시간만 표시)
     const restTimesConfig = [
-      { key: "time_1start", label: "1교시 시작 전 (08:30)", hour: 8, minute: 30 },
-      { key: "time_1end", label: "1교시 끝 (09:15)", hour: 9, minute: 15 },
-      { key: "time_2end", label: "2교시 끝 (10:10)", hour: 10, minute: 10 },
-      { key: "time_3end", label: "3교시 끝 (11:05)", hour: 11, minute: 5 },
-      { key: "time_lunch", label: "점심시간 전 (12:55)", hour: 12, minute: 55 },
-      { key: "time_5end", label: "5교시 끝 (13:45)", hour: 13, minute: 45 },
-      { key: "time_6end", label: "6교시 끝 (14:30)", hour: 14, minute: 30 }
+      { key: "time_1start", label: "08:30", hour: 8, minute: 30 },
+      { key: "time_1end", label: "09:15", hour: 9, minute: 15 },
+      { key: "time_2end", label: "10:10", hour: 10, minute: 10 },
+      { key: "time_3end", label: "11:05", hour: 11, minute: 5 },
+      { key: "time_lunch", label: "12:55", hour: 12, minute: 55 },
+      { key: "time_5end", label: "13:45", hour: 13, minute: 45 },
+      { key: "time_6end", label: "14:30", hour: 14, minute: 30 }
     ];
 
     function updateClock() {
@@ -1102,7 +1101,6 @@
           clockElem.textContent = hours + ":" + minutes + ":" + seconds;
         }
 
-        // 반별 자동 공지 체크 (10분간 유지)
         checkClassRestAlert(now);
       } catch (e) {}
     }
@@ -1114,13 +1112,11 @@
       const currentM = now.getMinutes();
       const dayOfWeek = now.getDay();
 
-      // 주말에는 작동 안 함
       if (dayOfWeek === 0 || dayOfWeek === 6) return;
 
       let activeNoticeText = "";
 
       restTimesConfig.forEach(function(item) {
-        // 해당 시간부터 정확히 10분 동안 (예: 09:15 ~ 09:24)
         if (currentH === item.hour && currentM >= item.minute && currentM < item.minute + 10) {
           const savedNotices = getClassNotices(gc.g, gc.c);
           const noticeText = savedNotices[item.key] ? savedNotices[item.key].trim() : "";
