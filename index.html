@@ -53,11 +53,17 @@
       margin: 0;
     }
 
-    .header-notice-btn {
+    .header-notice-container {
       position: absolute;
       right: 0;
       top: 50%;
       transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .header-notice-btn {
       padding: 10px 20px;
       background: #059669;
       color: #ffffff;
@@ -72,7 +78,15 @@
 
     .header-notice-btn:hover {
       background: #047857;
-      transform: translateY(-50%) scale(1.06);
+      transform: scale(1.06);
+    }
+
+    .notice-sub-comment {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .class-select-box {
@@ -114,13 +128,11 @@
         flex-direction: column;
         gap: 10px;
       }
-      .header-notice-btn {
+      .header-notice-container {
         position: static;
         transform: none;
         margin-top: 5px;
-      }
-      .header-notice-btn:hover {
-        transform: scale(1.05);
+        align-items: center;
       }
     }
 
@@ -850,7 +862,10 @@
     <div id="clockDisplay" class="current-time">00:00:00</div>
     <div class="title-row">
       <h1>대전하기중학교</h1>
-      <button class="header-notice-btn" onclick="openNoticeModal()">사용방법(지가 안읽어놓고 불편하다며 떼쓰기 금지)</button>
+      <div class="header-notice-container">
+        <button class="header-notice-btn" onclick="openNoticeModal()">사용방법</button>
+        <div class="notice-sub-comment">&lt;--지가 안읽어놓고 불편하다며 떼쓰기는 ㄴㄴ</div>
+      </div>
     </div>
     <div class="class-select-box">
       <select id="gradeSelect" onchange="changeClass()">
