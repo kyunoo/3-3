@@ -36,8 +36,11 @@
       border-radius: 20px;
       border: 2px solid #cbd5e1;
       box-shadow: 0 3px 6px rgba(0,0,0,0.08);
-      user-select: none;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
 
     .title-row {
@@ -904,7 +907,7 @@
   </div>
 
   <header>
-    <div id="clockDisplay" class="current-time" onclick="handleClockTripleClick()">00:00:00</div>
+    <div id="clockDisplay" class="current-time">00:00:00</div>
     <div class="title-row">
       <h1>대전하기중학교</h1>
       <div class="header-notice-container">
@@ -1159,19 +1162,25 @@
     let clockClickCount = 0;
     let clockClickTimer = null;
 
-    function handleClockTripleClick() {
-      clockClickCount++;
-      clearTimeout(clockClickTimer);
+    document.addEventListener("DOMContentLoaded", function() {
+      const clockElem = document.getElementById("clockDisplay");
+      if (clockElem) {
+        clockElem.addEventListener("click", function(e) {
+          e.preventDefault();
+          clockClickCount++;
+          clearTimeout(clockClickTimer);
 
-      if (clockClickCount >= 3) {
-        clockClickCount = 0;
-        triggerJunwooOverlay();
-      } else {
-        clockClickTimer = setTimeout(function() {
-          clockClickCount = 0;
-        }, 500); // 0.5초 안에 3번 클릭해야 함
+          if (clockClickCount >= 3) {
+            clockClickCount = 0;
+            triggerJunwooOverlay();
+          } else {
+            clockClickTimer = setTimeout(function() {
+              clockClickCount = 0;
+            }, 600);
+          }
+        });
       }
-    }
+    });
 
     function triggerJunwooOverlay() {
       const overlay = document.getElementById("junwooOverlay");
