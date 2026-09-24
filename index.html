@@ -182,6 +182,25 @@
       transform: scale(1.05);
     }
 
+    .class33-notice-setup-btn {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffffff;
+      background-color: #d97706;
+      border: none;
+      border-radius: 16px;
+      padding: 6px 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3);
+      transition: all 0.2s ease;
+      display: none; /* 기본 숨김, 3학년 3반일 때만 뜸 */
+    }
+
+    .class33-notice-setup-btn:hover {
+      background-color: #b45309;
+      transform: scale(1.05);
+    }
+
     .edit-schedule-btn {
       font-size: 13px;
       font-weight: bold;
@@ -356,7 +375,7 @@
     .edit-row label {
       font-size: 14px;
       font-weight: bold;
-      width: 50px;
+      width: 80px;
       color: #059669;
     }
 
@@ -529,6 +548,28 @@
       margin-bottom: 4px;
       border-bottom: 1px solid #cbd5e1;
       padding-bottom: 2px;
+    }
+
+    /* 3반 전용 알림 팝업 스타일 */
+    .class33-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #1e293b;
+      color: #ffffff;
+      padding: 16px 28px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 99999;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      border: 3px solid #d97706;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .class33-popup.show {
+      transform: translateX(-50%) translateY(0);
     }
 
     /* 축구 필터 & 카드 스타일 */
@@ -801,6 +842,12 @@
     </div>
   </div>
 
+  <!-- 3반 전용 알림 팝업 창 -->
+  <div id="class33Popup" class="class33-popup">
+    <div id="class33PopupText" style="margin-bottom: 4px;">알림</div>
+    <div style="font-size: 12px; color: #94a3b8; font-weight: normal;">[3학년 3반 전용 쉬는시간 공지]</div>
+  </div>
+
   <header>
     <div id="clockDisplay" class="current-time">00:00:00</div>
     <div class="title-row">
@@ -830,6 +877,7 @@
         <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
         <div class="schedule-header-actions">
           <a href="http://www.xn--s39aj90b0nb2xw6xh.kr/" target="_blank" class="com-link-btn">컴시간 바로가기</a>
+          <button id="class33NoticeBtn" class="class33-notice-setup-btn" onclick="toggleClass33NoticeMode()">공지하기</button>
           <button class="edit-schedule-btn" onclick="toggleAdminMode()">시간표 수정</button>
         </div>
       </h2>
@@ -844,10 +892,18 @@
 
       <div id="viewScheduleArea" class="schedule-list"></div>
 
+      <!-- 시간표 수정 영역 -->
       <div id="editScheduleArea" style="display: none; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
         <div style="font-weight: bold; color: #1e293b; margin-bottom: 10px; font-size: 15px;">과목명 수정하기</div>
         <div id="inputForm"></div>
         <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
+      </div>
+
+      <!-- 3학년 3반 전용 쉬는시간 공지 입력 영역 -->
+      <div id="editClass33NoticeArea" style="display: none; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px dashed #d97706; margin-top: 10px;">
+        <div style="font-weight: bold; color: #b45309; margin-bottom: 10px; font-size: 15px;">3반 쉬는시간별 자동 공지 설정 (빈칸이면 안 뜸)</div>
+        <div id="class33InputForm"></div>
+        <button class="btn-primary" style="background: #d97706;" onclick="saveClass33Notices()">3반 공지 저장하기</button>
       </div>
     </div>
 
@@ -895,14 +951,12 @@
         <button class="close-btn" onclick="closeSportsModal()">&times;</button>
       </div>
 
-      <!-- 리그 선택 필터 -->
       <div class="filter-btn-group">
         <button class="filter-btn active" onclick="selectLeague('4328', this)">EPL</button>
         <button class="filter-btn" onclick="selectLeague('4335', this)">라리가</button>
         <button class="filter-btn" onclick="selectLeague('4331', this)">분데스리가</button>
       </div>
 
-      <!-- 날짜 선택 필터 -->
       <div class="filter-btn-group">
         <button class="filter-btn" onclick="selectDateOffset(-1, this)">어제</button>
         <button class="filter-btn active" onclick="selectDateOffset(0, this)">오늘</button>
@@ -1027,6 +1081,18 @@
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
+    // 3학년 3반 쉬는시간 자동 공지 관련 설정
+    const restTimesConfig = [
+      { key: "time_1end", label: "1교시 끝 (09:15)", hour: 9, minute: 15 },
+      { key: "time_2end", label: "2교시 끝 (10:10)", hour: 10, minute: 10 },
+      { key: "time_3end", label: "3교시 끝 (11:05)", hour: 11, minute: 5 },
+      { key: "time_lunch", label: "점심시간 전 (12:55)", hour: 12, minute: 55 },
+      { key: "time_5end", label: "5교시 끝 (13:45)", hour: 13, minute: 45 },
+      { key: "time_6end", label: "6교시 끝 (14:30)", hour: 14, minute: 30 }
+    ];
+
+    let lastAlertedMinuteKey = ""; // 중복 알림 방지용
+
     function updateClock() {
       try {
         const now = new Date();
@@ -1037,9 +1103,119 @@
         if (clockElem) {
           clockElem.textContent = hours + ":" + minutes + ":" + seconds;
         }
-      } catch (e) {
-        // 시계 오류 방지
+
+        // 3학년 3반 전용 쉬는시간 자동 알림 체크
+        checkClass33RestAlert(now);
+      } catch (e) {}
+    }
+
+    // 3반 쉬는시간 알림 체크 로직
+    function checkClass33RestAlert(now) {
+      const gc = getCurrentGradeClass();
+      // 오직 3학년 3반일 때만 작동
+      if (gc.g !== "3" || gc.c !== "3") return;
+
+      const currentH = now.getHours();
+      const currentM = now.getMinutes();
+      const currentS = now.getSeconds();
+      const dayOfWeek = now.getDay();
+
+      // 주말(토, 일)에는 작동 안 함
+      if (dayOfWeek === 0 || dayOfWeek === 6) return;
+
+      restTimesConfig.forEach(function(item) {
+        if (currentH === item.hour && currentM === item.minute && currentS === 0) {
+          const alertKey = "" + now.getFullYear() + now.getMonth() + now.getDate() + "_" + item.key;
+          if (lastAlertedMinuteKey !== alertKey) {
+            lastAlertedMinuteKey = alertKey;
+            triggerClass33Alert(item.key);
+          }
+        }
+      });
+    }
+
+    function triggerClass33Alert(timeKey) {
+      const savedNotices = getClass33Notices();
+      const noticeText = savedNotices[timeKey] ? savedNotices[timeKey].trim() : "";
+
+      // 빈칸이면 아무것도 안 뜸
+      if (!noticeText) return;
+
+      const popup = document.getElementById("class33Popup");
+      const popupText = document.getElementById("class33PopupText");
+      if (!popup || !popupText) return;
+
+      popupText.textContent = noticeText;
+      popup.classList.add("show");
+
+      // 8초 뒤 자동으로 팝업 닫힘
+      setTimeout(function() {
+        popup.classList.remove("show");
+      }, 8000);
+    }
+
+    function getClass33Notices() {
+      try {
+        const stored = localStorage.getItem("hagi_3_3_rest_notices");
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch (e) {}
+      return {};
+    }
+
+    function toggleClass33NoticeMode() {
+      const noticeArea = document.getElementById("editClass33NoticeArea");
+      const editScheduleArea = document.getElementById("editScheduleArea");
+      const viewArea = document.getElementById("viewScheduleArea");
+
+      // 시간표 수정 창이 열려있다면 닫기
+      if (editScheduleArea.style.display === "block") {
+        editScheduleArea.style.display = "none";
+        viewArea.style.display = "block";
       }
+
+      if (noticeArea.style.display === "none") {
+        noticeArea.style.display = "block";
+        viewArea.style.display = "none";
+        renderClass33NoticeForm();
+      } else {
+        noticeArea.style.display = "none";
+        viewArea.style.display = "block";
+        renderScheduleView();
+      }
+    }
+
+    function renderClass33NoticeForm() {
+      const formDiv = document.getElementById("class33InputForm");
+      const savedNotices = getClass33Notices();
+
+      let html = "";
+      restTimesConfig.forEach(function(item) {
+        const val = savedNotices[item.key] || "";
+        html += '<div class="edit-row">' +
+                '<label style="width:130px;">' + item.label + '</label>' +
+                '<input type="text" class="edit-input" id="c33_' + item.key + '" value="' + val + '" placeholder="예: 국어 교과서 준비하기">' +
+                '</div>';
+      });
+      formDiv.innerHTML = html;
+    }
+
+    function saveClass33Notices() {
+      const newNotices = {};
+      restTimesConfig.forEach(function(item) {
+        const inputElem = document.getElementById("c33_" + item.key);
+        if (inputElem) {
+          newNotices[item.key] = inputElem.value.trim();
+        }
+      });
+
+      localStorage.setItem("hagi_3_3_rest_notices", JSON.stringify(newNotices));
+      alert("3학년 3반 쉬는시간 공지사항이 저장되었습니다!");
+      
+      document.getElementById("editClass33NoticeArea").style.display = "none";
+      document.getElementById("viewScheduleArea").style.display = "block";
+      renderScheduleView();
     }
 
     const events = [
@@ -1272,11 +1448,27 @@
       setInterval(updateClock, 1000);
       renderDday();
       fetchMealByDate(currentMealDate);
+      checkClass33ButtonVisibility();
       selectDay(currentDay);
     };
 
     function changeClass() {
+      checkClass33ButtonVisibility();
       selectDay(currentDay);
+    }
+
+    function checkClass33ButtonVisibility() {
+      const gc = getCurrentGradeClass();
+      const btn33 = document.getElementById("class33NoticeBtn");
+      const noticeArea = document.getElementById("editClass33NoticeArea");
+      if (!btn33) return;
+
+      if (gc.g === "3" && gc.c === "3") {
+        btn33.style.display = "inline-block";
+      } else {
+        btn33.style.display = "none";
+        if (noticeArea) noticeArea.style.display = "none";
+      }
     }
 
     function changeMealDate(offsetDays) {
@@ -1425,8 +1617,11 @@
       }
 
       const editArea = document.getElementById("editScheduleArea");
+      const noticeArea = document.getElementById("editClass33NoticeArea");
       if (editArea.style.display === "block") {
         renderScheduleForm();
+      } else if (noticeArea && noticeArea.style.display === "block") {
+        renderClass33NoticeForm();
       } else {
         renderScheduleView();
       }
@@ -1451,7 +1646,14 @@
 
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
+      const noticeArea = document.getElementById("editClass33NoticeArea");
       const viewArea = document.getElementById("viewScheduleArea");
+
+      // 3반 공지 창이 열려있다면 닫기
+      if (noticeArea && noticeArea.style.display === "block") {
+        noticeArea.style.display = "none";
+        viewArea.style.display = "block";
+      }
 
       if (editArea.style.display === "none") {
         editArea.style.display = "block";
@@ -1509,7 +1711,7 @@
     }
 
     /* ----------------------------------------------------
-       축구 스코어 (구버전 전자칠판 호환용 안전 코드)
+       축구 스코어
     ---------------------------------------------------- */
     let authorClickCount = 0;
     let authorClickTimer = null;
@@ -1600,7 +1802,6 @@
         nextDate.toISOString().split('T')[0]
       ];
 
-      // Promise.all을 활용한 안전한 비동기 호출
       Promise.all(datesToFetch.map(function(d) {
         const url = "https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=" + d + "&l=" + selectedLeagueId;
         return fetch(url).then(function(res) { return res.json(); }).catch(function() { return null; });
@@ -2042,7 +2243,7 @@
         seat.setAttribute("data-num", studentNums[idx]);
       });
 
-      await playVideoSequence(MEDIA_PATHS.video2, false);
+      await playVideoSequence(MEDIA_QLOTTERS ? "" : MEDIA_PATHS.video2, false);
 
       playAudio(MEDIA_PATHS.explosionSfx, false);
       setCurtainClosed(false);
