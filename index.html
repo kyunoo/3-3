@@ -374,7 +374,7 @@
     .edit-row label {
       font-size: 14px;
       font-weight: bold;
-      width: 90px;
+      width: 70px;
       color: #059669;
     }
 
@@ -899,7 +899,7 @@
 
       <!-- 공지 설정 영역 -->
       <div id="editClassNoticeArea" style="display: none; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px dashed #d97706; margin-top: 10px;">
-        <div style="font-weight: bold; color: #b45309; margin-bottom: 10px; font-size: 15px;" id="noticeEditTitle">자동 공지 설정 (빈칸이면 안 뜸)</div>
+        <div style="font-weight: bold; color: #b45309; margin-bottom: 10px; font-size: 15px;" id="noticeEditTitle">과목별준비물알람설정(해당수업시작10분전에뜸)</div>
         <div id="classInputForm"></div>
         <button class="btn-primary" style="background: #d97706;" onclick="saveClassNotices()">공지 저장하기</button>
       </div>
@@ -1079,15 +1079,15 @@
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
-    // 시간대별 설정 (입력 폼에 깔끔하게 시간만 표시)
+    // 시간대별 설정 (왼쪽에 표시될 교과 과목 이름 지정)
     const restTimesConfig = [
-      { key: "time_1start", label: "08:30", hour: 8, minute: 30 },
-      { key: "time_1end", label: "09:15", hour: 9, minute: 15 },
-      { key: "time_2end", label: "10:10", hour: 10, minute: 10 },
-      { key: "time_3end", label: "11:05", hour: 11, minute: 5 },
-      { key: "time_lunch", label: "12:55", hour: 12, minute: 55 },
-      { key: "time_5end", label: "13:45", hour: 13, minute: 45 },
-      { key: "time_6end", label: "14:30", hour: 14, minute: 30 }
+      { key: "time_1start", label: "1교시", hour: 8, minute: 30 },
+      { key: "time_1end", label: "2교시", hour: 9, minute: 15 },
+      { key: "time_2end", label: "3교시", hour: 10, minute: 10 },
+      { key: "time_3end", label: "4교시", hour: 11, minute: 5 },
+      { key: "time_lunch", label: "5교시", hour: 12, minute: 55 },
+      { key: "time_5end", label: "6교시", hour: 13, minute: 45 },
+      { key: "time_6end", label: "7교시", hour: 14, minute: 30 }
     ];
 
     function updateClock() {
@@ -1170,9 +1170,8 @@
     }
 
     function renderClassNoticeForm() {
-      const gc = getCurrentGradeClass();
-      document.getElementById("noticeEditTitle").textContent = gc.g + "학년 " + gc.c + "반 자동 공지 설정 (빈칸이면 안 뜸)";
       const formDiv = document.getElementById("classInputForm");
+      const gc = getCurrentGradeClass();
       const savedNotices = getClassNotices(gc.g, gc.c);
 
       let html = "";
@@ -1180,7 +1179,7 @@
         const val = savedNotices[item.key] || "";
         html += '<div class="edit-row">' +
                 '<label>' + item.label + '</label>' +
-                '<input type="text" class="edit-input" id="cnotice_' + item.key + '" value="' + val + '" placeholder="공지 내용 입력">' +
+                '<input type="text" class="edit-input" id="cnotice_' + item.key + '" value="' + val + '" placeholder="준비물 입력">' +
                 '</div>';
       });
       formDiv.innerHTML = html;
