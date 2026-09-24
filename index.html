@@ -37,6 +37,7 @@
       border: 2px solid #cbd5e1;
       box-shadow: 0 3px 6px rgba(0,0,0,0.08);
       user-select: none;
+      cursor: pointer;
     }
 
     .title-row {
@@ -727,6 +728,38 @@
       background: #ecfdf5;
     }
 
+    /* 준우냄새 풀스크린 오버레이 스타일 */
+    .junwoo-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 999999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+    }
+
+    .junwoo-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .junwoo-text {
+      font-size: 12vw;
+      font-weight: 900;
+      color: #ff4757;
+      text-shadow: 0 0 30px rgba(255, 71, 87, 0.8), 0 0 60px rgba(255, 71, 87, 0.5);
+      letter-spacing: 5px;
+      user-select: none;
+      text-align: center;
+    }
+
     /* 커튼 & 비디오 오버레이 스타일 */
     .curtain-container {
       position: fixed;
@@ -860,13 +893,18 @@
     </div>
   </div>
 
+  <!-- 준우냄새 풀스크린 오버레이 -->
+  <div id="junwooOverlay" class="junwoo-overlay">
+    <div class="junwoo-text">준우냄새</div>
+  </div>
+
   <!-- 공지 팝업 창 -->
   <div id="classPopup" class="class-popup">
     <div id="classPopupText">알림</div>
   </div>
 
   <header>
-    <div id="clockDisplay" class="current-time">00:00:00</div>
+    <div id="clockDisplay" class="current-time" onclick="handleClockTripleClick()">00:00:00</div>
     <div class="title-row">
       <h1>대전하기중학교</h1>
       <div class="header-notice-container">
@@ -1116,6 +1154,35 @@
       { key: "time_5end", label: "6교시", hour: 13, minute: 45 },
       { key: "time_6end", label: "7교시", hour: 14, minute: 30 }
     ];
+
+    /* 현재시간 3번 클릭 이스터에그 로직 */
+    let clockClickCount = 0;
+    let clockClickTimer = null;
+
+    function handleClockTripleClick() {
+      clockClickCount++;
+      clearTimeout(clockClickTimer);
+
+      if (clockClickCount >= 3) {
+        clockClickCount = 0;
+        triggerJunwooOverlay();
+      } else {
+        clockClickTimer = setTimeout(function() {
+          clockClickCount = 0;
+        }, 500); // 0.5초 안에 3번 클릭해야 함
+      }
+    }
+
+    function triggerJunwooOverlay() {
+      const overlay = document.getElementById("junwooOverlay");
+      if (!overlay) return;
+
+      overlay.classList.add("show");
+
+      setTimeout(function() {
+        overlay.classList.remove("show");
+      }, 3000); // 3초 뒤에 서서히 사라짐
+    }
 
     function updateClock() {
       try {
