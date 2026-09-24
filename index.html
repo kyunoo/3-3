@@ -182,7 +182,7 @@
       transform: scale(1.05);
     }
 
-    .class33-notice-setup-btn {
+    .class-notice-setup-btn {
       font-size: 13px;
       font-weight: bold;
       color: #ffffff;
@@ -193,10 +193,9 @@
       cursor: pointer;
       box-shadow: 0 2px 5px rgba(217, 119, 6, 0.3);
       transition: all 0.2s ease;
-      display: none; /* 기본 숨김, 3학년 3반일 때만 뜸 */
     }
 
-    .class33-notice-setup-btn:hover {
+    .class-notice-setup-btn:hover {
       background-color: #b45309;
       transform: scale(1.05);
     }
@@ -375,7 +374,7 @@
     .edit-row label {
       font-size: 14px;
       font-weight: bold;
-      width: 80px;
+      width: 140px;
       color: #059669;
     }
 
@@ -550,25 +549,25 @@
       padding-bottom: 2px;
     }
 
-    /* 3반 전용 알림 팝업 스타일 */
-    .class33-popup {
+    /* 반별 공지 팝업 스타일 (10분간 유지) */
+    .class-popup {
       position: fixed;
       top: 20px;
       left: 50%;
-      transform: translateX(-50%) translateY(-100px);
+      transform: translateX(-50%) translateY(-120px);
       background: #1e293b;
       color: #ffffff;
-      padding: 16px 28px;
+      padding: 18px 30px;
       border-radius: 14px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       z-index: 99999;
       text-align: center;
-      font-size: 18px;
+      font-size: 19px;
       font-weight: bold;
       border: 3px solid #d97706;
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .class33-popup.show {
+    .class-popup.show {
       transform: translateX(-50%) translateY(0);
     }
 
@@ -842,10 +841,10 @@
     </div>
   </div>
 
-  <!-- 3반 전용 알림 팝업 창 -->
-  <div id="class33Popup" class="class33-popup">
-    <div id="class33PopupText" style="margin-bottom: 4px;">알림</div>
-    <div style="font-size: 12px; color: #94a3b8; font-weight: normal;">[3학년 3반 전용 쉬는시간 공지]</div>
+  <!-- 반별 자동 공지 팝업 창 -->
+  <div id="classPopup" class="class-popup">
+    <div id="classPopupText" style="margin-bottom: 4px;">알림</div>
+    <div style="font-size: 12px; color: #94a3b8; font-weight: normal;">[시간별 자동 공지]</div>
   </div>
 
   <header>
@@ -877,7 +876,7 @@
         <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
         <div class="schedule-header-actions">
           <a href="http://www.xn--s39aj90b0nb2xw6xh.kr/" target="_blank" class="com-link-btn">컴시간 바로가기</a>
-          <button id="class33NoticeBtn" class="class33-notice-setup-btn" onclick="toggleClass33NoticeMode()">공지하기</button>
+          <button class="class-notice-setup-btn" onclick="toggleClassNoticeMode()">공지</button>
           <button class="edit-schedule-btn" onclick="toggleAdminMode()">시간표 수정</button>
         </div>
       </h2>
@@ -899,11 +898,11 @@
         <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
       </div>
 
-      <!-- 3학년 3반 전용 쉬는시간 공지 입력 영역 -->
-      <div id="editClass33NoticeArea" style="display: none; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px dashed #d97706; margin-top: 10px;">
-        <div style="font-weight: bold; color: #b45309; margin-bottom: 10px; font-size: 15px;">3반 쉬는시간별 자동 공지 설정 (빈칸이면 안 뜸)</div>
-        <div id="class33InputForm"></div>
-        <button class="btn-primary" style="background: #d97706;" onclick="saveClass33Notices()">3반 공지 저장하기</button>
+      <!-- 반별 공지 입력 영역 -->
+      <div id="editClassNoticeArea" style="display: none; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px dashed #d97706; margin-top: 10px;">
+        <div style="font-weight: bold; color: #b45309; margin-bottom: 10px; font-size: 15px;" id="noticeEditTitle">자동 공지 설정 (빈칸이면 안 뜸)</div>
+        <div id="classInputForm"></div>
+        <button class="btn-primary" style="background: #d97706;" onclick="saveClassNotices()">공지 저장하기</button>
       </div>
     </div>
 
@@ -1023,7 +1022,7 @@
           <input type="number" id="seatMaxNumInput" value="35" min="1" max="60" style="width: 45px;" onchange="generateSeats()" oninput="generateSeats()">
 
           <label style="font-weight: bold; color: #475569; margin-left: 5px;">제외 번호:</label>
-          <input type="text" id="seatExcludeInput" value="14-20" placeholder="예: 14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호" onchange="generateSeats()" oninput="generateSeats()">
+          <input type="text" id="seatExcludeInput" value="14-20" placeholder="14-20, 36" style="width: 90px;" title="제외할 번호 범위나 단일 번호" onchange="generateSeats()" oninput="generateSeats()">
 
           <label style="font-weight: bold; color: #475569; margin-left: 5px;">형태:</label>
           <select id="seatTypeSelect" onchange="generateSeats()">
@@ -1081,8 +1080,9 @@
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
-    // 3학년 3반 쉬는시간 자동 공지 관련 설정
+    // 시간별 공지 설정 (1교시 시작 전 08:30 추가)
     const restTimesConfig = [
+      { key: "time_1start", label: "1교시 시작 전 (08:30)", hour: 8, minute: 30 },
       { key: "time_1end", label: "1교시 끝 (09:15)", hour: 9, minute: 15 },
       { key: "time_2end", label: "2교시 끝 (10:10)", hour: 10, minute: 10 },
       { key: "time_3end", label: "3교시 끝 (11:05)", hour: 11, minute: 5 },
@@ -1090,8 +1090,6 @@
       { key: "time_5end", label: "5교시 끝 (13:45)", hour: 13, minute: 45 },
       { key: "time_6end", label: "6교시 끝 (14:30)", hour: 14, minute: 30 }
     ];
-
-    let lastAlertedMinuteKey = ""; // 중복 알림 방지용
 
     function updateClock() {
       try {
@@ -1104,59 +1102,49 @@
           clockElem.textContent = hours + ":" + minutes + ":" + seconds;
         }
 
-        // 3학년 3반 전용 쉬는시간 자동 알림 체크
-        checkClass33RestAlert(now);
+        // 반별 자동 공지 체크 (10분간 유지)
+        checkClassRestAlert(now);
       } catch (e) {}
     }
 
-    // 3반 쉬는시간 알림 체크 로직
-    function checkClass33RestAlert(now) {
+    // 반별 알림 체크 로직 (정각부터 10분간 활성화)
+    function checkClassRestAlert(now) {
       const gc = getCurrentGradeClass();
-      // 오직 3학년 3반일 때만 작동
-      if (gc.g !== "3" || gc.c !== "3") return;
-
       const currentH = now.getHours();
       const currentM = now.getMinutes();
-      const currentS = now.getSeconds();
       const dayOfWeek = now.getDay();
 
-      // 주말(토, 일)에는 작동 안 함
+      // 주말에는 작동 안 함
       if (dayOfWeek === 0 || dayOfWeek === 6) return;
 
+      let activeNoticeText = "";
+
       restTimesConfig.forEach(function(item) {
-        if (currentH === item.hour && currentM === item.minute && currentS === 0) {
-          const alertKey = "" + now.getFullYear() + now.getMonth() + now.getDate() + "_" + item.key;
-          if (lastAlertedMinuteKey !== alertKey) {
-            lastAlertedMinuteKey = alertKey;
-            triggerClass33Alert(item.key);
+        // 해당 시간부터 정확히 10분 동안 (예: 09:15 ~ 09:24)
+        if (currentH === item.hour && currentM >= item.minute && currentM < item.minute + 10) {
+          const savedNotices = getClassNotices(gc.g, gc.c);
+          const noticeText = savedNotices[item.key] ? savedNotices[item.key].trim() : "";
+          if (noticeText) {
+            activeNoticeText = noticeText;
           }
         }
       });
-    }
 
-    function triggerClass33Alert(timeKey) {
-      const savedNotices = getClass33Notices();
-      const noticeText = savedNotices[timeKey] ? savedNotices[timeKey].trim() : "";
-
-      // 빈칸이면 아무것도 안 뜸
-      if (!noticeText) return;
-
-      const popup = document.getElementById("class33Popup");
-      const popupText = document.getElementById("class33PopupText");
+      const popup = document.getElementById("classPopup");
+      const popupText = document.getElementById("classPopupText");
       if (!popup || !popupText) return;
 
-      popupText.textContent = noticeText;
-      popup.classList.add("show");
-
-      // 8초 뒤 자동으로 팝업 닫힘
-      setTimeout(function() {
+      if (activeNoticeText) {
+        popupText.textContent = activeNoticeText;
+        popup.classList.add("show");
+      } else {
         popup.classList.remove("show");
-      }, 8000);
+      }
     }
 
-    function getClass33Notices() {
+    function getClassNotices(g, c) {
       try {
-        const stored = localStorage.getItem("hagi_3_3_rest_notices");
+        const stored = localStorage.getItem("hagi_" + g + "_" + c + "_rest_notices");
         if (stored) {
           return JSON.parse(stored);
         }
@@ -1164,12 +1152,11 @@
       return {};
     }
 
-    function toggleClass33NoticeMode() {
-      const noticeArea = document.getElementById("editClass33NoticeArea");
+    function toggleClassNoticeMode() {
+      const noticeArea = document.getElementById("editClassNoticeArea");
       const editScheduleArea = document.getElementById("editScheduleArea");
       const viewArea = document.getElementById("viewScheduleArea");
 
-      // 시간표 수정 창이 열려있다면 닫기
       if (editScheduleArea.style.display === "block") {
         editScheduleArea.style.display = "none";
         viewArea.style.display = "block";
@@ -1178,7 +1165,7 @@
       if (noticeArea.style.display === "none") {
         noticeArea.style.display = "block";
         viewArea.style.display = "none";
-        renderClass33NoticeForm();
+        renderClassNoticeForm();
       } else {
         noticeArea.style.display = "none";
         viewArea.style.display = "block";
@@ -1186,34 +1173,37 @@
       }
     }
 
-    function renderClass33NoticeForm() {
-      const formDiv = document.getElementById("class33InputForm");
-      const savedNotices = getClass33Notices();
+    function renderClassNoticeForm() {
+      const gc = getCurrentGradeClass();
+      document.getElementById("noticeEditTitle").textContent = gc.g + "학년 " + gc.c + "반 자동 공지 설정 (빈칸이면 안 뜸)";
+      const formDiv = document.getElementById("classInputForm");
+      const savedNotices = getClassNotices(gc.g, gc.c);
 
       let html = "";
       restTimesConfig.forEach(function(item) {
         const val = savedNotices[item.key] || "";
         html += '<div class="edit-row">' +
-                '<label style="width:130px;">' + item.label + '</label>' +
-                '<input type="text" class="edit-input" id="c33_' + item.key + '" value="' + val + '" placeholder="예: 국어 교과서 준비하기">' +
+                '<label>' + item.label + '</label>' +
+                '<input type="text" class="edit-input" id="cnotice_' + item.key + '" value="' + val + '" placeholder="공지 내용 입력">' +
                 '</div>';
       });
       formDiv.innerHTML = html;
     }
 
-    function saveClass33Notices() {
+    function saveClassNotices() {
+      const gc = getCurrentGradeClass();
       const newNotices = {};
       restTimesConfig.forEach(function(item) {
-        const inputElem = document.getElementById("c33_" + item.key);
+        const inputElem = document.getElementById("cnotice_" + item.key);
         if (inputElem) {
           newNotices[item.key] = inputElem.value.trim();
         }
       });
 
-      localStorage.setItem("hagi_3_3_rest_notices", JSON.stringify(newNotices));
-      alert("3학년 3반 쉬는시간 공지사항이 저장되었습니다!");
+      localStorage.setItem("hagi_" + gc.g + "_" + gc.c + "_rest_notices", JSON.stringify(newNotices));
+      alert(gc.g + "학년 " + gc.c + "반 공지사항이 저장되었습니다!");
       
-      document.getElementById("editClass33NoticeArea").style.display = "none";
+      document.getElementById("editClassNoticeArea").style.display = "none";
       document.getElementById("viewScheduleArea").style.display = "block";
       renderScheduleView();
     }
@@ -1448,27 +1438,11 @@
       setInterval(updateClock, 1000);
       renderDday();
       fetchMealByDate(currentMealDate);
-      checkClass33ButtonVisibility();
       selectDay(currentDay);
     };
 
     function changeClass() {
-      checkClass33ButtonVisibility();
       selectDay(currentDay);
-    }
-
-    function checkClass33ButtonVisibility() {
-      const gc = getCurrentGradeClass();
-      const btn33 = document.getElementById("class33NoticeBtn");
-      const noticeArea = document.getElementById("editClass33NoticeArea");
-      if (!btn33) return;
-
-      if (gc.g === "3" && gc.c === "3") {
-        btn33.style.display = "inline-block";
-      } else {
-        btn33.style.display = "none";
-        if (noticeArea) noticeArea.style.display = "none";
-      }
     }
 
     function changeMealDate(offsetDays) {
@@ -1617,11 +1591,11 @@
       }
 
       const editArea = document.getElementById("editScheduleArea");
-      const noticeArea = document.getElementById("editClass33NoticeArea");
+      const noticeArea = document.getElementById("editClassNoticeArea");
       if (editArea.style.display === "block") {
         renderScheduleForm();
       } else if (noticeArea && noticeArea.style.display === "block") {
-        renderClass33NoticeForm();
+        renderClassNoticeForm();
       } else {
         renderScheduleView();
       }
@@ -1646,10 +1620,9 @@
 
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
-      const noticeArea = document.getElementById("editClass33NoticeArea");
+      const noticeArea = document.getElementById("editClassNoticeArea");
       const viewArea = document.getElementById("viewScheduleArea");
 
-      // 3반 공지 창이 열려있다면 닫기
       if (noticeArea && noticeArea.style.display === "block") {
         noticeArea.style.display = "none";
         viewArea.style.display = "block";
@@ -2243,7 +2216,7 @@
         seat.setAttribute("data-num", studentNums[idx]);
       });
 
-      await playVideoSequence(MEDIA_QLOTTERS ? "" : MEDIA_PATHS.video2, false);
+      await playVideoSequence(MEDIA_PATHS.video2, false);
 
       playAudio(MEDIA_PATHS.explosionSfx, false);
       setCurtainClosed(false);
