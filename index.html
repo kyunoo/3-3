@@ -1180,6 +1180,22 @@
           }
         });
       }
+
+      // 테스트용 공지 버튼 자동 생성
+      const testBtn = document.createElement("button");
+      testBtn.textContent = "📢 공지 팝업 테스트";
+      testBtn.style.cssText = "position: fixed; bottom: 20px; left: 20px; z-index: 999999; padding: 10px 16px; background: #d97706; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
+      testBtn.onclick = function() {
+        const popup = document.getElementById("classPopup");
+        const popupText = document.getElementById("classPopupText");
+        popupText.textContent = "테스트 공지: 준비물 미술 챙기기!";
+        popup.classList.add("show");
+
+        setTimeout(function() {
+          popup.classList.remove("show");
+        }, 3000);
+      };
+      document.body.appendChild(testBtn);
     });
 
     function triggerJunwooOverlay() {
@@ -1190,7 +1206,7 @@
 
       setTimeout(function() {
         overlay.classList.remove("show");
-      }, 3000); // 3초 뒤에 서서히 사라짐
+      }, 3000);
     }
 
     function updateClock() {
