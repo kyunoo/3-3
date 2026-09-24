@@ -63,7 +63,7 @@
       color: #ffffff;
       border: none;
       border-radius: 24px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       cursor: pointer;
       box-shadow: 0 3px 8px rgba(5, 150, 105, 0.35);
@@ -841,7 +841,7 @@
     </div>
   </div>
 
-  <!-- 공지 팝업 창 (오직 공지 내용만 깔끔하게 출력) -->
+  <!-- 공지 팝업 창 -->
   <div id="classPopup" class="class-popup">
     <div id="classPopupText">알림</div>
   </div>
@@ -850,7 +850,7 @@
     <div id="clockDisplay" class="current-time">00:00:00</div>
     <div class="title-row">
       <h1>대전하기중학교</h1>
-      <button class="header-notice-btn" onclick="openNoticeModal()">사용방법(필독)</button>
+      <button class="header-notice-btn" onclick="openNoticeModal()">사용방법(지가 안읽어놓고 불편하다며 떼쓰기 금지)</button>
     </div>
     <div class="class-select-box">
       <select id="gradeSelect" onchange="changeClass()">
@@ -982,12 +982,18 @@
   <div id="noticeModal" class="modal" onclick="closeModalOnBg(event, 'noticeModal')">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 style="margin:0; color: #1e293b;">사용방법(필독)</h3>
+        <h3 style="margin:0; color: #1e293b;">사용방법</h3>
         <button class="close-btn" onclick="closeNoticeModal()">&times;</button>
       </div>
       <div class="notice-text-content">기본 시간표에서 과목 변경이 생기면, 각 반 반장/부반장이나 친구들이 컴시간을 확인한 뒤 [시간표 수정] 버튼을 눌러주세요.
 
-수정한 시간표는 수정한 주가 지나고 월요일이 되면 자동으로 기본 시간표로 초기화됩니다.</div>
+수정한 시간표는 수정한 주가 지나고 월요일이 되면 자동으로 기본 시간표로 초기화됩니다.
+
+공지버튼을 눌러 원하는 과목의 준비물, 숙제 등을 공지할 수 있습니다. 해당시간의 과목시작 10분 전에 공지 알림이 뜹니다.
+
+사이트 새로고침을 하게되면 수정한 시간표, 공지 등이 모두 초기화가 되고 3학년 3반 시간표로 바뀔 수 있으니 조심해서 사욯해주시기 바랍니다.
+
+불편한거나 오류 있으면 언제든지 말해주세요</div>
     </div>
   </div>
 
@@ -1079,7 +1085,6 @@
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
-    // 시간대별 설정 (왼쪽에 표시될 교과 과목 이름 지정)
     const restTimesConfig = [
       { key: "time_1start", label: "1교시", hour: 8, minute: 30 },
       { key: "time_1end", label: "2교시", hour: 9, minute: 15 },
@@ -1105,7 +1110,6 @@
       } catch (e) {}
     }
 
-    // 반별 알림 체크 로직 (정각부터 10분간 활성화)
     function checkClassRestAlert(now) {
       const gc = getCurrentGradeClass();
       const currentH = now.getHours();
