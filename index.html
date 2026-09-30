@@ -1121,27 +1121,6 @@
       { key: "time_6end", label: "7교시", hour: 14, minute: 30, subjectIndex: 6 }
     ];
 
-    document.addEventListener("DOMContentLoaded", function() {
-      // [테스트용 공지 버튼 동적 생성]
-      const testBtn = document.createElement("button");
-      testBtn.textContent = "📢 공지 팝업 테스트";
-      testBtn.style.cssText = "position: fixed; bottom: 20px; left: 20px; z-index: 999999; padding: 10px 16px; background: #d97706; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
-      testBtn.onclick = function() {
-        const popup = document.getElementById("classPopup");
-        const titleElem = document.getElementById("classPopupTitle");
-        const textElem = document.getElementById("classPopupText");
-
-        titleElem.textContent = "미술 시간이다!";
-        textElem.textContent = "준비물: 미술도구 챙기기";
-        popup.classList.add("show");
-
-        setTimeout(function() {
-          popup.classList.remove("show");
-        }, 3000);
-      };
-      document.body.appendChild(testBtn);
-    });
-
     function updateClock() {
       try {
         const now = new Date();
