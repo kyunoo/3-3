@@ -863,10 +863,9 @@
     </div>
   </div>
 
-  <!-- 공지 팝업 창 -->
+  <!-- 공지 팝업 창 (오직 설정한 내용만 표시) -->
   <div id="classPopup" class="class-popup">
-    <div id="classPopupTitle" style="color: #fbbf24; font-size: 23px; margin-bottom: 5px;">알림</div>
-    <div id="classPopupText" style="font-size: 18px; font-weight: normal;">내용</div>
+    <div id="classPopupText" style="font-size: 20px; font-weight: bold;">내용</div>
   </div>
 
   <header>
@@ -1112,13 +1111,13 @@
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
     const restTimesConfig = [
-      { key: "time_1start", label: "1교시", hour: 8, minute: 30, subjectIndex: 0 },
-      { key: "time_1end", label: "2교시", hour: 9, minute: 15, subjectIndex: 1 },
-      { key: "time_2end", label: "3교시", hour: 10, minute: 10, subjectIndex: 2 },
-      { key: "time_3end", label: "4교시", hour: 11, minute: 5, subjectIndex: 3 },
-      { key: "time_lunch", label: "5교시", hour: 12, minute: 55, subjectIndex: 4 },
-      { key: "time_5end", label: "6교시", hour: 13, minute: 45, subjectIndex: 5 },
-      { key: "time_6end", label: "7교시", hour: 14, minute: 30, subjectIndex: 6 }
+      { key: "time_1start", label: "1교시", hour: 8, minute: 30 },
+      { key: "time_1end", label: "2교시", hour: 9, minute: 15 },
+      { key: "time_2end", label: "3교시", hour: 10, minute: 10 },
+      { key: "time_3end", label: "4교시", hour: 11, minute: 5 },
+      { key: "time_lunch", label: "5교시", hour: 12, minute: 55 },
+      { key: "time_5end", label: "6교시", hour: 13, minute: 45 },
+      { key: "time_6end", label: "7교시", hour: 14, minute: 30 }
     ];
 
     function updateClock() {
@@ -1145,10 +1144,6 @@
       if (dayOfWeek === 0 || dayOfWeek === 6) return;
 
       let activeNoticeText = "";
-      let activeSubjectName = "";
-
-      const scheduleData = getStoredSchedule(gc.g, gc.c);
-      const todayList = scheduleData[dayOfWeek] || [];
 
       restTimesConfig.forEach(function(item) {
         if (currentH === item.hour && currentM >= item.minute && currentM < item.minute + 10) {
@@ -1156,19 +1151,15 @@
           const noticeText = savedNotices[item.key] ? savedNotices[item.key].trim() : "";
           if (noticeText) {
             activeNoticeText = noticeText;
-            const subject = todayList[item.subjectIndex] || item.label;
-            activeSubjectName = subject + " 시간이다!";
           }
         }
       });
 
       const popup = document.getElementById("classPopup");
-      const titleElem = document.getElementById("classPopupTitle");
       const textElem = document.getElementById("classPopupText");
-      if (!popup || !titleElem || !textElem) return;
+      if (!popup || !textElem) return;
 
       if (activeNoticeText) {
-        titleElem.textContent = activeSubjectName;
         textElem.textContent = activeNoticeText;
         popup.classList.add("show");
       } else {
