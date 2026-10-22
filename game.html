@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>푸바오가 늑구를 찾아 부캉이를 타고 돌아오게 하는 게임</title>
   <style>
-    body { margin: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: sans-serif; }
-    canvas { background: #1e293b; border: 4px solid #334155; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    body { margin: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: sans-serif; user-select: none; }
+    canvas { background: #1e293b; border: 4px solid #334155; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); touch-action: manipulation; }
     .info { margin-bottom: 10px; font-size: 20px; font-weight: bold; }
     #restartBtn { display: none; margin-top: 15px; padding: 10px 30px; font-size: 18px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; }
     #restartBtn:hover { background: #047857; }
@@ -44,11 +44,24 @@
     let obstacles = [];
     let coins = [];
 
-    window.addEventListener("keydown", e => {
-      if ((e.code === "Space" || e.code === "ArrowUp") && player.grounded && !isGameOver && !isWin) {
+    // 공통 점프 함수 (키보드 + 터치/클릭 공용)
+    function triggerJump() {
+      if (player.grounded && !isGameOver && !isWin) {
         player.vy = player.jumpPower;
         player.grounded = false;
       }
+    }
+
+    // 1. 키보드 입력 (스페이스바, 위쪽 화살표)
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        triggerJump();
+      }
+    });
+
+    // 2. 전자칠판 터치 및 마우스 클릭 입력 추가
+    canvas.addEventListener("pointerdown", e => {
+      triggerJump();
     });
 
     setInterval(() => {
@@ -128,8 +141,7 @@
       if (window.autoPlay && player.grounded) {
         let nearestObs = obstacles.find(o => o.x > player.x && o.x < player.x + 180);
         if (nearestObs) {
-          player.vy = player.jumpPower;
-          player.grounded = false;
+          triggerJump();
         }
       }
 
@@ -139,7 +151,6 @@
         let obs = obstacles[i];
         obs.x -= obs.speed;
 
-        // [히트박스 수정] 여유 공간(hitMargin)을 3픽셀로 대폭 줄여서 살짝만 스쳐도 바로 실패하도록 변경[cite: 2]
         let hitMargin = 3; 
         if (!window.godMode && 
             player.x + hitMargin < obs.x + obs.w && 
