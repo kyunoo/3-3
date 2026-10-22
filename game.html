@@ -155,15 +155,11 @@
         safeTimer--;
       }
 
-      // 물리 연산 (중력) 및 착지 감지
-      let justLanded = false;
+      // 물리 연산 (중력)
       player.vy += 0.6;
       player.y += player.vy;
       if (player.y > 260) {
         player.y = 260;
-        if (!player.grounded) {
-          justLanded = true;
-        }
         player.vy = 0;
         player.grounded = true;
       }
@@ -232,32 +228,39 @@
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // CATCH_RUN: 상대방은 화면 끝에 멈춰 있고, 푸바오가 달려가 점프해서 잡는 구간
+      // AUTO_CATCH: 늑구는 화면 끝에 멈춰 있고, 푸바오가 달려가다가 '점프'해서 공중에서 덮쳐 잡는 구간
       else if (gameState === "AUTO_CATCH") {
-        if (player.x < fixedNpcX - 50) {
-          player.x += 4;
+        if (player.x < fixedNpcX - 120 && player.grounded) {
+          player.x += 3.5; // 여유 있게 달려감
+        } else if (player.grounded) {
+          // 늑구 앞에서 멋지게 점프! (점프 모션을 충분히 볼 수 있도록 설정)
+          player.vy = -12;
+          player.grounded = false;
         } else {
-          // 상대방 앞에서 점프!
-          if (player.grounded) {
-            player.vy = -14;
-            player.grounded = false;
-          }
+          // 공중에서 포물선을 그리며 전진
+          player.x += 3.5;
         }
 
-        // 점프한 뒤 바닥에 완벽히 착지하는 순간 다음 단계로 전환!
-        if (justLanded) {
+        // 공중에서 날아가며 늑구 위치(fixedNpcX - 50)에 도달했을 때(잡는 순간) 다음 단계로 전환!
+        if (!player.grounded && player.x >= fixedNpcX - 60) {
           if (stage === 1) {
             stage = 2;
             npc.targetOffset = 220;
             player.x = 80;          // 왼쪽 시작점으로 완벽 리셋
+            player.y = 260;
+            player.vy = 0;
+            player.grounded = true;
             obstacles = [];         // 장애물 초기화
             coins = [];             // 코인 초기화
-            safeTimer = 120;        // 2초 동안 안전 시간 부여 (장애물 생성 및 충돌 방지)
+            safeTimer = 120;        // 2초 동안 안전 시간 부여
             gameState = "PLAYING";  // 게임 재개
           } else if (stage === 2) {
             stage = 3;
             npc.targetOffset = -120;
             player.x = 80;          // 왼쪽 시작점으로 완벽 리셋
+            player.y = 260;
+            player.vy = 0;
+            player.grounded = true;
             obstacles = [];         // 장애물 초기화
             coins = [];             // 코인 초기화
             safeTimer = 120;        // 2초 동안 안전 시간 부여
@@ -276,7 +279,7 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // CATCH_RUN 상태일 때는 상대방을 화면 끝(fixedNpcX)에 고정해서 멈춰 세움
+      // AUTO_CATCH 상태일 때는 상대방을 화면 끝(fixedNpcX)에 고정해서 멈춰 세움
       let currentNpcX = (gameState === "AUTO_CATCH") ? fixedNpcX : (player.x + npc.xOffset);
 
       if (stage === 1) {
