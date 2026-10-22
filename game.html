@@ -7,15 +7,19 @@
     body { margin: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: sans-serif; }
     canvas { background: #1e293b; border: 4px solid #334155; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     .info { margin-bottom: 10px; font-size: 20px; font-weight: bold; }
+    #restartBtn { display: none; margin-top: 15px; padding: 10px 30px; font-size: 18px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    #restartBtn:hover { background: #047857; }
   </style>
 </head>
 <body>
-  <div class="info" id="gameInfo">점수: 0 | 1단계</div>
+  <div class="info" id="gameInfo">점수: 0 | 푸바오야 늑구를 찾아줭</div>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <button id="restartBtn" onclick="resetGame()">다시하기</button>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const restartBtn = document.getElementById("restartBtn");
 
     let score = 0;
     let stage = 1;
@@ -50,11 +54,25 @@
         score += 1;
         if (score >= 1000) {
           isWin = true; // 어부에게 잡히는 최종 결말
+          restartBtn.style.display = "block";
         }
         else if (score >= 500) stage = 3;
         else if (score >= 100) stage = 2;
       }
     }, 1000);
+
+    function resetGame() {
+      score = 0;
+      stage = 1;
+      isGameOver = false;
+      isWin = false;
+      player.y = 300;
+      player.vy = 0;
+      player.grounded = true;
+      obstacles = [];
+      coins = [];
+      restartBtn.style.display = "none";
+    }
 
     // 장애물 및 코인 생성
     function spawnObjects() {
@@ -87,6 +105,7 @@
 
         if (player.x < obs.x + obs.w && player.x + player.w > obs.x && player.y < obs.y + obs.h && player.y + player.h > obs.y) {
           isGameOver = true;
+          restartBtn.style.display = "block";
         }
         if (obs.x < -50) obstacles.splice(i, 1);
       }
@@ -146,33 +165,28 @@
         ctx.fill();
       });
 
-      // 상단 점수 및 단계 표시
-      let stageText = "1단계";
-      if (stage === 2) stageText = "2단계";
-      if (stage === 3) stageText = "3단계";
+      // 상단 점수 및 단계 제목 표시
+      let stageText = "푸바오야 늑구를 찾아줭";
+      if (stage === 2) stageText = "늑구를 안은 푸바오의 부캉이 얻기 대작전";
+      if (stage === 3) stageText = "늑구를 안고 부캉이를 탄 푸바오의 자유 되찾기 대작전";
       document.getElementById("gameInfo").textContent = "점수: " + score + " | " + stageText;
 
-      // 게임 결과 화면 (성공과 실패 모두 동일한 감금 엔딩)
+      // 게임 결과 화면
       if (isGameOver || isWin) {
         ctx.fillStyle = "rgba(0,0,0,0.85)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.fillStyle = isWin ? "#3b82f6" : "#ef4444";
-        ctx.font = "bold 22px sans-serif";
         ctx.textAlign = "center";
         
-        const titleText = isWin 
-          ? "바다로 탈출했지만 어부의 낚싯줄에 걸렸다!" 
-          : "장애물에 걸려 사육사에게 잡혔다!";
-        
-        ctx.fillText(titleText, canvas.width/2, canvas.height/2 - 40);
-        
-        ctx.fillStyle = "white";
-        ctx.font = "16px sans-serif";
-        ctx.fillText("결국 셋은 각자의 감옥으로...", canvas.width/2, canvas.height/2 - 10);
-        ctx.fillText("푸바오: 에버랜드", canvas.width/2, canvas.height/2 + 25);
-        ctx.fillText("늑구: 오월드", canvas.width/2, canvas.height/2 + 50);
-        ctx.fillText("부캉이: 신세계 백화점 아쿠아리움", canvas.width/2, canvas.height/2 + 75);
+        if (isGameOver) {
+          ctx.fillStyle = "#ef4444";
+          ctx.font = "bold 40px sans-serif";
+          ctx.fillText("실패", canvas.width/2, canvas.height/2 + 10);
+        } else if (isWin) {
+          ctx.fillStyle = "#3b82f6";
+          ctx.font = "bold 30px sans-serif";
+          ctx.fillText("바다로 탈출했지만 어부에게 잡혔다... (실패)", canvas.width/2, canvas.height/2 + 10);
+        }
       }
     }
 
