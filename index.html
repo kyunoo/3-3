@@ -10,8 +10,8 @@
       max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: #f4f6f9;
+      color: #1e293b;
       position: relative;
       min-height: 100vh;
       box-sizing: border-box;
@@ -30,12 +30,12 @@
       top: 0;
       font-size: 26px;
       font-weight: 800;
-      color: #f8fafc;
-      background: #1e293b;
+      color: #1e293b;
+      background: #ffffff;
       padding: 10px 20px;
       border-radius: 20px;
-      border: 2px solid #334155;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+      border: 2px solid #cbd5e1;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
       user-select: none;
     }
 
@@ -49,7 +49,7 @@
     }
 
     h1 {
-      color: #f8fafc;
+      color: #1e293b;
       font-size: 36px;
       margin: 0;
       font-weight: 900;
@@ -74,12 +74,12 @@
       font-size: 18px;
       font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35);
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
     }
 
     .notice-sub-comment {
       font-size: 14px;
-      color: #94a3b8;
+      color: #64748b;
       margin-top: 6px;
       font-weight: 700;
       text-align: right;
@@ -97,11 +97,11 @@
     .class-select-box select {
       padding: 8px 14px;
       border-radius: 8px;
-      border: 2px solid #334155;
+      border: 2px solid #cbd5e1;
       font-weight: bold;
       font-size: 16px;
-      color: #f8fafc;
-      background: #1e293b;
+      color: #1e293b;
+      background: #ffffff;
     }
 
     .top-grid-container {
@@ -114,11 +114,11 @@
     }
 
     .card {
-      background: #1e293b;
+      background: #ffffff;
       padding: 20px;
       border-radius: 12px;
-      border: 2px solid #334155;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      border: 2px solid #cbd5e1;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
       margin-bottom: 20px;
       position: relative;
       z-index: 1;
@@ -126,8 +126,8 @@
 
     .card h2 {
       margin-top: 0;
-      color: #f8fafc;
-      border-bottom: 2px solid #334155;
+      color: #1e293b;
+      border-bottom: 2px solid #cbd5e1;
       padding-bottom: 10px;
       font-size: 20px;
       display: flex;
@@ -148,6 +148,7 @@
       align-items: center;
     }
 
+    /* 버튼 글자가 아래로 꺾이지 않도록 white-space: nowrap 추가 */
     .com-link-btn, .class-notice-setup-btn, .edit-schedule-btn {
       font-size: 13px;
       font-weight: bold;
@@ -157,6 +158,7 @@
       padding: 6px 14px;
       cursor: pointer;
       text-decoration: none;
+      white-space: nowrap;
     }
 
     .com-link-btn { background-color: #2563eb; }
@@ -206,7 +208,7 @@
       font-size: 18px;
       font-weight: 600;
       text-align: center;
-      color: #f8fafc;
+      color: #1e293b;
     }
 
     .calorie-info {
@@ -225,8 +227,8 @@
     }
 
     .dday-box {
-      background: #1e293b;
-      border: 2px solid #334155;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
       border-radius: 8px;
       padding: 12px 10px;
       text-align: center;
@@ -234,7 +236,7 @@
 
     .dday-title {
       font-size: 14px;
-      color: #94a3b8;
+      color: #64748b;
       font-weight: bold;
       margin-bottom: 4px;
     }
@@ -242,18 +244,18 @@
     .dday-count {
       font-size: 22px;
       font-weight: 800;
-      color: #f8fafc;
+      color: #1e293b;
     }
 
     .dday-count.today { color: #dc2626; }
-    .dday-date { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+    .dday-date { font-size: 12px; color: #64748b; margin-top: 2px; }
 
     .schedule-item {
       display: flex;
       padding: 10px 12px;
-      background-color: #1e293b;
+      background-color: #ffffff;
       border-radius: 6px;
-      border: 2px solid #334155;
+      border: 2px solid #cbd5e1;
       border-left: 6px solid #059669;
       margin-bottom: 8px;
       font-size: 16px;
@@ -267,7 +269,7 @@
 
     .subject {
       font-weight: 600;
-      color: #f8fafc;
+      color: #1e293b;
     }
     
     .edit-row {
@@ -287,11 +289,11 @@
     .edit-input {
       flex: 1;
       padding: 8px;
-      border: 2px solid #334155;
+      border: 2px solid #cbd5e1;
       border-radius: 6px;
       font-size: 15px;
-      background: #1e293b;
-      color: #f8fafc;
+      background: #ffffff;
+      color: #1e293b;
     }
     
     .btn-primary {
@@ -316,9 +318,9 @@
     .day-btn {
       flex: 1;
       padding: 10px;
-      border: 2px solid #334155;
-      background: #1e293b;
-      color: #f8fafc;
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
       border-radius: 6px;
       cursor: pointer;
       font-size: 15px;
@@ -338,29 +340,29 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
 
     .modal-content {
-      background: #1e293b;
-      border: 2px solid #334155;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
       padding: 25px;
       border-radius: 12px;
       width: 90%;
       max-width: 700px;
       max-height: 85vh;
       overflow-y: auto;
-      color: #f8fafc;
+      color: #1e293b;
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #334155;
+      border-bottom: 2px solid #cbd5e1;
       padding-bottom: 10px;
       margin-bottom: 15px;
     }
@@ -370,7 +372,7 @@
       cursor: pointer;
       border: none;
       background: none;
-      color: #f8fafc;
+      color: #1e293b;
     }
 
     .monthly-grid {
@@ -380,8 +382,8 @@
     }
 
     .day-meal-box {
-      background: #1e293b;
-      border: 2px solid #334155;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
       border-radius: 6px;
       padding: 8px;
       font-size: 13px;
@@ -391,7 +393,7 @@
       color: #059669;
       display: block;
       margin-bottom: 4px;
-      border-bottom: 2px solid #334155;
+      border-bottom: 2px solid #cbd5e1;
       padding-bottom: 2px;
     }
 
@@ -400,11 +402,11 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%) translateY(-120px);
-      background: #1e293b;
-      color: #f8fafc;
+      background: #ffffff;
+      color: #1e293b;
       padding: 16px 28px;
       border-radius: 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
       z-index: 99999;
       text-align: center;
       font-size: 18px;
@@ -426,11 +428,11 @@
 
     .tool-controls-group input, .tool-controls-group select {
       padding: 8px;
-      border: 2px solid #334155;
+      border: 2px solid #cbd5e1;
       border-radius: 6px;
       font-size: 15px;
-      background: #1e293b;
-      color: #f8fafc;
+      background: #ffffff;
+      color: #1e293b;
     }
 
     .draw-result {
@@ -446,8 +448,8 @@
       position: relative;
       width: 100%;
       height: 480px;
-      background: #1e293b;
-      border: 2px solid #334155;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
       border-radius: 12px;
       overflow: hidden;
       margin-top: 15px;
@@ -456,12 +458,12 @@
     .blackboard {
       width: 180px;
       padding: 8px;
-      background: #1e293b;
-      color: #f8fafc;
+      background: #ffffff;
+      color: #1e293b;
       text-align: center;
       font-weight: bold;
       border-radius: 6px;
-      border: 2px solid #334155;
+      border: 2px solid #cbd5e1;
       margin: 10px auto 0;
       font-size: 15px;
       letter-spacing: 2px;
@@ -471,7 +473,7 @@
       position: absolute;
       width: 54px;
       height: 44px;
-      background: #1e293b;
+      background: #ffffff;
       border: 2px solid #059669;
       border-radius: 8px;
       display: flex;
@@ -479,7 +481,7 @@
       justify-content: center;
       font-weight: 800;
       font-size: 16px;
-      color: #f8fafc;
+      color: #1e293b;
       cursor: move;
       user-select: none;
     }
@@ -490,17 +492,17 @@
       align-items: center;
       margin-top: 40px;
       padding-top: 20px;
-      border-top: 2px solid #334155;
+      border-top: 2px solid #cbd5e1;
       flex-wrap: wrap;
       gap: 10px;
     }
 
     .footer-btn {
       padding: 10px 16px;
-      background: #1e293b;
-      border: 2px solid #334155;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
       border-radius: 20px;
-      color: #f8fafc;
+      color: #1e293b;
       font-size: 14px;
       font-weight: bold;
       cursor: pointer;
@@ -508,7 +510,7 @@
 
     .notice-text-content {
       font-size: 15px;
-      color: #f8fafc;
+      color: #1e293b;
       line-height: 1.8;
       white-space: pre-line;
       padding: 10px 5px;
@@ -550,7 +552,7 @@
   <div class="top-grid-container">
     <div class="card">
       <h2>
-        <span>시간표 <span id="selectedDayText" style="font-size: 15px; color: #94a3b8;"></span></span>
+        <span>시간표 <span id="selectedDayText" style="font-size: 15px; color: #64748b;"></span></span>
         <div class="schedule-header-actions">
           <a href="http://www.xn--s39aj90b0nb2xw6xh.kr/" target="_blank" class="com-link-btn">컴시간 바로가기</a>
           <button class="class-notice-setup-btn" onclick="toggleClassNoticeMode()">공지</button>
@@ -568,13 +570,13 @@
 
       <div id="viewScheduleArea" class="schedule-list"></div>
 
-      <div id="editScheduleArea" style="display: none; background: #1e293b; padding: 15px; border-radius: 8px; border: 2px dashed #334155;">
-        <div style="font-weight: bold; color: #f8fafc; margin-bottom: 10px; font-size: 16px;">과목명 수정하기</div>
+      <div id="editScheduleArea" style="display: none; background: #ffffff; padding: 15px; border-radius: 8px; border: 2px dashed #cbd5e1;">
+        <div style="font-weight: bold; color: #1e293b; margin-bottom: 10px; font-size: 16px;">과목명 수정하기</div>
         <div id="inputForm"></div>
         <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
       </div>
 
-      <div id="editClassNoticeArea" style="display: none; background: #1e293b; padding: 15px; border-radius: 8px; border: 2px dashed #d97706; margin-top: 10px;">
+      <div id="editClassNoticeArea" style="display: none; background: #ffffff; padding: 15px; border-radius: 8px; border: 2px dashed #d97706; margin-top: 10px;">
         <div style="font-weight: bold; color: #d97706; margin-bottom: 10px; font-size: 16px;">과목별 준비물 알람 설정</div>
         <div id="classInputForm"></div>
         <button class="btn-primary" style="background: #d97706;" onclick="saveClassNotices()">공지 저장하기</button>
@@ -640,7 +642,7 @@
     </div>
   </div>
 
-  <!-- 제비뽑기 모달 (이스터에그 트리거 포함) -->
+  <!-- 제비뽑기 모달 (3학년 3반 전용 게임 이스터에그 포함) -->
   <div id="lotteryModal" class="modal" onclick="closeModalOnBg(event, 'lotteryModal')">
     <div class="modal-content" style="max-width: 400px;">
       <div class="modal-header">
@@ -877,7 +879,7 @@
           html += '<div class="schedule-item"><span class="period">' + (i + 1) + '교시</span><span class="subject">' + subject + '</span></div>';
         }
       }
-      viewDiv.innerHTML = html || "<div style='color:#94a3b8; text-align:center;'>등록된 시간표가 없습니다.</div>";
+      viewDiv.innerHTML = html || "<div style='color:#64748b; text-align:center;'>등록된 시간표가 없습니다.</div>";
     }
 
     function toggleAdminMode() {
@@ -1023,6 +1025,7 @@
       const grade = document.getElementById("gradeSelect").value;
       const cls = document.getElementById("classSelect").value;
 
+      // 오직 3학년 3반일 때만 비밀번호로 게임 진입 가능
       if (grade === "3" && cls === "3" && countVal === "75199521") {
         window.location.href = "game.html";
         return;
