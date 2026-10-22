@@ -30,7 +30,7 @@
     let isGameOver = false;
     let isWin = false;
     let gameState = "PLAYING"; // "PLAYING", "CATCH_RUN"
-    let catchTargetX = 0;      // 늑구를 확실하게 잡기 위한 목표 X 좌표
+    let catchDistance = 200;   // 푸바오와 늑구 사이의 실시간 거리
 
     // 배경음악(BGM) 설정 및 무한 반복(loop) 활성화
     const bgm = new Audio("bgm.mp3");
@@ -86,12 +86,12 @@
         // 스테이지 1 -> 2 (100점 도달)
         if (score >= 100 && stage === 1) {
           score = 100;
-          startCatchRun(220);
+          startCatchRun(200);
         }
         // 스테이지 2 -> 3 (500점 도달)
         else if (score >= 500 && stage === 2) {
           score = 500;
-          startCatchRun(-120);
+          startCatchRun(200);
         }
         // 최종 클리어 (1000점)
         else if (score >= 1000) {
@@ -101,11 +101,10 @@
       }
     }, 1000);
 
-    // 목표 점수 도달 시: 늑구의 현재 진짜 위치를 정확히 계산해서 타겟으로 설정
-    function startCatchRun(newTargetOffset) {
+    // 목표 점수 도달 시: 장애물 제거 및 추격전 모드 진입
+    function startCatchRun(initialDist) {
       gameState = "CATCH_RUN";
-      npc.targetOffset = newTargetOffset;
-      catchTargetX = player.x + npc.xOffset; // 이 순간의 늑구 실제 위치를 고정 타겟으로 지정
+      catchDistance = initialDist;
       obstacles = []; 
       coins = [];     
     }
@@ -206,45 +205,38 @@
 
             if (score >= 100 && score < 500 && stage === 1) {
               score = 100;
-              startCatchRun(220);
+              startCatchRun(200);
             } else if (score >= 500 && stage === 2) {
               score = 500;
-              startCatchRun(-120);
+              startCatchRun(200);
             }
           }
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // 늑구도 계속 달리며 도망가고, 푸바오가 진짜 늑구 위치(catchTargetX)까지 확실히 쫓아가서 잡는 구간
+      // 푸바오가 늑구에게 확실히 다가가 닿은 뒤 점프해서 잡는 구간
       else if (gameState === "CATCH_RUN") {
-        // 늑구도 계속 앞으로 전진하며 달림
-        catchTargetX += 3.5; 
-        npc.xOffset = catchTargetX - player.x; // 늑구의 위치를 정확히 갱신
-
-        // 푸바오가 늑구 바로 앞(catchTargetX - 60)까지 확실히 다가갈 때까지 속도를 높여 전진
-        let targetX = catchTargetX - 60;
-        if (player.x < targetX) {
-          player.x += 4;
+        // 거리가 좁혀질 때까지 푸바오가 늑구 쪽으로 바짝 다가감 (거리가 15 이하로 좁혀져야 닿은 것!)
+        if (catchDistance > 15) {
+          catchDistance -= 2.0; // 좁혀지는 속도
         } else {
-          // 충분히 밀착했을 때 점프해서 늑구를 덮침!
+          // 거리가 좁혀져서 닿았을 때 점프!
           if (player.grounded) {
             player.vy = -14;
             player.grounded = false;
           }
         }
 
-        // 점프했다가 착지하는 순간에만 확실하게 다음 스테이지로 전환!
+        // 점프했다가 착지하는 순간에 다음 스테이지로 확실하게 전환!
         if (!player.grounded && player.y >= 260) {
           player.y = 260;
           player.vy = 0;
           player.grounded = true;
 
-          if (score === 100 && stage === 1) {
+          if (stage === 1) {
             stage = 2;
-            npc.targetOffset = 220;
-          } else if (score === 500 && stage === 2) {
+          } else if (stage === 2) {
             stage = 3;
-            npc.targetOffset = -120;
           }
           gameState = "PLAYING"; // 게임 재개
         }
@@ -257,7 +249,8 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      let currentNpcX = (gameState === "CATCH_RUN") ? catchTargetX : (player.x + npc.xOffset);
+      // 추격전 중에는 catchDistance를 기반으로 늑구 위치 계산 (눈으로 보면서 확실히 닿게 됨)
+      let currentNpcX = (gameState === "CATCH_RUN") ? (player.x + catchDistance) : (player.x + npc.xOffset);
 
       if (stage === 1) {
         ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 80, 80);
