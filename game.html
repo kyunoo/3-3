@@ -29,9 +29,7 @@
     let stage = 1;
     let isGameOver = false;
     let isWin = false;
-    let gameState = "PLAYING"; // "PLAYING", "AUTO_PAUSE", "AUTO_JUMP", "STAGE_CLEAR"
-    let autoMoveTargetX = 0;
-    let pauseTimer = 0;
+    let gameState = "PLAYING"; // "PLAYING", "CATCH_RUN"
 
     const imgFubaoRun = new Image(); imgFubaoRun.src = "fubao_run.png";
     const imgNeukguRun = new Image(); imgNeukguRun.src = "neukgu_run.png";
@@ -72,12 +70,12 @@
         // 스테이지 1 -> 2 (100점 도달)
         if (score >= 100 && stage === 1) {
           score = 100;
-          startCatchTransition(220);
+          startCatchRun(220);
         }
         // 스테이지 2 -> 3 (500점 도달)
         else if (score >= 500 && stage === 2) {
           score = 500;
-          startCatchTransition(-120);
+          startCatchRun(-120);
         }
         // 최종 클리어 (1000점)
         else if (score >= 1000) {
@@ -87,14 +85,12 @@
       }
     }, 1000);
 
-    // 목표 점수 도달 시: 점수 멈춤 -> 잠깐 멈칫(PAUSE) -> 점프해서 늑구 잡기(JUMP)
-    function startCatchTransition(newTargetOffset) {
-      gameState = "AUTO_PAUSE";
-      pauseTimer = 40; // 약 0.6초 동안 잠깐 멈춤
+    // 목표 점수 도달 시: 점수 멈춤 + 장애물 제거 + 추격전 모드 진입
+    function startCatchRun(newTargetOffset) {
+      gameState = "CATCH_RUN";
       npc.targetOffset = newTargetOffset;
-      autoMoveTargetX = player.x + npc.xOffset; // 늑구 위치 고정
-      obstacles = []; // 장애물 제거
-      coins = [];     // 코인 제거
+      obstacles = []; 
+      coins = [];     
     }
 
     function resetGame() {
@@ -193,37 +189,43 @@
 
             if (score >= 100 && score < 500 && stage === 1) {
               score = 100;
-              startCatchTransition(220);
+              startCatchRun(220);
             } else if (score >= 500 && stage === 2) {
               score = 500;
-              startCatchTransition(-120);
+              startCatchRun(-120);
             }
           }
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // 1단계: 100점 도달 직후 잠깐 멈칫하는 구간
-      else if (gameState === "AUTO_PAUSE") {
-        pauseTimer--;
-        if (pauseTimer <= 0) {
-          gameState = "AUTO_JUMP";
-          player.vy = -13; // 멋지게 점프!
-          player.grounded = false;
-        }
-      } 
-      // 2단계: 점프해서 늑구에게 빠르게 날아가 잡는 구간
-      else if (gameState === "AUTO_JUMP") {
-        let destinationX = autoMoveTargetX - 50;
-        if (player.x < destinationX) {
-          player.x += 5; // 빠른 속도로 늑구 쪽으로 전진
+      // 늑구도 계속 달리면서, 푸바오가 속도를 높여 쫓아간 뒤 점프해서 잡는 구간
+      else if (gameState === "CATCH_RUN") {
+        // 늑구도 자연스럽게 계속 달리는 애니메이션 유지
+        npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 40;
+
+        // 푸바오가 평소보다 속도를 높여서 앞으로 전진
+        if (player.x < 320) {
+          player.x += 3.5;
+        } else {
+          // 충분히 따라붙었을 때 점프해서 늑구를 덮침!
+          if (player.grounded) {
+            player.vy = -14;
+            player.grounded = false;
+          }
         }
 
-        // 늑구에게 닿고 바닥에 착지했을 때 다음 스테이지 시작
-        if (player.x >= destinationX && player.grounded) {
-          if (stage === 1) {
+        // 점프했다가 착지하면 다음 스테이지로 자연스럽게 전환
+        if (!player.grounded && player.y >= 260) {
+          player.y = 260;
+          player.vy = 0;
+          player.grounded = true;
+
+          if (score === 100 && stage === 1) {
             stage = 2;
-          } else if (stage === 2) {
+            npc.targetOffset = 220;
+          } else if (score === 500 && stage === 2) {
             stage = 3;
+            npc.targetOffset = -120;
           }
           gameState = "PLAYING"; // 게임 재개
         }
@@ -236,8 +238,7 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // 연출 중에는 늑구 위치 고정, 평소에는 자연스럽게 이동
-      let currentNpcX = (gameState === "AUTO_PAUSE" || gameState === "AUTO_JUMP") ? autoMoveTargetX : (player.x + npc.xOffset);
+      let currentNpcX = player.x + npc.xOffset;
 
       if (stage === 1) {
         ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 80, 80);
