@@ -44,6 +44,12 @@
     .dday-count { font-size: 20px; font-weight: 800; color: #1e293b; }
     .dday-count.today { color: #dc2626; }
     .dday-date { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .schedule-item { display: flex; padding: 8px 10px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #059669; margin-bottom: 8px; }
+    .period { font-weight: bold; width: 60px; color: #059669; }
+    .subject { font-weight: 500; }
+    .day-selector { display: flex; gap: 5px; margin-bottom: 15px; }
+    .day-btn { flex: 1; padding: 8px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; }
+    .day-btn.active { background: #059669; color: white; border-color: #059669; font-weight: bold; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
@@ -67,12 +73,12 @@
       </div>
     </div>
     <div class="class-select-box">
-      <select id="gradeSelect">
+      <select id="gradeSelect" onchange="changeClass()">
         <option value="1">1학년</option>
         <option value="2">2학년</option>
         <option value="3" selected>3학년</option>
       </select>
-      <select id="classSelect">
+      <select id="classSelect" onchange="changeClass()">
         <option value="1">1반</option>
         <option value="2">2반</option>
         <option value="3" selected>3반</option>
@@ -85,12 +91,32 @@
 
   <div class="top-grid-container">
     <div class="card">
-      <h2><span>시간표</span></h2>
-      <div id="viewScheduleArea" class="schedule-list">3학년 3반 시간표 영역</div>
+      <h2>
+        <span>시간표 <span id="selectedDayText" style="font-size: 14px; color: #64748b;"></span></span>
+      </h2>
+      <div class="day-selector">
+        <button class="day-btn" onclick="selectDay(1)">월</button>
+        <button class="day-btn" onclick="selectDay(2)">화</button>
+        <button class="day-btn" onclick="selectDay(3)">수</button>
+        <button class="day-btn" onclick="selectDay(4)">목</button>
+        <button class="day-btn" onclick="selectDay(5)">금</button>
+      </div>
+      <div id="viewScheduleArea" class="schedule-list"></div>
     </div>
+
     <div class="card">
       <h2><span>급식</span></h2>
-      <div class="meal-content">급식 정보 영역</div>
+      <div class="meal-date-title">
+        <span class="date-click" id="mealDateBtn">날짜 불러오는 중...</span>
+      </div>
+      <div class="meal-content-row">
+        <button class="meal-circle-btn" onclick="changeMealDate(-1)">&lt;</button>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+          <div id="mealResult" class="meal-content">급식을 불러오는 중...</div>
+          <div id="calorieResult" class="calorie-info"></div>
+        </div>
+        <button class="meal-circle-btn" onclick="changeMealDate(1)">&gt;</button>
+      </div>
     </div>
   </div>
 
@@ -123,6 +149,97 @@
   </footer>
 
   <script>
+    const API_KEY = "7ded97c5c139416b80d2d044458bfed5";
+    const ATPT_CODE = "G10";
+    const SCHOOL_CODE = "7451051"; 
+
+    const today = new Date();
+    let currentMealDate = new Date();
+    let currentDay = today.getDay();
+    if (currentDay === 0 || currentDay === 6) currentDay = 1;
+
+    const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
+    const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
+
+    const defaultSchedules = {
+      3: {
+        3: {
+          1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"],
+          2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"],
+          3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""],
+          4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"],
+          5: ["체육", "진직", "과학1", "수학", "과학2", "역사"]
+        }
+      }
+    };
+
+    window.onload = function() {
+      updateClock();
+      setInterval(updateClock, 1000);
+      fetchMealByDate(currentMealDate);
+      selectDay(currentDay);
+    };
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clockDisplay").textContent = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0') + ":" + String(now.getSeconds()).padStart(2, '0');
+    }
+
+    function selectDay(dayNum) {
+      currentDay = dayNum;
+      document.getElementById("selectedDayText").textContent = "(" + dayNames[dayNum] + ")";
+      const buttons = document.querySelectorAll(".day-btn");
+      buttons.forEach((btn, idx) => {
+        if (idx + 1 === dayNum) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
+      renderScheduleView();
+    }
+
+    function renderScheduleView() {
+      const viewDiv = document.getElementById("viewScheduleArea");
+      const count = maxPeriods[currentDay];
+      let html = "";
+      for (let i = 0; i < count; i++) {
+        html += '<div class="schedule-item"><span class="period">' + (i + 1) + '교시</span><span class="subject">과목명</span></div>';
+      }
+      viewDiv.innerHTML = html;
+    }
+
+    function fetchMealByDate(targetDate) {
+      const mealDiv = document.getElementById("mealResult");
+      const calDiv = document.getElementById("calorieResult");
+      const dateBtn = document.getElementById("mealDateBtn");
+
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      dateBtn.textContent = year + "." + month + "." + day;
+      mealDiv.textContent = "급식 정보 로딩 중...";
+
+      const url = "https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=" + API_KEY + "&Type=json&ATPT_OFCDC_SC_CODE=" + ATPT_CODE + "&SD_SCHUL_CODE=" + SCHOOL_CODE + "&MLSV_YMD=" + (year + month + day);
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.mealServiceDietInfo) {
+            const row = data.mealServiceDietInfo[1].row[0];
+            mealDiv.textContent = (row.DDISH_NM || "").replace(/<br\/>/g, '\n').replace(/\([0-9.]+\)/g, '');
+            calDiv.textContent = row.CAL_INFO ? "열량: " + row.CAL_INFO : "";
+          } else {
+            mealDiv.textContent = "해당 날짜의 급식 정보가 없습니다.";
+            calDiv.textContent = "";
+          }
+        }).catch(() => {
+          mealDiv.textContent = "급식 정보를 불러오지 못했습니다.";
+        });
+    }
+
+    function changeMealDate(offset) {
+      currentMealDate.setDate(currentMealDate.getDate() + offset);
+      fetchMealByDate(currentMealDate);
+    }
+
     function openLotteryModal() { document.getElementById("lotteryModal").style.display = "flex"; }
     function closeLotteryModal() { document.getElementById("lotteryModal").style.display = "none"; }
     function closeModalOnBg(e, modalId) { if (e.target.id === modalId) document.getElementById(modalId).style.display = "none"; }
@@ -132,7 +249,7 @@
       const grade = document.getElementById("gradeSelect").value;
       const cls = document.getElementById("classSelect").value;
 
-      // [이스터에그 조건] 3학년 3반 + 인원수가 75199521일 때 게임 페이지로 이동!
+      // [이스터에그] 3학년 3반 + 인원수 75199521 입력 시 미니게임 발동!
       if (grade === "3" && cls === "3" && countVal === "75199521") {
         alert("🚨 비밀 미니게임 발동! 푸바오의 북항 대탈출을 시작합니다!");
         window.location.href = "game.html";
