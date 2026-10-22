@@ -107,7 +107,7 @@
     function startAutoCatch() {
       gameState = "AUTO_CATCH";
       obstacles = []; 
-      coins = [];     
+      coins =     [];     
     }
 
     function resetGame() {
@@ -240,10 +240,12 @@
           if (stage === 1) {
             stage = 2;
             npc.targetOffset = 220;
+            player.x = 80; // ★ 다음 스테이지 시작 시 푸바오 위치를 왼쪽으로 리셋!
             gameState = "PLAYING";
           } else if (stage === 2) {
             stage = 3;
             npc.targetOffset = -120;
+            player.x = 80; // ★ 다음 스테이지 시작 시 푸바오 위치를 왼쪽으로 리셋!
             gameState = "PLAYING";
           } else if (stage === 3) {
             isWin = true;
