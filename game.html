@@ -10,7 +10,7 @@
   </style>
 </head>
 <body>
-  <div class="info" id="gameInfo">점수: 0 | 단계: 1단계 (늑구 쫓기)</div>
+  <div class="info" id="gameInfo">점수: 0 | 단계: 1단계 (추격 시작)</div>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
   <script>
@@ -22,47 +22,52 @@
     let isGameOver = false;
     let isWin = false;
 
-    // 플레이어 (푸바오)
-    let player = { x: 50, y: 300, w: 40, h: 40, vy: 0, jumpPower: -12, grounded: true };
+    // 이미지 객체 로드
+    const imgFubaoRun = new Image(); imgFubaoRun.src = "fubao_run.png";
+    const imgNeukguRun = new Image(); imgNeukguRun.src = "neukgu_run.png";
+    const imgBukangRun = new Image(); imgBukangRun.src = "bukang_run.png";
+    const imgHug = new Image(); imgHug.src = "fubao_hug_neukgu.png";
+    const imgBukangRide = new Image(); imgBukangRide.src = "fubao_neukgu_bukang.png";
+    const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
+    const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
+
+    // 플레이어 객체
+    let player = { x: 80, y: 300, w: 50, h: 50, vy: 0, jumpPower: -12, grounded: true };
     let obstacles = [];
     let coins = [];
 
-    // 키 입력 처리
-    let keys = {};
-    window.addEventListener("keydown", e => { if (e.code === "Space" || e.code === "ArrowUp") { if (player.grounded) { player.vy = player.jumpPower; player.grounded = false; } } });
+    // 키 입력 (점프)
+    window.addEventListener("keydown", e => {
+      if ((e.code === "Space" || e.code === "ArrowUp") && player.grounded) {
+        player.vy = player.jumpPower;
+        player.grounded = false;
+      }
+    });
 
-    // 게임 루프 타이머 (1초에 점수 1점)
+    // 1초마다 점수 증가 및 단계 체크
     setInterval(() => {
       if (!isGameOver && !isWin) {
         score += 1;
-        checkStage();
+        if (score >= 1000) isWin = true;
+        else if (score >= 500) stage = 3; // 부캉이 탑승 + 사육사 추격
+        else if (score >= 100) stage = 2; // 늑구 포획 후 이동
       }
     }, 1000);
 
-    function checkStage() {
-      if (score >= 1000) {
-        isWin = true;
-      } else if (score >= 500) {
-        stage = 3; // 부캉이 탑승 + 사육사 추격 (난이도 업)
-      } else if (score >= 100) {
-        stage = 2; // 늑구 포획 후 이동
-      }
-    }
-
-    // 장애물 및 코인 생성 렌덤 스폰
+    // 장애물 및 코인 스폰
     function spawnObjects() {
       if (Math.random() < 0.02) {
-        obstacles.push({ x: canvas.width, y: 310, w: 30, h: 30, speed: stage === 3 ? 7 : 5 });
+        obstacles.push({ x: canvas.width, y: 310, w: 40, h: 40, speed: stage === 3 ? 7 : 5 });
       }
       if (Math.random() < 0.01) {
-        coins.push({ x: canvas.width, y: Math.random() * 200 + 100, w: 20, h: 20, speed: 5 });
+        coins.push({ x: canvas.width, y: Math.random() * 200 + 100, w: 25, h: 25, speed: 5 });
       }
     }
 
     function update() {
       if (isGameOver || isWin) return;
 
-      // 중력 적용
+      // 물리 연산 (중력)
       player.vy += 0.6;
       player.y += player.vy;
       if (player.y > 300) {
@@ -78,20 +83,19 @@
         let obs = obstacles[i];
         obs.x -= obs.speed;
 
-        // 충돌 감지
         if (player.x < obs.x + obs.w && player.x + player.w > obs.x && player.y < obs.y + obs.h && player.y + player.h > obs.y) {
           isGameOver = true;
         }
         if (obs.x < -50) obstacles.splice(i, 1);
       }
 
-      // 코인 이동 및 획득 체크
+      // 코인 이동 및 획득 (+5점)
       for (let i = coins.length - 1; i >= 0; i--) {
         let coin = coins[i];
         coin.x -= coin.speed;
 
-        if (player.x < coin.x + coin.w && player.x + player.w > coin.x && player.y < coin.y + coin.h && player.y + player.h > coin.y) {
-          score += 5; // 코인 먹으면 +5점
+        if (player.x < coin.x + coin.w && player.x + player.w > coin.x && player.y < coin.y + coin.h && player.y + coin.h > coin.y) {
+          score += 5;
           coins.splice(i, 1);
         }
         if (coin.x < -50) coins.splice(i, 1);
@@ -103,43 +107,73 @@
 
       // 바닥 그리기
       ctx.fillStyle = "#334155";
-      ctx.fillRect(0, 340, canvas.width, 60);
+      ctx.fillRect(0, 350, canvas.width, 50);
 
-      // 플레이어 (푸바오) 그리기
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(player.x, player.y, player.w, player.h);
+      // 단계별 캐릭터 렌더링
+      if (stage === 1) {
+        // 1단계: 푸바오, 도망치는 늑구, 부캉이 표시
+        ctx.drawImage(imgFubaoRun, player.x, player.y, player.w, player.h);
+        ctx.drawImage(imgNeukguRun, player.x + 120, 305, 45, 45);
+        ctx.drawImage(imgBukangRun, player.x + 240, 315, 60, 35);
+      } else if (stage === 2) {
+        // 2단계: 푸바오가 늑구를 안고 부캉이를 쫓는 모습
+        ctx.drawImage(imgHug, player.x, player.y - 5, 60, 50);
+        ctx.drawImage(imgBukangRun, player.x + 150, 315, 60, 35);
+      } else if (stage === 3) {
+        // 3단계: 푸바오+늑구가 부캉이를 타고 탈출 중 + 사육사 추격
+        ctx.drawImage(imgBukangRide, player.x, player.y - 10, 80, 50);
+        ctx.drawImage(imgZookeeper, player.x - 70, 290, 50, 60); // 뒤에서 쫓아오는 사육사
+      }
 
       // 장애물 그리기
-      ctx.fillStyle = "#ef4444";
-      obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.w, obs.h));
+      obstacles.forEach(obs => {
+        if (imgObstacle.complete && imgObstacle.naturalWidth !== 0) {
+          ctx.drawImage(imgObstacle, obs.x, obs.y, obs.w, obs.h);
+        } else {
+          ctx.fillStyle = "#ef4444";
+          ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        }
+      });
 
-      // 코인 그리기
+      // 코인 그리기 (황금 대나무 느낌)
       ctx.fillStyle = "#eab308";
-      coins.forEach(coin => ctx.fillRect(coin.x, coin.y, coin.w, coin.h));
+      coins.forEach(coin => {
+        ctx.beginPath();
+        ctx.arc(coin.x + coin.w/2, coin.y + coin.h/2, coin.w/2, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
-      // 상단 정보 업데이트
-      let stageText = "1단계: 늑구 쫓기";
-      if (stage === 2) stageText = "2단계: 늑구 껴안고 부캉이 탐색";
-      if (stage === 3) stageText = "3단계: 부캉이 탑승 & 사육사 추격!";
+      // 상단 상태바 텍스트
+      let stageText = "1단계: 늑구와 부캉이 추격 중";
+      if (stage === 2) stageText = "2단계: 늑구 포획! 부캉이 탑승 시도 (난이도 업)";
+      if (stage === 3) stageText = "3단계: 부캉이 탑승 완료! 사육사의 추격 회피 중";
       document.getElementById("gameInfo").textContent = `점수: ${score} | ${stageText}`;
 
-      // 게임 오버 / 승리 화면
+      // 게임 오버 화면 (실패 시 각각의 고향으로 강제 분리)
       if (isGameOver) {
-        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fillStyle = "rgba(0,0,0,0.85)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "white";
-        ctx.font = "24px sans-serif";
+        ctx.fillStyle = "#ef4444";
+        ctx.font = "bold 22px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("❌ 실패! 셋의 운명은 각자의 고향으로...", canvas.width/2, canvas.height/2 - 20);
+        ctx.fillText("❌ 실패! 셋의 운명이 갈라졌습니다...", canvas.width/2, canvas.height/2 - 30);
+        ctx.fillStyle = "white";
         ctx.font = "16px sans-serif";
-        ctx.fillText("(푸바오: 에버랜드 / 늑구: 오월드 / 부캉이: 아쿠아리움)", canvas.width/2, canvas.height/2 + 20);
-      } else if (isWin) {
-        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fillText("🐼 푸바오 ➔ 에버랜드행", canvas.width/2, canvas.height/2 + 5);
+        ctx.fillText("🐺 늑구 ➔ 오월드행", canvas.width/2, canvas.height/2 + 30);
+        ctx.fillText("🦈 부캉이 ➔ 신세계 아쿠아리움행", canvas.width/2, canvas.height/2 + 55);
+      } 
+      // 게임 승리 화면 (1000점 달성 시 바다로 자유 탈출)
+      else if (isWin) {
+        ctx.fillStyle = "rgba(0,0,0,0.85)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#22c55e";
-        ctx.font = "28px sans-serif";
+        ctx.font = "bold 24px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("🎉 대성공! 바다로 떠나 완전한 자유를 획득!", canvas.width/2, canvas.height/2);
+        ctx.fillText("🎉 대성공! 바다로 떠나 완전한 자유 획득!", canvas.width/2, canvas.height/2 - 15);
+        ctx.fillStyle = "white";
+        ctx.font = "16px sans-serif";
+        ctx.fillText("푸바오, 늑구, 부캉이 모두 완벽한 해방!", canvas.width/2, canvas.height/2 + 20);
       }
     }
 
