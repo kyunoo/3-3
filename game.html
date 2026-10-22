@@ -29,8 +29,10 @@
     let stage = 1;
     let isGameOver = false;
     let isWin = false;
-    let gameState = "PLAYING"; // "PLAYING", "CATCH_RUN"
-    let catchDistance = 200;   // 푸바오와 늑구 사이의 실시간 거리
+    let gameState = "PLAYING"; // "PLAYING", "AUTO_CATCH"
+    
+    // 화면 끝에 멈춰 설 늑구의 X 좌표 고정 위치
+    let fixedNpcX = 650;
 
     // 배경음악(BGM) 설정 및 무한 반복(loop) 활성화
     const bgm = new Audio("bgm.mp3");
@@ -86,12 +88,12 @@
         // 스테이지 1 -> 2 (100점 도달)
         if (score >= 100 && stage === 1) {
           score = 100;
-          startCatchRun(200);
+          startAutoCatch();
         }
         // 스테이지 2 -> 3 (500점 도달)
         else if (score >= 500 && stage === 2) {
           score = 500;
-          startCatchRun(200);
+          startAutoCatch();
         }
         // 최종 클리어 (1000점)
         else if (score >= 1000) {
@@ -101,10 +103,9 @@
       }
     }, 1000);
 
-    // 목표 점수 도달 시: 장애물 제거 및 추격전 모드 진입
-    function startCatchRun(initialDist) {
-      gameState = "CATCH_RUN";
-      catchDistance = initialDist;
+    // 목표 점수 도달 시: 장애물 제거 후 화면 끝에 늑구를 멈춰 세우고 자동 잡기 모드 진입
+    function startAutoCatch() {
+      gameState = "AUTO_CATCH";
       obstacles = []; 
       coins = [];     
     }
@@ -115,6 +116,7 @@
       isGameOver = false;
       isWin = false;
       gameState = "PLAYING";
+      player.x = 80;
       player.y = 260;
       player.vy = 0;
       player.grounded = true;
@@ -153,15 +155,15 @@
         player.grounded = true;
       }
 
-      npc.vy += 0.6;
-      npc.y += npc.vy;
-      if (npc.y > 260) {
-        npc.y = 260;
-        npc.vy = 0;
-        npc.grounded = true;
-      }
-
       if (gameState === "PLAYING") {
+        npc.vy += 0.6;
+        npc.y += npc.vy;
+        if (npc.y > 260) {
+          npc.y = 260;
+          npc.vy = 0;
+          npc.grounded = true;
+        }
+
         if (npc.grounded && Math.random() < 0.008) {
           npc.vy = npc.jumpPower;
           npc.grounded = false;
@@ -205,29 +207,29 @@
 
             if (score >= 100 && score < 500 && stage === 1) {
               score = 100;
-              startCatchRun(200);
+              startAutoCatch();
             } else if (score >= 500 && stage === 2) {
               score = 500;
-              startCatchRun(200);
+              startAutoCatch();
             }
           }
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // 푸바오가 늑구에게 확실히 다가가 닿은 뒤 점프해서 잡는 구간
-      else if (gameState === "CATCH_RUN") {
-        // 거리가 좁혀질 때까지 푸바오가 늑구 쪽으로 바짝 다가감 (거리가 15 이하로 좁혀져야 닿은 것!)
-        if (catchDistance > 15) {
-          catchDistance -= 2.0; // 좁혀지는 속도
+      // AUTO_CATCH: 늑구는 화면 끝에 멈춰 있고, 푸바오가 자동으로 달려가 점프해서 닿는 구간
+      else if (gameState === "AUTO_CATCH") {
+        // 푸바오가 오른쪽으로 빠르게 달려감
+        if (player.x < fixedNpcX - 70) {
+          player.x += 4;
         } else {
-          // 거리가 좁혀져서 닿았을 때 점프!
+          // 늑구 바로 앞에서 자동으로 점프!
           if (player.grounded) {
             player.vy = -14;
             player.grounded = false;
           }
         }
 
-        // 점프했다가 착지하는 순간에 다음 스테이지로 확실하게 전환!
+        // 점프했다가 착지하는 순간 다음 단계로 확실하게 전환!
         if (!player.grounded && player.y >= 260) {
           player.y = 260;
           player.vy = 0;
@@ -235,8 +237,10 @@
 
           if (stage === 1) {
             stage = 2;
+            npc.targetOffset = 220;
           } else if (stage === 2) {
             stage = 3;
+            npc.targetOffset = -120;
           }
           gameState = "PLAYING"; // 게임 재개
         }
@@ -249,8 +253,8 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // 추격전 중에는 catchDistance를 기반으로 늑구 위치 계산 (눈으로 보면서 확실히 닿게 됨)
-      let currentNpcX = (gameState === "CATCH_RUN") ? (player.x + catchDistance) : (player.x + npc.xOffset);
+      // AUTO_CATCH 상태일 때는 늑구를 화면 끝(fixedNpcX)에 고정해서 멈춰 세움
+      let currentNpcX = (gameState === "AUTO_CATCH") ? fixedNpcX : (player.x + npc.xOffset);
 
       if (stage === 1) {
         ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 80, 80);
