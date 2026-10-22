@@ -30,6 +30,7 @@
     let isGameOver = false;
     let isWin = false;
     let gameState = "PLAYING"; // "PLAYING", "CATCH_RUN"
+    let catchTargetX = 0;      // 늑구를 확실하게 잡기 위한 목표 X 좌표
 
     // 배경음악(BGM) 설정 및 무한 반복(loop) 활성화
     const bgm = new Audio("bgm.mp3");
@@ -59,7 +60,7 @@
     let coins = [];
 
     function triggerJump() {
-      startBgm(); // 첫 키 입력 시 BGM 재생
+      startBgm(); 
       if (player.grounded && !isGameOver && !isWin && gameState === "PLAYING") {
         player.vy = player.jumpPower;
         player.grounded = false;
@@ -73,7 +74,7 @@
     });
 
     canvas.addEventListener("pointerdown", e => {
-      startBgm(); // 첫 터치/클릭 시 BGM 재생
+      startBgm(); 
       triggerJump();
     });
 
@@ -100,10 +101,11 @@
       }
     }, 1000);
 
-    // 목표 점수 도달 시: 점수 멈춤 + 장애물 제거 + 추격전 모드 진입
+    // 목표 점수 도달 시: 늑구의 현재 진짜 위치를 정확히 계산해서 타겟으로 설정
     function startCatchRun(newTargetOffset) {
       gameState = "CATCH_RUN";
       npc.targetOffset = newTargetOffset;
+      catchTargetX = player.x + npc.xOffset; // 이 순간의 늑구 실제 위치를 고정 타겟으로 지정
       obstacles = []; 
       coins = [];     
     }
@@ -213,23 +215,25 @@
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // 늑구도 계속 달리면서, 푸바오가 속도를 높여 쫓아간 뒤 점프해서 잡는 구간
+      // 늑구도 계속 달리며 도망가고, 푸바오가 진짜 늑구 위치(catchTargetX)까지 확실히 쫓아가서 잡는 구간
       else if (gameState === "CATCH_RUN") {
-        // 늑구도 자연스럽게 계속 달리는 애니메이션 유지
-        npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 40;
+        // 늑구도 계속 앞으로 전진하며 달림
+        catchTargetX += 3.5; 
+        npc.xOffset = catchTargetX - player.x; // 늑구의 위치를 정확히 갱신
 
-        // 푸바오가 평소보다 속도를 높여서 앞으로 전진
-        if (player.x < 320) {
-          player.x += 3.5;
+        // 푸바오가 늑구 바로 앞(catchTargetX - 60)까지 확실히 다가갈 때까지 속도를 높여 전진
+        let targetX = catchTargetX - 60;
+        if (player.x < targetX) {
+          player.x += 4;
         } else {
-          // 충분히 따라붙었을 때 점프해서 늑구를 덮침!
+          // 충분히 밀착했을 때 점프해서 늑구를 덮침!
           if (player.grounded) {
             player.vy = -14;
             player.grounded = false;
           }
         }
 
-        // 점프했다가 착지하면 다음 스테이지로 자연스럽게 전환
+        // 점프했다가 착지하는 순간에만 확실하게 다음 스테이지로 전환!
         if (!player.grounded && player.y >= 260) {
           player.y = 260;
           player.vy = 0;
@@ -253,7 +257,7 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      let currentNpcX = player.x + npc.xOffset;
+      let currentNpcX = (gameState === "CATCH_RUN") ? catchTargetX : (player.x + npc.xOffset);
 
       if (stage === 1) {
         ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 80, 80);
