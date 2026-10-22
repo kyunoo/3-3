@@ -67,12 +67,14 @@
       if (!isGameOver && !isWin && gameState === "PLAYING") {
         score += 1;
         
-        // 스테이지 1 -> 2로 넘어가는 지점 (점수 100점 도달 시)
-        if (score === 100 && stage === 1) {
+        // 스테이지 1 -> 2로 넘어가는 지점 (점수 100점 이상 도달 시)
+        if (score >= 100 && stage === 1) {
+          score = 100;
           startAutoMoveTransition(2, 220);
         }
-        // 스테이지 2 -> 3으로 넘어가는 지점 (점수 500점 도달 시)
-        else if (score === 500 && stage === 2) {
+        // 스테이지 2 -> 3으로 넘어가는 지점 (점수 500점 이상 도달 시)
+        else if (score >= 500 && stage === 2) {
+          score = 500;
           startAutoMoveTransition(3, -120);
         }
         // 최종 클리어 (1000점)
@@ -174,7 +176,7 @@
           if (obs.x < -100) obstacles.splice(i, 1);
         }
 
-        // 코인(별) 먹기 체크
+        // 코인(별) 먹기 체크 (코인 먹을 때도 점수가 확 오르므로 체크 추가!)
         for (let i = coins.length - 1; i >= 0; i--) {
           let coin = coins[i];
           coin.x -= coin.speed;
@@ -182,6 +184,15 @@
           if (player.x < coin.x + coin.w && player.x + player.w > coin.x && player.y < coin.y + coin.h && player.y + player.h > coin.y) {
             score += 5;
             coins.splice(i, 1);
+
+            // 코인 먹어서 100점이나 500점을 넘었을 때의 예외 처리
+            if (score >= 100 && score < 500 && stage === 1) {
+              score = 100;
+              startAutoMoveTransition(2, 220);
+            } else if (score >= 500 && stage === 2) {
+              score = 500;
+              startAutoMoveTransition(3, -120);
+            }
           }
           if (coin.x < -100) coins.splice(i, 1);
         }
@@ -189,11 +200,9 @@
       // 목표 점수 도달 시 푸바오가 늑구에게 스르륵 다가가는 자동 연출 로직
       else if (gameState === "AUTO_MOVING") {
         let targetNpcX = player.x + npc.xOffset;
-        // 푸바오가 늑구의 위치로 부드럽게 걸어감
         if (Math.abs(player.x - (targetNpcX - 50)) > 2) {
           player.x += 2;
         } else {
-          // 만나면 스테이지 업그레이드 후 다시 플레이 상태로 복귀
           if (score === 100 && stage === 1) {
             stage = 2;
           } else if (score === 500 && stage === 2) {
