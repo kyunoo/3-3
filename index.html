@@ -6,21 +6,21 @@
   <title>대전하기중학교</title>
   <style>
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #000000;
-      --text-sub: #4b5563;
-      --border-color: #cbd5e1;
-      --accent: #000000;
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --border-color: #334155;
+      --accent: #059669;
     }
 
-    [data-theme="dark"] {
-      --bg-color: #000000;
-      --card-bg: #000000;
-      --text-main: #ffffff;
-      --text-sub: #9ca3af;
-      --border-color: #ffffff;
-      --accent: #ffffff;
+    [data-theme="light"] {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --border-color: #cbd5e1;
+      --accent: #059669;
     }
 
     body {
@@ -86,13 +86,14 @@
 
     .header-notice-btn {
       padding: 12px 26px;
-      background: var(--text-main);
-      color: var(--bg-color);
-      border: 2px solid var(--border-color);
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
       border-radius: 28px;
       font-size: 18px;
       font-weight: 800;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35);
     }
 
     .notice-sub-comment {
@@ -155,7 +156,7 @@
     
     .toggle-btn {
       font-size: 14px;
-      color: var(--text-main);
+      color: var(--accent);
       cursor: pointer;
       font-weight: bold;
     }
@@ -169,14 +170,17 @@
     .com-link-btn, .class-notice-setup-btn, .edit-schedule-btn {
       font-size: 13px;
       font-weight: bold;
-      color: var(--bg-color);
-      background-color: var(--text-main);
-      border: 2px solid var(--border-color);
+      color: #ffffff;
+      border: none;
       border-radius: 16px;
       padding: 6px 14px;
       cursor: pointer;
       text-decoration: none;
     }
+
+    .com-link-btn { background-color: #2563eb; }
+    .class-notice-setup-btn { background-color: #d97706; }
+    .edit-schedule-btn { background-color: #059669; }
 
     .meal-date-title {
       text-align: center;
@@ -185,7 +189,7 @@
 
     .date-click {
       font-size: 16px;
-      color: var(--text-main);
+      color: var(--accent);
       cursor: pointer;
       text-decoration: underline;
       font-weight: bold;
@@ -203,9 +207,9 @@
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background-color: var(--card-bg);
-      color: var(--text-main);
-      border: 2px solid var(--border-color);
+      background-color: var(--accent);
+      color: white;
+      border: none;
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
@@ -226,7 +230,7 @@
 
     .calorie-info {
       font-size: 14px;
-      color: var(--text-sub);
+      color: var(--accent);
       font-weight: bold;
       margin-top: 4px;
       text-align: center;
@@ -260,16 +264,8 @@
       color: var(--text-main);
     }
 
-    .dday-count.today {
-      color: var(--text-main);
-      text-decoration: underline;
-    }
-
-    .dday-date {
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-top: 2px;
-    }
+    .dday-count.today { color: #dc2626; }
+    .dday-date { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
 
     .schedule-item {
       display: flex;
@@ -277,6 +273,7 @@
       background-color: var(--card-bg);
       border-radius: 6px;
       border: 2px solid var(--border-color);
+      border-left: 6px solid var(--accent);
       margin-bottom: 8px;
       font-size: 16px;
     }
@@ -284,7 +281,7 @@
     .period {
       font-weight: bold;
       width: 70px;
-      color: var(--text-main);
+      color: var(--accent);
     }
 
     .subject {
@@ -303,7 +300,7 @@
       font-size: 15px;
       font-weight: bold;
       width: 70px;
-      color: var(--text-main);
+      color: var(--accent);
     }
 
     .edit-input {
@@ -317,9 +314,9 @@
     }
     
     .btn-primary {
-      background: var(--text-main);
-      color: var(--bg-color);
-      border: 2px solid var(--border-color);
+      background: var(--accent);
+      color: white;
+      border: none;
       padding: 10px 16px;
       border-radius: 6px;
       cursor: pointer;
@@ -348,9 +345,9 @@
     }
 
     .day-btn.active {
-      background: var(--text-main);
-      color: var(--bg-color);
-      border-color: var(--border-color);
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
     }
 
     .modal {
@@ -410,11 +407,32 @@
     }
 
     .day-meal-box strong {
-      color: var(--text-main);
+      color: var(--accent);
       display: block;
       margin-bottom: 4px;
       border-bottom: 2px solid var(--border-color);
       padding-bottom: 2px;
+    }
+
+    .class-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: var(--card-bg);
+      color: var(--text-main);
+      padding: 16px 28px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 99999;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      border: 3px solid #d97706;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .class-popup.show {
+      transform: translateX(-50%) translateY(0);
     }
 
     .tool-controls-group {
@@ -437,7 +455,7 @@
     .draw-result {
       font-size: 22px;
       font-weight: bold;
-      color: var(--text-main);
+      color: #dc2626;
       text-align: center;
       margin-top: 15px;
       min-height: 30px;
@@ -473,7 +491,7 @@
       width: 54px;
       height: 44px;
       background: var(--card-bg);
-      border: 2px solid var(--border-color);
+      border: 2px solid var(--accent);
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -516,7 +534,11 @@
     }
   </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
+
+  <div id="classPopup" class="class-popup">
+    <div id="classPopupText">내용</div>
+  </div>
 
   <header>
     <div id="clockDisplay" class="current-time">00:00:00</div>
@@ -550,6 +572,7 @@
         <span>시간표 <span id="selectedDayText" style="font-size: 15px; color: var(--text-sub);"></span></span>
         <div class="schedule-header-actions">
           <a href="http://www.xn--s39aj90b0nb2xw6xh.kr/" target="_blank" class="com-link-btn">컴시간 바로가기</a>
+          <button class="class-notice-setup-btn" onclick="toggleClassNoticeMode()">공지</button>
           <button class="edit-schedule-btn" onclick="toggleAdminMode()">시간표 수정</button>
         </div>
       </h2>
@@ -569,6 +592,12 @@
         <div id="inputForm"></div>
         <button class="btn-primary" onclick="saveSchedule()">수정사항 저장하기</button>
       </div>
+
+      <div id="editClassNoticeArea" style="display: none; background: var(--card-bg); padding: 15px; border-radius: 8px; border: 2px dashed #d97706; margin-top: 10px;">
+        <div style="font-weight: bold; color: #d97706; margin-bottom: 10px; font-size: 16px;">과목별 준비물 알람 설정</div>
+        <div id="classInputForm"></div>
+        <button class="btn-primary" style="background: #d97706;" onclick="saveClassNotices()">공지 저장하기</button>
+      </div>
     </div>
 
     <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
@@ -585,6 +614,9 @@
           </div>
           <button class="meal-circle-btn" onclick="changeMealDate(1)">&gt;</button>
         </div>
+      </div>
+      <div style="text-align: right; margin-top: 10px;">
+        <button id="todayMealResetBtn" style="display:none; background:var(--accent); color:white; border:none; border-radius:6px; padding:5px 10px; font-size:12px; font-weight:bold; cursor:pointer;" onclick="resetToTodayMeal()">오늘 급식 보기</button>
       </div>
     </div>
   </div>
@@ -619,7 +651,9 @@
 
 수정한 시간표는 수정한 주가 지나고 월요일이 되면 자동으로 기본 시간표로 초기화됩니다.
 
-사이트 새로고침을 하게되면 수정한 시간표 등이 모두 초기화가 되니 조심해서 사용해주시기 바랍니다.
+공지버튼을 눌러 원하는 과목의 준비물, 숙제 등을 공지할 수 있습니다. 해당시간의 과목시작 10분 전에 공지 알림이 뜹니다.
+
+사이트 새로고침을 하게되면 수정한 시간표, 공지 등이 모두 초기화가 되니 조심해서 사용해주시기 바랍니다.
 
 불편한거나 오류 있으면 언제든지 말해주세요</div>
     </div>
@@ -648,7 +682,7 @@
         <h3 style="margin:0; font-size: 20px;">학교 자리배치</h3>
         <button class="close-btn" onclick="closeSeatingModal()">&times;</button>
       </div>
-      <div style="font-size: 14px; font-weight: bold; text-align: center; min-height: 20px;" id="seatingStatus"></div>
+      <div style="font-size: 14px; font-weight: bold; text-align: center; min-height: 20px; color: var(--accent);" id="seatingStatus"></div>
       <div class="blackboard">칠 판</div>
       <div id="seatingBoard" class="seating-board"></div>
     </div>
@@ -682,6 +716,72 @@
     const maxPeriods = { 1: 6, 2: 7, 3: 7, 4: 6, 5: 6 };
     const dayNames = ["", "월요일", "화요일", "수요일", "목요일", "금요일"];
 
+    const restTimesConfig = [
+      { key: "time_1start", label: "1교시", hour: 8, minute: 30 },
+      { key: "time_1end", label: "2교시", hour: 9, minute: 15 },
+      { key: "time_2end", label: "3교시", hour: 10, minute: 10 },
+      { key: "time_3end", label: "4교시", hour: 11, minute: 5 },
+      { key: "time_lunch", label: "5교시", hour: 12, minute: 55 },
+      { key: "time_5end", label: "6교시", hour: 13, minute: 45 },
+      { key: "time_6end", label: "7교시", hour: 14, minute: 30 }
+    ];
+
+    function updateClock() {
+      try {
+        const now = new Date();
+        document.getElementById("clockDisplay").textContent = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0') + ":" + String(now.getSeconds()).padStart(2, '0');
+        checkClassRestAlert(now);
+      } catch (e) {}
+    }
+
+    function checkClassRestAlert(now) {
+      const gc = getCurrentGradeClass();
+      if (now.getDay() === 0 || now.getDay() === 6) return;
+      let activeText = "";
+      restTimesConfig.forEach(item => {
+        if (now.getHours() === item.hour && now.getMinutes() >= item.minute && now.getMinutes() < item.minute + 10) {
+          const notices = getClassNotices(gc.g, gc.c);
+          if (notices[item.key]) activeText = notices[item.key].trim();
+        }
+      });
+      const popup = document.getElementById("classPopup");
+      const textElem = document.getElementById("classPopupText");
+      if (activeText) { textElem.textContent = activeText; popup.classList.add("show"); }
+      else { popup.classList.remove("show"); }
+    }
+
+    function getClassNotices(g, c) {
+      try { return JSON.parse(localStorage.getItem("hagi_" + g + "_" + c + "_rest_notices")) || {}; } catch (e) { return {}; }
+    }
+
+    function toggleClassNoticeMode() {
+      const noticeArea = document.getElementById("editClassNoticeArea");
+      const editArea = document.getElementById("editScheduleArea");
+      const viewArea = document.getElementById("viewScheduleArea");
+      if (editArea.style.display === "block") { editArea.style.display = "none"; viewArea.style.display = "block"; }
+      if (noticeArea.style.display === "none") { noticeArea.style.display = "block"; viewArea.style.display = "none"; renderClassNoticeForm(); }
+      else { noticeArea.style.display = "none"; viewArea.style.display = "block"; renderScheduleView(); }
+    }
+
+    function renderClassNoticeForm() {
+      const formDiv = document.getElementById("classInputForm");
+      const gc = getCurrentGradeClass();
+      const notices = getClassNotices(gc.g, gc.c);
+      formDiv.innerHTML = restTimesConfig.map(item => '<div class="edit-row"><label>' + item.label + '</label><input type="text" class="edit-input" id="cnotice_' + item.key + '" value="' + (notices[item.key] || '') + '" placeholder="준비물 입력"></div>').join('');
+    }
+
+    function saveClassNotices() {
+      const gc = getCurrentGradeClass();
+      const newNotices = {};
+      restTimesConfig.forEach(item => {
+        const inp = document.getElementById("cnotice_" + item.key);
+        if (inp) newNotices[item.key] = inp.value.trim();
+      });
+      localStorage.setItem("hagi_" + gc.g + "_" + gc.c + "_rest_notices", JSON.stringify(newNotices));
+      alert("공지사항이 저장되었습니다!");
+      toggleClassNoticeMode();
+    }
+
     const events = [
       { name: "중간고사", date: "2026-09-22" },
       { name: "체육대회", date: "2026-10-08" },
@@ -692,18 +792,48 @@
       { name: "겨울방학", date: "2027-01-06" }
     ];
 
+    function renderDday() {
+      const container = document.getElementById("ddayContainer");
+      if (!container) return;
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      container.innerHTML = events.map(evt => {
+        const diff = Math.floor((new Date(evt.date) - todayDate) / (1000 * 60 * 60 * 24));
+        if (diff < 0) return '';
+        return '<div class="dday-box"><div class="dday-title">' + evt.name + '</div><div class="dday-count ' + (diff === 0 ? 'today' : '') + '">' + (diff === 0 ? 'D-DAY' : 'D-' + diff) + '</div><div class="dday-date">' + evt.date + '</div></div>';
+      }).join('');
+    }
+
+    function toggleDday() {
+      const container = document.getElementById("ddayContainer");
+      const btn = document.getElementById("ddayToggleBtn");
+      if (container.style.display === "none") { container.style.display = "grid"; btn.textContent = "[접기]"; }
+      else { container.style.display = "none"; btn.textContent = "[펼치기]"; }
+    }
+
     const defaultSchedules = {
       1: {
-        1: { 1: ["사회1", "수학1", "도덕", "영어", "음악", "국어1"], 2: ["미술", "과학1", "체육", "영어", "국어1", "기가", "사회1"], 3: ["과학1", "국어1", "A_스포츠", "체육", "기가", "영회", ""], 4: ["한문", "국어2", "체육", "사회2", "수학2", "수학1"], 5: ["과학2", "수학1", "도덕", "음악", "기가", "국어2"] }
+        1: { 1: ["사회1", "수학1", "도덕", "영어", "음악", "국어1"], 2: ["미술", "과학1", "체육", "영어", "국어1", "기가", "사회1"], 3: ["과학1", "국어1", "A_스포츠", "체육", "기가", "영회", ""], 4: ["한문", "국어2", "체육", "사회2", "수학2", "수학1"], 5: ["과학2", "수학1", "도덕", "음악", "기가", "국어2"] },
+        2: { 1: ["한문", "과학2", "국어1", "체육", "기가", "음악"], 2: ["수학1", "국어1", "수학2", "과학1", "체육", "사회1", "영회"], 3: ["기가", "영어", "A_스포츠", "도덕", "수학1", "국어1"] },
+        3: { 1: ["음악", "체육", "수학1", "국어1", "과학2", "과학1"], 2: ["영어", "B_스포츠", "기가", "사회1", "수학1", "도덕", "국어1"] },
+        4: { 1: ["영어", "기가", "음악", "국어2", "체육", "도덕"], 2: ["체육", "B_스포츠", "수학1", "국어1", "영회", "과학1", "도덕"] },
+        5: { 1: ["수학2", "국어1", "과학1", "과학2", "수학1", "체육"], 2: ["국어1", "도덕", "음악", "음악", "한문", "체육", "기가"] },
+        6: { 1: ["국어1", "도덕", "영어", "기가", "사회2", "수학1"], 2: ["음악", "음악", "사회2", "수학1", "수학2", "국어1", "과학1"] }
+      },
+      2: {
+        1: { 1: ["국어1", "영어", "과학1", "역사", "수학2", "기가"], 2: ["체육1", "미술", "국어1", "A_스포츠", "정보", "정보", "한문"] },
+        2: { 1: ["정보", "정보", "수학2", "한문", "역사", "체육1"], 2: ["영회", "국어1", "미술", "A_스포츠", "체육1", "역사", "과학1"] },
+        3: { 1: ["과학1", "수학2", "국어1", "정보", "정보", "한문"], 2: ["기가", "영어", "체육1", "한문", "미술", "수학2", "역사"] },
+        4: { 1: ["수학2", "역사", "기가", "수학1", "영어", "과학2"], 2: ["진직", "정보", "정보", "미술", "국어1", "과학1", "체육1"] },
+        5: { 1: ["체육1", "기가", "영회", "수학2", "국어1", "과학1"], 2: ["역사", "진직", "C_스포츠", "과학1", "영어", "국어1", "기가"] },
+        6: { 1: ["역사", "한문", "체육1", "과학1", "수학1", "국어1"], 2: ["과학1", "한문", "C_스포츠", "기가", "수학2", "국어2", "영어"] }
       },
       3: {
-        3: {
-          1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"],
-          2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"],
-          3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""],
-          4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"],
-          5: ["체육", "진직", "과학1", "수학", "과학2", "역사"]
-        }
+        1: { 1: ["체육", "사회", "진직", "과학1", "영어A", "역사"], 2: ["A_스포츠", "영어A", "역사", "국어1", "기가", "음악", "수학"] },
+        2: { 1: ["과학2", "수학", "영어A", "국어1", "역사", "기가"], 2: ["A_스포츠", "역사", "영회", "국어2", "과학1", "체육", "사회"] },
+        3: { 1: ["영회", "과학1", "국어1", "수학", "도덕", "사회"], 2: ["기가", "체육", "과학1", "도덕", "스포", "영어A", "음악"], 3: ["사회", "미술", "미술", "국어2", "기가", "영어A", ""], 4: ["국어1", "수학", "영어A", "국어2", "체육", "역사"], 5: ["체육", "진직", "과학1", "수학", "과학2", "역사"] },
+        4: { 1: ["국어2", "체육", "역사", "미술", "미술", "영회"], 2: ["국어2", "과학1", "수학", "체육", "B_스포츠", "사회", "영어A"] },
+        5: { 1: ["기가", "진직", "사회", "체육", "국어2", "과학1"], 2: ["수학", "도덕", "도덕", "영어A", "음악", "미술", "미술"] },
+        6: { 1: ["미술", "미술", "국어1", "진직", "수학", "영어A"], 2: ["국어2", "사회", "체육", "기가", "도덕", "도덕", "과학1"] }
       }
     };
 
@@ -722,7 +852,7 @@
       try {
         const key = "hagi_" + g + "_" + c + "_schedule";
         const stored = localStorage.getItem(key);
-        if (!stored) return (defaultSchedules[g] && defaultSchedules[g][c]) ? defaultSchedules[g][c] : {1:["국어","수학","영어","사회","과학","체육"], 2:["국어","수학","영어","사회","과학","체육","음악"]};
+        if (!stored) return (defaultSchedules[g] && defaultSchedules[g][c]) ? defaultSchedules[g][c] : {1:["국어","수학","영어","사회","과학","체육"]};
         const parsed = JSON.parse(stored);
         if (parsed.savedMonday !== getMondayOfWeek(new Date())) {
           localStorage.removeItem(key);
@@ -747,35 +877,6 @@
       document.getElementById("clockDisplay").textContent = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0') + ":" + String(now.getSeconds()).padStart(2, '0');
     }
 
-    function renderDday() {
-      const container = document.getElementById("ddayContainer");
-      if (!container) return;
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      let html = "";
-      events.forEach(evt => {
-        const targetDate = new Date(evt.date);
-        const diffDays = Math.floor((targetDate - todayDate) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 0) {
-          let countText = diffDays === 0 ? "D-DAY" : "D-" + diffDays;
-          let isTodayClass = diffDays === 0 ? "today" : "";
-          html += '<div class="dday-box"><div class="dday-title">' + evt.name + '</div><div class="dday-count ' + isTodayClass + '">' + countText + '</div><div class="dday-date">' + evt.date + '</div></div>';
-        }
-      });
-      container.innerHTML = html;
-    }
-
-    function toggleDday() {
-      const container = document.getElementById("ddayContainer");
-      const btn = document.getElementById("ddayToggleBtn");
-      if (container.style.display === "none") {
-        container.style.display = "grid";
-        btn.textContent = "[접기]";
-      } else {
-        container.style.display = "none";
-        btn.textContent = "[펼치기]";
-      }
-    }
-
     function selectDay(dayNum) {
       currentDay = dayNum;
       document.getElementById("selectedDayText").textContent = "(" + dayNames[dayNum] + " - " + maxPeriods[dayNum] + "교시)";
@@ -784,7 +885,9 @@
         else btn.classList.remove("active");
       });
       const editArea = document.getElementById("editScheduleArea");
+      const noticeArea = document.getElementById("editClassNoticeArea");
       if (editArea.style.display === "block") renderScheduleForm();
+      else if (noticeArea && noticeArea.style.display === "block") renderClassNoticeForm();
       else renderScheduleView();
     }
 
@@ -810,7 +913,9 @@
 
     function toggleAdminMode() {
       const editArea = document.getElementById("editScheduleArea");
+      const noticeArea = document.getElementById("editClassNoticeArea");
       const viewArea = document.getElementById("viewScheduleArea");
+      if (noticeArea && noticeArea.style.display === "block") { noticeArea.style.display = "none"; viewArea.style.display = "block"; }
       if (editArea.style.display === "none") {
         editArea.style.display = "block";
         viewArea.style.display = "none";
@@ -858,11 +963,16 @@
       const mealDiv = document.getElementById("mealResult");
       const calDiv = document.getElementById("calorieResult");
       const dateBtn = document.getElementById("mealDateBtn");
+      const resetBtn = document.getElementById("todayMealResetBtn");
 
       const year = targetDate.getFullYear();
       const month = String(targetDate.getMonth() + 1).padStart(2, '0');
       const day = String(targetDate.getDate()).padStart(2, '0');
       const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
+
+      const isToday = targetDate.toDateString() === new Date().toDateString();
+      if (resetBtn) resetBtn.style.display = isToday ? "none" : "inline-block";
+
       dateBtn.textContent = year + "." + month + "." + day + "(" + weekNames[targetDate.getDay()] + ")";
       mealDiv.textContent = "급식 정보 로딩 중...";
       calDiv.textContent = "";
@@ -888,6 +998,11 @@
 
     function changeMealDate(offset) {
       currentMealDate.setDate(currentMealDate.getDate() + offset);
+      fetchMealByDate(currentMealDate);
+    }
+
+    function resetToTodayMeal() {
+      currentMealDate = new Date();
       fetchMealByDate(currentMealDate);
     }
 
