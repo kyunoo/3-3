@@ -35,8 +35,12 @@
     const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
     const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
 
-    // 플레이어 객체 (초기에는 푸바오)
+    // 플레이어 객체
     let player = { x: 80, y: 300, w: 50, h: 50, vy: 0, jumpPower: -10, grounded: true };
+    
+    // NPC (상대방) 객체 - 생동감 있는 움직임을 위해 y축, 속도, 거리(offset) 부여
+    let npc = { y: 300, vy: 0, jumpPower: -9, grounded: true, xOffset: 120, targetOffset: 120 };
+
     let obstacles = [];
     let coins = [];
 
@@ -53,11 +57,17 @@
       if (!isGameOver && !isWin) {
         score += 1;
         if (score >= 1000) {
-          isWin = true; // 어부에게 잡히는 최종 결말
+          isWin = true; 
           restartBtn.style.display = "block";
         }
-        else if (score >= 500) stage = 3;
-        else if (score >= 100) stage = 2;
+        else if (score >= 500) {
+          stage = 3;
+          npc.targetOffset = -80; // 사육사는 뒤에서 쫓아옴
+        }
+        else if (score >= 100) {
+          stage = 2;
+          npc.targetOffset = 150; // 부캉이는 좀 더 앞에서 도망침
+        }
       }
     }, 1000);
 
@@ -69,25 +79,35 @@
       player.y = 300;
       player.vy = 0;
       player.grounded = true;
+      npc.y = 300;
+      npc.vy = 0;
+      npc.targetOffset = 120;
       obstacles = [];
       coins = [];
       restartBtn.style.display = "none";
     }
 
-    // 장애물 및 코인 생성
     function spawnObjects() {
-      if (Math.random() < 0.012) {
-        obstacles.push({ x: canvas.width, y: 310, w: 40, h: 40, speed: stage === 3 ? 6.5 : 5 });
+      // 장애물 생성 (최소 거리 보장)
+      let lastObs = obstacles.length > 0 ? obstacles[obstacles.length - 1] : null;
+      let minGap = 280; // 장애물 간 최소 간격 설정 (피할 수 있도록)
+
+      if (!lastObs || (canvas.width - lastObs.x > minGap)) {
+        if (Math.random() < 0.015) {
+          obstacles.push({ x: canvas.width, y: 310, w: 40, h: 40, speed: stage === 3 ? 6.5 : 5.5 });
+        }
       }
-      if (Math.random() < 0.008) {
-        coins.push({ x: canvas.width, y: Math.random() * 200 + 100, w: 25, h: 25, speed: 5 });
+
+      // 코인 생성 (먹을 수 있는 높이로 조절: 220 ~ 270)
+      if (Math.random() < 0.01) {
+        coins.push({ x: canvas.width, y: Math.random() * 50 + 220, w: 25, h: 25, speed: 5.5 });
       }
     }
 
     function update() {
       if (isGameOver || isWin) return;
 
-      // 중력
+      // 1. 플레이어 물리 연산
       player.vy += 0.55;
       player.y += player.vy;
       if (player.y > 300) {
@@ -96,9 +116,27 @@
         player.grounded = true;
       }
 
+      // 2. 상대방(NPC) 물리 및 생동감 연산
+      npc.vy += 0.55;
+      npc.y += npc.vy;
+      if (npc.y > 300) {
+        npc.y = 300;
+        npc.vy = 0;
+        npc.grounded = true;
+      }
+
+      // NPC가 가끔씩 알아서 점프함 (생동감)
+      if (npc.grounded && Math.random() < 0.008) {
+        npc.vy = npc.jumpPower;
+        npc.grounded = false;
+      }
+      
+      // NPC와 플레이어 사이의 거리가 늘어났다 줄어들었다 함 (숨쉬는 듯한 움직임)
+      npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 30;
+
       spawnObjects();
 
-      // 장애물 충돌 처리 (실패 시 게임 오버)
+      // 3. 장애물 이동 및 충돌 체크
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
         obs.x -= obs.speed;
@@ -110,7 +148,7 @@
         if (obs.x < -50) obstacles.splice(i, 1);
       }
 
-      // 코인 획득 (+5점)
+      // 4. 코인 이동 및 획득
       for (let i = coins.length - 1; i >= 0; i--) {
         let coin = coins[i];
         coin.x -= coin.speed;
@@ -130,21 +168,23 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // 캐릭터 단계별 연출
+      // 캐릭터 단계별 연출 (NPC의 x좌표는 player.x + npc.xOffset)
+      let currentNpcX = player.x + npc.xOffset;
+
       if (stage === 1) {
         // 1단계: 푸바오(조종)가 앞서가는 늑구를 쫓음
-        ctx.drawImage(imgNeukguRun, player.x + 120, 305, 45, 45);
+        ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 5, 45, 45);
         ctx.drawImage(imgFubaoRun, player.x, player.y, player.w, player.h);
       } 
       else if (stage === 2) {
         // 2단계: 늑구를 안은 푸바오(조종)가 앞서가는 부캉이를 쫓음
-        ctx.drawImage(imgBukangRun, player.x + 150, 315, 60, 35);
+        ctx.drawImage(imgBukangRun, currentNpcX, npc.y + 15, 60, 35);
         ctx.drawImage(imgHug, player.x, player.y - 5, 60, 50);
       } 
       else if (stage === 3) {
         // 3단계: 부캉이를 타고 늑구를 안은 푸바오(조종)를 사육사가 뒤에서 쫓아옴
         ctx.drawImage(imgBukangRide, player.x, player.y - 10, 80, 50);
-        ctx.drawImage(imgZookeeper, player.x - 70, 290, 50, 60);
+        ctx.drawImage(imgZookeeper, currentNpcX, npc.y - 10, 50, 60);
       }
 
       // 장애물 렌더링
