@@ -31,6 +31,19 @@
     let isWin = false;
     let gameState = "PLAYING"; // "PLAYING", "CATCH_RUN"
 
+    // 배경음악(BGM) 설정 및 무한 반복(loop) 활성화
+    const bgm = new Audio("bgm.mp3");
+    bgm.loop = true; 
+    let bgmStarted = false;
+
+    // 브라우저 정책 대응: 화면을 클릭하거나 키를 누르는 순간 BGM 재생 시작
+    function startBgm() {
+      if (!bgmStarted) {
+        bgm.play().catch(() => {});
+        bgmStarted = true;
+      }
+    }
+
     const imgFubaoRun = new Image(); imgFubaoRun.src = "fubao_run.png";
     const imgNeukguRun = new Image(); imgNeukguRun.src = "neukgu_run.png";
     const imgBukangRun = new Image(); imgBukangRun.src = "bukang_run.png";
@@ -46,6 +59,7 @@
     let coins = [];
 
     function triggerJump() {
+      startBgm(); // 첫 키 입력 시 BGM 재생
       if (player.grounded && !isGameOver && !isWin && gameState === "PLAYING") {
         player.vy = player.jumpPower;
         player.grounded = false;
@@ -59,6 +73,7 @@
     });
 
     canvas.addEventListener("pointerdown", e => {
+      startBgm(); // 첫 터치/클릭 시 BGM 재생
       triggerJump();
     });
 
