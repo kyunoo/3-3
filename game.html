@@ -38,8 +38,9 @@
     const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
     const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
 
-    let player = { x: 80, y: 260, w: 90, h: 90, vy: 0, jumpPower: -13, grounded: true };
-    let npc = { y: 260, vy: 0, jumpPower: -12, grounded: true, xOffset: 200, targetOffset: 200 };
+    // 점프력을 -15로 높여서 시원하게 뛰어넘도록 상향 조정
+    let player = { x: 80, y: 260, w: 90, h: 90, vy: 0, jumpPower: -15, grounded: true };
+    let npc = { y: 260, vy: 0, jumpPower: -13, grounded: true, xOffset: 200, targetOffset: 200 };
 
     let obstacles = [];
     let coins = [];
