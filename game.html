@@ -21,12 +21,15 @@
     const ctx = canvas.getContext("2d");
     const restartBtn = document.getElementById("restartBtn");
 
+    // [개발자 테스트용 글로벌 치트 변수]
+    window.godMode = false;   // true로 바꾸면 장애물 무시
+    window.autoPlay = false;  // true로 바꾸면 자동 점프
+
     let score = 0;
     let stage = 1;
     let isGameOver = false;
     let isWin = false;
 
-    // 이미지 객체 로드
     const imgFubaoRun = new Image(); imgFubaoRun.src = "fubao_run.png";
     const imgNeukguRun = new Image(); imgNeukguRun.src = "neukgu_run.png";
     const imgBukangRun = new Image(); imgBukangRun.src = "bukang_run.png";
@@ -35,16 +38,15 @@
     const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
     const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
 
-    // 플레이어 객체 (크기 1.5배 증가: 70x70, 바닥 높이 280)
-    let player = { x: 80, y: 280, w: 70, h: 70, vy: 0, jumpPower: -11.5, grounded: true };
+    // 플레이어 객체 (크기 대폭 증가: 90x90, 바닥 높이 260)
+    let player = { x: 80, y: 260, w: 90, h: 90, vy: 0, jumpPower: -13, grounded: true };
     
-    // NPC 객체 (크기 증가에 맞춰 간격 조정)
-    let npc = { y: 280, vy: 0, jumpPower: -10.5, grounded: true, xOffset: 160, targetOffset: 160 };
+    // NPC 객체
+    let npc = { y: 260, vy: 0, jumpPower: -12, grounded: true, xOffset: 200, targetOffset: 200 };
 
     let obstacles = [];
     let coins = [];
 
-    // 점프 조작
     window.addEventListener("keydown", e => {
       if ((e.code === "Space" || e.code === "ArrowUp") && player.grounded && !isGameOver && !isWin) {
         player.vy = player.jumpPower;
@@ -52,7 +54,6 @@
       }
     });
 
-    // 1초마다 점수 증가 및 단계 체크
     setInterval(() => {
       if (!isGameOver && !isWin) {
         score += 1;
@@ -62,11 +63,11 @@
         }
         else if (score >= 500) {
           stage = 3;
-          npc.targetOffset = -100; // 커진 사육사는 조금 더 뒤에서 쫓아옴
+          npc.targetOffset = -120; // 뒤에서 추격
         }
         else if (score >= 100) {
           stage = 2;
-          npc.targetOffset = 180; // 부캉이는 넉넉히 앞에서 도망침
+          npc.targetOffset = 220; // 앞에서 도망
         }
       }
     }, 1000);
@@ -76,82 +77,89 @@
       stage = 1;
       isGameOver = false;
       isWin = false;
-      player.y = 280;
+      player.y = 260;
       player.vy = 0;
       player.grounded = true;
-      npc.y = 280;
+      npc.y = 260;
       npc.vy = 0;
-      npc.targetOffset = 160;
+      npc.targetOffset = 200;
       obstacles = [];
       coins = [];
       restartBtn.style.display = "none";
     }
 
     function spawnObjects() {
-      // 장애물 생성 (크기가 60x60으로 커졌으므로 최소 거리 350 보장)
       let lastObs = obstacles.length > 0 ? obstacles[obstacles.length - 1] : null;
-      let minGap = 350; 
+      let minGap = 420; // 덩치가 커진 만큼 피할 공간도 크게 확장
 
       if (!lastObs || (canvas.width - lastObs.x > minGap)) {
         if (Math.random() < 0.015) {
-          // 크기 증가된 장애물
-          obstacles.push({ x: canvas.width, y: 290, w: 60, h: 60, speed: stage === 3 ? 6.5 : 5.5 });
+          // 커진 장애물 (75x75)
+          obstacles.push({ x: canvas.width, y: 275, w: 75, h: 75, speed: stage === 3 ? 7 : 6 });
         }
       }
 
-      // 코인 생성 (크기 증가 40x40, 먹을 수 있는 높이로 조절)
+      // 커진 코인 (50x50)
       if (Math.random() < 0.01) {
-        coins.push({ x: canvas.width, y: Math.random() * 50 + 170, w: 40, h: 40, speed: 5.5 });
+        coins.push({ x: canvas.width, y: Math.random() * 50 + 130, w: 50, h: 50, speed: 6 });
       }
     }
 
     function update() {
       if (isGameOver || isWin) return;
 
-      // 1. 플레이어 물리 연산
-      player.vy += 0.55;
+      // 물리 연산
+      player.vy += 0.6;
       player.y += player.vy;
-      if (player.y > 280) { // 바닥 기준점 280
-        player.y = 280;
+      if (player.y > 260) {
+        player.y = 260;
         player.vy = 0;
         player.grounded = true;
       }
 
-      // 2. 상대방(NPC) 물리 연산
-      npc.vy += 0.55;
+      npc.vy += 0.6;
       npc.y += npc.vy;
-      if (npc.y > 280) { // 바닥 기준점 280
-        npc.y = 280;
+      if (npc.y > 260) {
+        npc.y = 260;
         npc.vy = 0;
         npc.grounded = true;
       }
 
-      // NPC 자동 점프 (생동감)
       if (npc.grounded && Math.random() < 0.008) {
         npc.vy = npc.jumpPower;
         npc.grounded = false;
       }
-      
-      // 앞뒤로 멀어졌다 가까워지는 움직임
-      npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 35;
+      npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 40;
+
+      // [치트] 자동 플레이 로직
+      if (window.autoPlay && player.grounded) {
+        let nearestObs = obstacles.find(o => o.x > player.x && o.x < player.x + 180);
+        if (nearestObs) {
+          player.vy = player.jumpPower;
+          player.grounded = false;
+        }
+      }
 
       spawnObjects();
 
-      // 3. 장애물 이동 및 충돌 체크
+      // 장애물 처리
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
         obs.x -= obs.speed;
 
-        // 히트박스 충돌 판정 (살짝 여유를 둬서 억울하게 안 죽게 설정)
-        let hitMargin = 10;
-        if (player.x + hitMargin < obs.x + obs.w && player.x + player.w - hitMargin > obs.x && player.y + hitMargin < obs.y + obs.h && player.y + player.h - hitMargin > obs.y) {
+        let hitMargin = 15; // 넉넉한 판정
+        if (!window.godMode && 
+            player.x + hitMargin < obs.x + obs.w && 
+            player.x + player.w - hitMargin > obs.x && 
+            player.y + hitMargin < obs.y + obs.h && 
+            player.y + player.h - hitMargin > obs.y) {
           isGameOver = true;
           restartBtn.style.display = "block";
         }
         if (obs.x < -100) obstacles.splice(i, 1);
       }
 
-      // 4. 코인 이동 및 획득 (+5점)
+      // 코인 처리
       for (let i = coins.length - 1; i >= 0; i--) {
         let coin = coins[i];
         coin.x -= coin.speed;
@@ -167,30 +175,27 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 바닥 렌더링
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // 캐릭터 단계별 연출 (커진 크기에 맞춰 좌표 및 사이즈 조절)
       let currentNpcX = player.x + npc.xOffset;
 
       if (stage === 1) {
-        // 1단계: 늑구 60x60, 푸바오 70x70
-        ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 60, 60);
+        // 1단계 (늑구 80x80, 푸바오 90x90)
+        ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 80, 80);
         ctx.drawImage(imgFubaoRun, player.x, player.y, player.w, player.h);
       } 
       else if (stage === 2) {
-        // 2단계: 부캉이 90x50, 늑구 안은 푸바오 80x70
-        ctx.drawImage(imgBukangRun, currentNpcX, npc.y + 20, 90, 50);
-        ctx.drawImage(imgHug, player.x, player.y, 80, 70);
+        // 2단계 (부캉이 110x65, 늑구 안은 푸바오 100x90)
+        ctx.drawImage(imgBukangRun, currentNpcX, npc.y + 25, 110, 65);
+        ctx.drawImage(imgHug, player.x, player.y, 100, 90);
       } 
       else if (stage === 3) {
-        // 3단계: 부캉이 탑승 100x80, 사육사 70x80
-        ctx.drawImage(imgBukangRide, player.x, player.y - 10, 100, 80);
-        ctx.drawImage(imgZookeeper, currentNpcX, npc.y - 10, 70, 80);
+        // 3단계 (부캉이 탑승 120x100, 사육사 90x100)
+        ctx.drawImage(imgBukangRide, player.x, player.y - 10, 120, 100);
+        ctx.drawImage(imgZookeeper, currentNpcX, npc.y - 10, 90, 100);
       }
 
-      // 장애물 렌더링 (60x60)
       obstacles.forEach(obs => {
         if (imgObstacle.complete && imgObstacle.naturalWidth !== 0) {
           ctx.drawImage(imgObstacle, obs.x, obs.y, obs.w, obs.h);
@@ -200,7 +205,6 @@
         }
       });
 
-      // 코인 렌더링 (반경 커짐)
       ctx.fillStyle = "#eab308";
       coins.forEach(coin => {
         ctx.beginPath();
@@ -208,17 +212,14 @@
         ctx.fill();
       });
 
-      // 상단 점수 및 단계 제목 표시
       let stageText = "푸바오야 늑구를 찾아줭";
       if (stage === 2) stageText = "늑구를 안은 푸바오의 부캉이 얻기 대작전";
       if (stage === 3) stageText = "늑구를 안고 부캉이를 탄 푸바오의 자유 되찾기 대작전";
       document.getElementById("gameInfo").textContent = "점수: " + score + " | " + stageText;
 
-      // 게임 결과 화면
       if (isGameOver || isWin) {
         ctx.fillStyle = "rgba(0,0,0,0.85)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         ctx.textAlign = "center";
         
         if (isGameOver) {
