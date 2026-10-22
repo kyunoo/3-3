@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>푸바오의 북항 대탈출</title>
+  <style>
+    body { margin: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: sans-serif; }
+    canvas { background: #1e293b; border: 4px solid #334155; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .info { margin-bottom: 10px; font-size: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="info" id="gameInfo">점수: 0 | 단계: 1단계 (늑구 쫓기)</div>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let score = 0;
+    let stage = 1;
+    let isGameOver = false;
+    let isWin = false;
+
+    // 플레이어 (푸바오)
+    let player = { x: 50, y: 300, w: 40, h: 40, vy: 0, jumpPower: -12, grounded: true };
+    let obstacles = [];
+    let coins = [];
+
+    // 키 입력 처리
+    let keys = {};
+    window.addEventListener("keydown", e => { if (e.code === "Space" || e.code === "ArrowUp") { if (player.grounded) { player.vy = player.jumpPower; player.grounded = false; } } });
+
+    // 게임 루프 타이머 (1초에 점수 1점)
+    setInterval(() => {
+      if (!isGameOver && !isWin) {
+        score += 1;
+        checkStage();
+      }
+    }, 1000);
+
+    function checkStage() {
+      if (score >= 1000) {
+        isWin = true;
+      } else if (score >= 500) {
+        stage = 3; // 부캉이 탑승 + 사육사 추격 (난이도 업)
+      } else if (score >= 100) {
+        stage = 2; // 늑구 포획 후 이동
+      }
+    }
+
+    // 장애물 및 코인 생성 렌덤 스폰
+    function spawnObjects() {
+      if (Math.random() < 0.02) {
+        obstacles.push({ x: canvas.width, y: 310, w: 30, h: 30, speed: stage === 3 ? 7 : 5 });
+      }
+      if (Math.random() < 0.01) {
+        coins.push({ x: canvas.width, y: Math.random() * 200 + 100, w: 20, h: 20, speed: 5 });
+      }
+    }
+
+    function update() {
+      if (isGameOver || isWin) return;
+
+      // 중력 적용
+      player.vy += 0.6;
+      player.y += player.vy;
+      if (player.y > 300) {
+        player.y = 300;
+        player.vy = 0;
+        player.grounded = true;
+      }
+
+      spawnObjects();
+
+      // 장애물 이동 및 충돌 체크
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        let obs = obstacles[i];
+        obs.x -= obs.speed;
+
+        // 충돌 감지
+        if (player.x < obs.x + obs.w && player.x + player.w > obs.x && player.y < obs.y + obs.h && player.y + player.h > obs.y) {
+          isGameOver = true;
+        }
+        if (obs.x < -50) obstacles.splice(i, 1);
+      }
+
+      // 코인 이동 및 획득 체크
+      for (let i = coins.length - 1; i >= 0; i--) {
+        let coin = coins[i];
+        coin.x -= coin.speed;
+
+        if (player.x < coin.x + coin.w && player.x + player.w > coin.x && player.y < coin.y + coin.h && player.y + player.h > coin.y) {
+          score += 5; // 코인 먹으면 +5점
+          coins.splice(i, 1);
+        }
+        if (coin.x < -50) coins.splice(i, 1);
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 바닥 그리기
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(0, 340, canvas.width, 60);
+
+      // 플레이어 (푸바오) 그리기
+      ctx.fillStyle = "#22c55e";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      // 장애물 그리기
+      ctx.fillStyle = "#ef4444";
+      obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.w, obs.h));
+
+      // 코인 그리기
+      ctx.fillStyle = "#eab308";
+      coins.forEach(coin => ctx.fillRect(coin.x, coin.y, coin.w, coin.h));
+
+      // 상단 정보 업데이트
+      let stageText = "1단계: 늑구 쫓기";
+      if (stage === 2) stageText = "2단계: 늑구 껴안고 부캉이 탐색";
+      if (stage === 3) stageText = "3단계: 부캉이 탑승 & 사육사 추격!";
+      document.getElementById("gameInfo").textContent = `점수: ${score} | ${stageText}`;
+
+      // 게임 오버 / 승리 화면
+      if (isGameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.font = "24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("❌ 실패! 셋의 운명은 각자의 고향으로...", canvas.width/2, canvas.height/2 - 20);
+        ctx.font = "16px sans-serif";
+        ctx.fillText("(푸바오: 에버랜드 / 늑구: 오월드 / 부캉이: 아쿠아리움)", canvas.width/2, canvas.height/2 + 20);
+      } else if (isWin) {
+        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#22c55e";
+        ctx.font = "28px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("🎉 대성공! 바다로 떠나 완전한 자유를 획득!", canvas.width/2, canvas.height/2);
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
