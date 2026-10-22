@@ -148,7 +148,7 @@
       align-items: center;
     }
 
-    /* 버튼 글자가 아래로 꺾이지 않도록 white-space: nowrap 추가 */
+    /* 버튼 글자가 아래로 꺾이지 않도록 white-space: nowrap 적용 */
     .com-link-btn, .class-notice-setup-btn, .edit-schedule-btn {
       font-size: 13px;
       font-weight: bold;
@@ -352,7 +352,7 @@
       padding: 25px;
       border-radius: 12px;
       width: 90%;
-      max-width: 700px;
+      max-width: 720px;
       max-height: 85vh;
       overflow-y: auto;
       color: #1e293b;
@@ -642,7 +642,7 @@
     </div>
   </div>
 
-  <!-- 제비뽑기 모달 (3학년 3반 전용 게임 이스터에그 포함) -->
+  <!-- 제비뽑기 모달 -->
   <div id="lotteryModal" class="modal" onclick="closeModalOnBg(event, 'lotteryModal')">
     <div class="modal-content" style="max-width: 400px;">
       <div class="modal-header">
@@ -664,6 +664,10 @@
       <div class="modal-header">
         <h3 style="margin:0; font-size: 20px;">학교 자리배치</h3>
         <button class="close-btn" onclick="closeSeatingModal()">&times;</button>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; margin-bottom: 10px; font-size: 13px;">
+        <span>인원수:</span> <input type="number" id="seatMaxNumInput" value="35" class="edit-input" style="width: 60px;" onchange="generateSeats()">
+        <button class="btn-primary" style="width: auto; margin-top:0; padding: 6px 14px;" onclick="shuffleSeats()">자리 섞기</button>
       </div>
       <div style="font-size: 14px; font-weight: bold; text-align: center; min-height: 20px; color: #059669;" id="seatingStatus"></div>
       <div class="blackboard">칠 판</div>
@@ -1003,21 +1007,51 @@
     function closeNoticeModal() { document.getElementById("noticeModal").style.display = "none"; }
     function openLotteryModal() { document.getElementById("lotteryModal").style.display = "flex"; }
     function closeLotteryModal() { document.getElementById("lotteryModal").style.display = "none"; }
-    function openSeatingModal() { document.getElementById("seatingModal").style.display = "flex"; generateSeats(); }
+    
+    function openSeatingModal() { 
+      document.getElementById("seatingModal").style.display = "flex"; 
+      generateSeats(); 
+    }
     function closeSeatingModal() { document.getElementById("seatingModal").style.display = "none"; }
     function closeModalOnBg(e, modalId) { if (e.target.id === modalId) document.getElementById(modalId).style.display = "none"; }
 
     function generateSeats() {
       const board = document.getElementById("seatingBoard");
       board.innerHTML = "";
-      for (let i = 1; i <= 35; i++) {
+      const maxNum = parseInt(document.getElementById("seatMaxNumInput").value) || 35;
+      
+      let numbers = Array.from({length: maxNum}, (_, i) => i + 1);
+
+      for (let i = 0; i < maxNum; i++) {
         const seat = document.createElement("div");
         seat.className = "seat-box";
-        seat.textContent = i + "번";
-        seat.style.left = ((i - 1) % 6) * 78 + 35 + "px";
-        seat.style.top = Math.floor((i - 1) / 6) * 58 + 25 + "px";
+        seat.textContent = numbers[i] + "번";
+        seat.style.left = ((i % 6) * 78 + 35) + "px";
+        seat.style.top = (Math.floor(i / 6) * 58 + 25) + "px";
         board.appendChild(seat);
       }
+    }
+
+    function shuffleSeats() {
+      const board = document.getElementById("seatingBoard");
+      board.innerHTML = "";
+      const maxNum = parseInt(document.getElementById("seatMaxNumInput").value) || 35;
+      
+      let numbers = Array.from({length: maxNum}, (_, i) => i + 1);
+      for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+      }
+
+      for (let i = 0; i < maxNum; i++) {
+        const seat = document.createElement("div");
+        seat.className = "seat-box";
+        seat.textContent = numbers[i] + "번";
+        seat.style.left = ((i % 6) * 78 + 35) + "px";
+        seat.style.top = (Math.floor(i / 6) * 58 + 25) + "px";
+        board.appendChild(seat);
+      }
+      document.getElementById("seatingStatus").textContent = "자리가 무작위로 섞였습니다!";
     }
 
     function runLottery() {
