@@ -7,25 +7,22 @@
     body { margin: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: sans-serif; }
     canvas { background: #1e293b; border: 4px solid #334155; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     .info { margin-bottom: 10px; font-size: 20px; font-weight: bold; }
-    #restartBtn { display: none; margin-top: 15px; padding: 10px 20px; font-size: 16px; font-weight: bold; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    #restartBtn:hover { background: #047857; }
   </style>
 </head>
 <body>
   <div class="info" id="gameInfo">점수: 0 | 1단계</div>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <button id="restartBtn" onclick="resetGame()">다시하기</button>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const restartBtn = document.getElementById("restartBtn");
 
     let score = 0;
     let stage = 1;
     let isGameOver = false;
     let isWin = false;
 
+    // 이미지 객체 로드
     const imgFubaoRun = new Image(); imgFubaoRun.src = "fubao_run.png";
     const imgNeukguRun = new Image(); imgNeukguRun.src = "neukgu_run.png";
     const imgBukangRun = new Image(); imgBukangRun.src = "bukang_run.png";
@@ -34,10 +31,12 @@
     const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
     const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
 
-    let player = { x: 80, y: 300, w: 50, h: 50, vy: 0, jumpPower: -9.5, grounded: true };
+    // 플레이어 객체 (초기에는 푸바오)
+    let player = { x: 80, y: 300, w: 50, h: 50, vy: 0, jumpPower: -10, grounded: true };
     let obstacles = [];
     let coins = [];
 
+    // 점프 조작
     window.addEventListener("keydown", e => {
       if ((e.code === "Space" || e.code === "ArrowUp") && player.grounded && !isGameOver && !isWin) {
         player.vy = player.jumpPower;
@@ -45,44 +44,33 @@
       }
     });
 
+    // 1초마다 점수 증가 및 단계 체크
     setInterval(() => {
       if (!isGameOver && !isWin) {
         score += 1;
         if (score >= 1000) {
-          isWin = true;
-          restartBtn.style.display = "block";
+          isWin = true; // 어부에게 잡히는 최종 결말
         }
         else if (score >= 500) stage = 3;
         else if (score >= 100) stage = 2;
       }
     }, 1000);
 
-    function resetGame() {
-      score = 0;
-      stage = 1;
-      isGameOver = false;
-      isWin = false;
-      player.y = 300;
-      player.vy = 0;
-      player.grounded = true;
-      obstacles = [];
-      coins = [];
-      restartBtn.style.display = "none";
-    }
-
+    // 장애물 및 코인 생성
     function spawnObjects() {
       if (Math.random() < 0.012) {
-        obstacles.push({ x: canvas.width, y: 310, w: 40, h: 40, speed: stage === 3 ? 6 : 4.5 });
+        obstacles.push({ x: canvas.width, y: 310, w: 40, h: 40, speed: stage === 3 ? 6.5 : 5 });
       }
       if (Math.random() < 0.008) {
-        coins.push({ x: canvas.width, y: Math.random() * 200 + 100, w: 25, h: 25, speed: 4.5 });
+        coins.push({ x: canvas.width, y: Math.random() * 200 + 100, w: 25, h: 25, speed: 5 });
       }
     }
 
     function update() {
       if (isGameOver || isWin) return;
 
-      player.vy += 0.5;
+      // 중력
+      player.vy += 0.55;
       player.y += player.vy;
       if (player.y > 300) {
         player.y = 300;
@@ -92,17 +80,18 @@
 
       spawnObjects();
 
+      // 장애물 충돌 처리 (실패 시 게임 오버)
       for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
         obs.x -= obs.speed;
 
         if (player.x < obs.x + obs.w && player.x + player.w > obs.x && player.y < obs.y + obs.h && player.y + player.h > obs.y) {
           isGameOver = true;
-          restartBtn.style.display = "block";
         }
         if (obs.x < -50) obstacles.splice(i, 1);
       }
 
+      // 코인 획득 (+5점)
       for (let i = coins.length - 1; i >= 0; i--) {
         let coin = coins[i];
         coin.x -= coin.speed;
@@ -118,25 +107,28 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // 바닥
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // 1단계: 부캉이 없이 늑구와 푸바오만 등장
+      // 캐릭터 단계별 연출
       if (stage === 1) {
-        ctx.drawImage(imgNeukguRun, player.x, 305, 45, 45);
-        ctx.drawImage(imgFubaoRun, player.x + 90, player.y, player.w, player.h);
+        // 1단계: 푸바오(조종)가 앞서가는 늑구를 쫓음
+        ctx.drawImage(imgNeukguRun, player.x + 120, 305, 45, 45);
+        ctx.drawImage(imgFubaoRun, player.x, player.y, player.w, player.h);
       } 
-      // 2단계: 늑구를 잡고 부캉이를 향해 이동
       else if (stage === 2) {
-        ctx.drawImage(imgBukangRun, player.x, 315, 60, 35);
-        ctx.drawImage(imgHug, player.x + 90, player.y - 5, 60, 50);
+        // 2단계: 늑구를 안은 푸바오(조종)가 앞서가는 부캉이를 쫓음
+        ctx.drawImage(imgBukangRun, player.x + 150, 315, 60, 35);
+        ctx.drawImage(imgHug, player.x, player.y - 5, 60, 50);
       } 
-      // 3단계: 부캉이 탑승 및 사육사 추격
       else if (stage === 3) {
+        // 3단계: 부캉이를 타고 늑구를 안은 푸바오(조종)를 사육사가 뒤에서 쫓아옴
         ctx.drawImage(imgBukangRide, player.x, player.y - 10, 80, 50);
         ctx.drawImage(imgZookeeper, player.x - 70, 290, 50, 60);
       }
 
+      // 장애물 렌더링
       obstacles.forEach(obs => {
         if (imgObstacle.complete && imgObstacle.naturalWidth !== 0) {
           ctx.drawImage(imgObstacle, obs.x, obs.y, obs.w, obs.h);
@@ -146,6 +138,7 @@
         }
       });
 
+      // 코인 렌더링
       ctx.fillStyle = "#eab308";
       coins.forEach(coin => {
         ctx.beginPath();
@@ -153,25 +146,33 @@
         ctx.fill();
       });
 
+      // 상단 점수 및 단계 표시
       let stageText = "1단계";
       if (stage === 2) stageText = "2단계";
       if (stage === 3) stageText = "3단계";
       document.getElementById("gameInfo").textContent = "점수: " + score + " | " + stageText;
 
-      if (isGameOver) {
+      // 게임 결과 화면 (성공과 실패 모두 동일한 감금 엔딩)
+      if (isGameOver || isWin) {
         ctx.fillStyle = "rgba(0,0,0,0.85)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#ef4444";
-        ctx.font = "bold 24px sans-serif";
+        
+        ctx.fillStyle = isWin ? "#3b82f6" : "#ef4444";
+        ctx.font = "bold 22px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("실패", canvas.width/2, canvas.height/2);
-      } else if (isWin) {
-        ctx.fillStyle = "rgba(0,0,0,0.85)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#22c55e";
-        ctx.font = "bold 24px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("성공", canvas.width/2, canvas.height/2);
+        
+        const titleText = isWin 
+          ? "바다로 탈출했지만 어부의 낚싯줄에 걸렸다!" 
+          : "장애물에 걸려 사육사에게 잡혔다!";
+        
+        ctx.fillText(titleText, canvas.width/2, canvas.height/2 - 40);
+        
+        ctx.fillStyle = "white";
+        ctx.font = "16px sans-serif";
+        ctx.fillText("결국 셋은 각자의 감옥으로...", canvas.width/2, canvas.height/2 - 10);
+        ctx.fillText("푸바오: 에버랜드", canvas.width/2, canvas.height/2 + 25);
+        ctx.fillText("늑구: 오월드", canvas.width/2, canvas.height/2 + 50);
+        ctx.fillText("부캉이: 신세계 백화점 아쿠아리움", canvas.width/2, canvas.height/2 + 75);
       }
     }
 
