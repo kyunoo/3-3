@@ -107,7 +107,7 @@
     function startAutoCatch() {
       gameState = "AUTO_CATCH";
       obstacles = []; 
-      coins =     [];     
+      coins = [];     
     }
 
     function resetGame() {
@@ -146,11 +146,15 @@
     function update() {
       if (isGameOver || isWin) return;
 
-      // 물리 연산 (중력)
+      // 물리 연산 (중력) 및 착지 순간 감지용 변수
+      let justLanded = false;
       player.vy += 0.6;
       player.y += player.vy;
       if (player.y > 260) {
         player.y = 260;
+        if (!player.grounded) {
+          justLanded = true;
+        }
         player.vy = 0;
         player.grounded = true;
       }
@@ -231,21 +235,21 @@
           }
         }
 
-        // 점프했다가 착지하는 순간 다음 단계 전환 또는 최종 승리 처리
-        if (!player.grounded && player.y >= 260) {
-          player.y = 260;
-          player.vy = 0;
-          player.grounded = true;
-
+        // 점프한 뒤 바닥에 '착지하는 순간'에 다음 단계로 확실하게 전환!
+        if (justLanded) {
           if (stage === 1) {
             stage = 2;
             npc.targetOffset = 220;
-            player.x = 80; // ★ 다음 스테이지 시작 시 푸바오 위치를 왼쪽으로 리셋!
+            player.x = 80; // 왼쪽 시작점으로 안전하게 리셋
+            obstacles = [];
+            coins = [];
             gameState = "PLAYING";
           } else if (stage === 2) {
             stage = 3;
             npc.targetOffset = -120;
-            player.x = 80; // ★ 다음 스테이지 시작 시 푸바오 위치를 왼쪽으로 리셋!
+            player.x = 80; // 왼쪽 시작점으로 안전하게 리셋
+            obstacles = [];
+            coins = [];
             gameState = "PLAYING";
           } else if (stage === 3) {
             isWin = true;
