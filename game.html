@@ -56,8 +56,9 @@
     const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
     const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
 
-    let player = { x: 80, y: 260, w: 90, h: 90, vy: 0, jumpPower: -15, grounded: true };
-    let npc = { y: 260, vy: 0, jumpPower: -13, grounded: true, xOffset: 200, targetOffset: 200 };
+    // 점프력을 -17.5로 상향 조정하여 더 빠르고 시원하게 뛰어넘도록 수정
+    let player = { x: 80, y: 260, w: 90, h: 90, vy: 0, jumpPower: -17.5, grounded: true };
+    let npc = { y: 260, vy: 0, jumpPower: -14, grounded: true, xOffset: 200, targetOffset: 200 };
 
     let obstacles = [];
     let coins = [];
@@ -155,17 +156,21 @@
         safeTimer--;
       }
 
-      // 물리 연산 (중력)
-      player.vy += 0.6;
+      // 물리 연산 (중력) 및 착지 감지
+      let justLanded = false;
+      player.vy += 0.65;
       player.y += player.vy;
       if (player.y > 260) {
         player.y = 260;
+        if (!player.grounded) {
+          justLanded = true;
+        }
         player.vy = 0;
         player.grounded = true;
       }
 
       if (gameState === "PLAYING") {
-        npc.vy += 0.6;
+        npc.vy += 0.65;
         npc.y += npc.vy;
         if (npc.y > 260) {
           npc.y = 260;
@@ -228,39 +233,33 @@
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // AUTO_CATCH: 늑구는 화면 끝에 멈춰 있고, 푸바오가 달려가다가 '점프'해서 공중에서 덮쳐 잡는 구간
+      // AUTO_CATCH: 상대방은 화면 끝에 멈춰 있고, 푸바오가 자동으로 달려가 '자동 점프'로 덮쳐 잡는 구간
       else if (gameState === "AUTO_CATCH") {
-        if (player.x < fixedNpcX - 120 && player.grounded) {
-          player.x += 3.5; // 여유 있게 달려감
+        if (player.x < fixedNpcX - 90 && player.grounded) {
+          player.x += 3.5; // 자동으로 오른쪽으로 달려감
         } else if (player.grounded) {
-          // 늑구 앞에서 멋지게 점프! (점프 모션을 충분히 볼 수 있도록 설정)
-          player.vy = -12;
+          // 늑구 앞에서 자동으로 멋지게 점프! (플레이어 조작 필요 없음)
+          player.vy = -14;
           player.grounded = false;
         } else {
           // 공중에서 포물선을 그리며 전진
           player.x += 3.5;
         }
 
-        // 공중에서 날아가며 늑구 위치(fixedNpcX - 50)에 도달했을 때(잡는 순간) 다음 단계로 전환!
-        if (!player.grounded && player.x >= fixedNpcX - 60) {
+        // 점프한 뒤 바닥에 완벽히 착지하는 순간 다음 단계로 자동 전환!
+        if (justLanded) {
           if (stage === 1) {
             stage = 2;
             npc.targetOffset = 220;
             player.x = 80;          // 왼쪽 시작점으로 완벽 리셋
-            player.y = 260;
-            player.vy = 0;
-            player.grounded = true;
             obstacles = [];         // 장애물 초기화
             coins = [];             // 코인 초기화
-            safeTimer = 120;        // 2초 동안 안전 시간 부여
+            safeTimer = 120;        // 2초 동안 안전 시간 부여 (장애물 생성 및 충돌 방지)
             gameState = "PLAYING";  // 게임 재개
           } else if (stage === 2) {
             stage = 3;
             npc.targetOffset = -120;
             player.x = 80;          // 왼쪽 시작점으로 완벽 리셋
-            player.y = 260;
-            player.vy = 0;
-            player.grounded = true;
             obstacles = [];         // 장애물 초기화
             coins = [];             // 코인 초기화
             safeTimer = 120;        // 2초 동안 안전 시간 부여
