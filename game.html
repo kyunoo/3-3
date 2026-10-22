@@ -29,6 +29,7 @@
     let stage = 1;
     let isGameOver = false;
     let isWin = false;
+    let gameState = "PLAYING"; // "PLAYING", "AUTO_MOVING", "STAGE_CLEAR"
 
     const imgFubaoRun = new Image(); imgFubaoRun.src = "fubao_run.png";
     const imgNeukguRun = new Image(); imgNeukguRun.src = "neukgu_run.png";
@@ -38,56 +39,62 @@
     const imgZookeeper = new Image(); imgZookeeper.src = "zookeeper.png";
     const imgObstacle = new Image(); imgObstacle.src = "obstacle.png";
 
-    // 점프력을 -15로 높여서 시원하게 뛰어넘도록 상향 조정
     let player = { x: 80, y: 260, w: 90, h: 90, vy: 0, jumpPower: -15, grounded: true };
     let npc = { y: 260, vy: 0, jumpPower: -13, grounded: true, xOffset: 200, targetOffset: 200 };
 
     let obstacles = [];
     let coins = [];
 
-    // 공통 점프 함수 (키보드 + 터치/클릭 공용)
     function triggerJump() {
-      if (player.grounded && !isGameOver && !isWin) {
+      if (player.grounded && !isGameOver && !isWin && gameState === "PLAYING") {
         player.vy = player.jumpPower;
         player.grounded = false;
       }
     }
 
-    // 1. 키보드 입력 (스페이스바, 위쪽 화살표)
     window.addEventListener("keydown", e => {
       if (e.code === "Space" || e.code === "ArrowUp") {
         triggerJump();
       }
     });
 
-    // 2. 전자칠판 터치 및 마우스 클릭 입력 추가
     canvas.addEventListener("pointerdown", e => {
       triggerJump();
     });
 
+    // 점수 및 스테이지 전환 체크 타이머
     setInterval(() => {
-      if (!isGameOver && !isWin) {
+      if (!isGameOver && !isWin && gameState === "PLAYING") {
         score += 1;
-        if (score >= 1000) {
-          isWin = true; 
+        
+        // 스테이지 1 -> 2로 넘어가는 지점 (점수 100점 도달 시)
+        if (score === 100 && stage === 1) {
+          startAutoMoveTransition(2, 220);
+        }
+        // 스테이지 2 -> 3으로 넘어가는 지점 (점수 500점 도달 시)
+        else if (score === 500 && stage === 2) {
+          startAutoMoveTransition(3, -120);
+        }
+        // 최종 클리어 (1000점)
+        else if (score >= 1000) {
+          isWin = true;  
           restartBtn.style.display = "block";
-        }
-        else if (score >= 500) {
-          stage = 3;
-          npc.targetOffset = -120;
-        }
-        else if (score >= 100) {
-          stage = 2;
-          npc.targetOffset = 220;
         }
       }
     }, 1000);
+
+    // 목표 점수 도달 시 푸바오가 늑구에게 자동으로 다가가는 연출 시작 함수
+    function startAutoMoveTransition(nextStageNum, newTargetOffset) {
+      gameState = "AUTO_MOVING";
+      npc.targetOffset = newTargetOffset;
+    }
 
     function resetGame() {
       score = 0;
       stage = 1;
       isGameOver = false;
       isWin = false;
+      gameState = "PLAYING";
       player.y = 260;
       player.vy = 0;
       player.grounded = true;
@@ -117,6 +124,7 @@
     function update() {
       if (isGameOver || isWin) return;
 
+      // 물리 연산 (중력)
       player.vy += 0.6;
       player.y += player.vy;
       if (player.y > 260) {
@@ -133,46 +141,66 @@
         npc.grounded = true;
       }
 
-      if (npc.grounded && Math.random() < 0.008) {
-        npc.vy = npc.jumpPower;
-        npc.grounded = false;
-      }
-      npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 40;
-
-      if (window.autoPlay && player.grounded) {
-        let nearestObs = obstacles.find(o => o.x > player.x && o.x < player.x + 180);
-        if (nearestObs) {
-          triggerJump();
+      if (gameState === "PLAYING") {
+        if (npc.grounded && Math.random() < 0.008) {
+          npc.vy = npc.jumpPower;
+          npc.grounded = false;
         }
-      }
+        npc.xOffset = npc.targetOffset + Math.sin(Date.now() / 300) * 40;
 
-      spawnObjects();
-
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        let obs = obstacles[i];
-        obs.x -= obs.speed;
-
-        let hitMargin = 3; 
-        if (!window.godMode && 
-            player.x + hitMargin < obs.x + obs.w && 
-            player.x + player.w - hitMargin > obs.x && 
-            player.y + hitMargin < obs.y + obs.h && 
-            player.y + player.h - hitMargin > obs.y) {
-          isGameOver = true;
-          restartBtn.style.display = "block";
+        if (window.autoPlay && player.grounded) {
+          let nearestObs = obstacles.find(o => o.x > player.x && o.x < player.x + 180);
+          if (nearestObs) {
+            triggerJump();
+          }
         }
-        if (obs.x < -100) obstacles.splice(i, 1);
-      }
 
-      for (let i = coins.length - 1; i >= 0; i--) {
-        let coin = coins[i];
-        coin.x -= coin.speed;
+        spawnObjects();
 
-        if (player.x < coin.x + coin.w && player.x + player.w > coin.x && player.y < coin.y + coin.h && player.y + coin.h > coin.y) {
-          score += 5;
-          coins.splice(i, 1);
+        // 장애물 이동 및 충돌 체크
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+          let obs = obstacles[i];
+          obs.x -= obs.speed;
+
+          let hitMargin = 3; 
+          if (!window.godMode && 
+              player.x + hitMargin < obs.x + obs.w && 
+              player.x + player.w - hitMargin > obs.x && 
+              player.y + hitMargin < obs.y + obs.h && 
+              player.y + player.h - hitMargin > obs.y) {
+            isGameOver = true;
+            restartBtn.style.display = "block";
+          }
+          if (obs.x < -100) obstacles.splice(i, 1);
         }
-        if (coin.x < -100) coins.splice(i, 1);
+
+        // 코인(별) 먹기 체크
+        for (let i = coins.length - 1; i >= 0; i--) {
+          let coin = coins[i];
+          coin.x -= coin.speed;
+
+          if (player.x < coin.x + coin.w && player.x + player.w > coin.x && player.y < coin.y + coin.h && player.y + player.h > coin.y) {
+            score += 5;
+            coins.splice(i, 1);
+          }
+          if (coin.x < -100) coins.splice(i, 1);
+        }
+      } 
+      // 목표 점수 도달 시 푸바오가 늑구에게 스르륵 다가가는 자동 연출 로직
+      else if (gameState === "AUTO_MOVING") {
+        let targetNpcX = player.x + npc.xOffset;
+        // 푸바오가 늑구의 위치로 부드럽게 걸어감
+        if (Math.abs(player.x - (targetNpcX - 50)) > 2) {
+          player.x += 2;
+        } else {
+          // 만나면 스테이지 업그레이드 후 다시 플레이 상태로 복귀
+          if (score === 100 && stage === 1) {
+            stage = 2;
+          } else if (score === 500 && stage === 2) {
+            stage = 3;
+          }
+          gameState = "PLAYING";
+        }
       }
     }
 
@@ -212,6 +240,16 @@
         ctx.arc(coin.x + coin.w/2, coin.y + coin.h/2, coin.w/2, 0, Math.PI * 2);
         ctx.fill();
       });
+
+      // 자동 이동 연출 중 화면 안내 문구
+      if (gameState === "AUTO_MOVING") {
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("✨ 목표 달성! 늑구에게 다가가는 중... ✨", canvas.width / 2, canvas.height / 2);
+      }
 
       let stageText = "푸바오야 늑구를 찾아줭";
       if (stage === 2) stageText = "늑구를 안은 푸바오의 부캉이 얻기 대작전";
