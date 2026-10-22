@@ -29,7 +29,7 @@
     let stage = 1;
     let isGameOver = false;
     let isWin = false;
-    let gameState = "PLAYING"; // "PLAYING", "AUTO_CATCH"
+    let gameState = "PLAYING"; // "PLAYING", "CATCH_RUN"
     
     // 화면 오른쪽 끝에 멈춰 설 상대방의 X 좌표 고정 위치
     let fixedNpcX = 680;
@@ -105,7 +105,7 @@
 
     // 목표 점수 도달 시: 장애물 제거 후 상대방을 화면 끝에 멈춰 세우고 자동 잡기 모드 진입
     function startAutoCatch() {
-      gameState = "AUTO_CATCH";
+      gameState = "CATCH_RUN";
       obstacles = []; 
       coins = [];     
     }
@@ -146,7 +146,7 @@
     function update() {
       if (isGameOver || isWin) return;
 
-      // 물리 연산 (중력) 및 착지 순간 감지용 변수
+      // 물리 연산 (중력) 및 착지 감지
       let justLanded = false;
       player.vy += 0.6;
       player.y += player.vy;
@@ -223,8 +223,8 @@
           if (coin.x < -100) coins.splice(i, 1);
         }
       } 
-      // AUTO_CATCH: 상대방은 화면 끝에 멈춰 있고, 푸바오가 달려가 점프해서 닿는 구간
-      else if (gameState === "AUTO_CATCH") {
+      // CATCH_RUN: 상대방은 화면 끝에 멈춰 있고, 푸바오가 달려가 점프해서 잡는 구간
+      else if (gameState === "CATCH_RUN") {
         if (player.x < fixedNpcX - 50) {
           player.x += 4;
         } else {
@@ -235,22 +235,22 @@
           }
         }
 
-        // 점프한 뒤 바닥에 '착지하는 순간'에 다음 단계로 확실하게 전환!
+        // 점프한 뒤 바닥에 완벽히 착지하는 순간에만 다음 단계로 전환!
         if (justLanded) {
           if (stage === 1) {
             stage = 2;
             npc.targetOffset = 220;
-            player.x = 80; // 왼쪽 시작점으로 안전하게 리셋
-            obstacles = [];
-            coins = [];
-            gameState = "PLAYING";
+            player.x = 80;          // 왼쪽 시작점으로 완벽 리셋
+            obstacles = [];         // 장애물 초기화
+            coins = [];             // 코인 초기화
+            gameState = "PLAYING";  // 게임 재개
           } else if (stage === 2) {
             stage = 3;
             npc.targetOffset = -120;
-            player.x = 80; // 왼쪽 시작점으로 안전하게 리셋
-            obstacles = [];
-            coins = [];
-            gameState = "PLAYING";
+            player.x = 80;          // 왼쪽 시작점으로 완벽 리셋
+            obstacles = [];         // 장애물 초기화
+            coins = [];             // 코인 초기화
+            gameState = "PLAYING";  // 게임 재개
           } else if (stage === 3) {
             isWin = true;
             restartBtn.style.display = "block";
@@ -265,8 +265,8 @@
       ctx.fillStyle = "#334155";
       ctx.fillRect(0, 350, canvas.width, 50);
 
-      // AUTO_CATCH 상태일 때는 상대방을 화면 끝(fixedNpcX)에 고정해서 멈춰 세움
-      let currentNpcX = (gameState === "AUTO_CATCH") ? fixedNpcX : (player.x + npc.xOffset);
+      // CATCH_RUN 상태일 때는 상대방을 화면 끝(fixedNpcX)에 고정해서 멈춰 세움
+      let currentNpcX = (gameState === "CATCH_RUN") ? fixedNpcX : (player.x + npc.xOffset);
 
       if (stage === 1) {
         ctx.drawImage(imgNeukguRun, currentNpcX, npc.y + 10, 80, 80);
